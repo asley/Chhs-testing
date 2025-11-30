@@ -1,0 +1,75 @@
+CHANGELOG
+=========
+v1.6.01
+-------
+Added license preamble to CSS file
+
+v1.6.00
+-------
+Transferred ownership from Ross Parker to Gibbon Foundation
+
+v1.5.05
+-------
+Fixed bug preventing house points from being viewed in the manage page data table
+
+v1.5.04
+-------
+Overhauled main point totals table in home page and added a points by event table
+Changed award house points and Award student points forms to emphasise identical 'reason' fields
+Added reason autocomplete dropdown for ease-of-use
+
+v1.5.03
+-------
+Fixed left students appearing in student point lists
+
+v1.5.02
+-------
+Fixed student categories not available when awarding points
+
+v1.5.01
+-------
+Fixed parent dashboard issue for multiple-child families
+
+v1.5.00
+-------
+Ongoing refactoring
+
+v1.4.01
+-------
+Fix dashboard hooks for students and parents
+
+v1.4.00
+-------
+Form Group Terminology
+
+v1.3.03
+-------
+Updated permissions to allow student roles to potentially manage points
+
+v1.3.02
+-------
+Updated house point totals to reset with each school year
+Added house logos to the dashboard tab
+Refactored breadcrumbs
+
+v1.3.01
+-------
+Increased the maximum points per award from 255 to 9999
+Added a new permission to allow the ability to award unlimited points
+Added default categories for awarding unlimited points
+Updated the forms to use the Gibbon v15 Form API
+Changed to semantic version numbering
+
+v1.03
+-------
+Reorganized the menu items
+
+v1.02
+-------
+Added types for point categories: House or Student
+Added ability to define preset point increments with the format of  Thing: 1, OtherThing: 2
+
+v1.01
+-------
+Disabled submit buttons
+Added interface for awarding house points directly to a house

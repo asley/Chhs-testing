@@ -25,6 +25,68 @@ use Gibbon\Module\Reports\DataSource;
 
 class Student extends DataSource
 {
+    /**
+     * Convert percentage grade to letter grade
+     * @param float|string $percentage
+     * @return string|null
+     */
+    public static function percentageToLetterGrade($percentage)
+    {
+        if ($percentage === null || $percentage === '') {
+            return null;
+        }
+
+        $pct = floatval($percentage);
+
+        if ($pct >= 90) return 'A+';
+        if ($pct >= 85) return 'A';
+        if ($pct >= 80) return 'A-';
+        if ($pct >= 75) return 'B+';
+        if ($pct >= 70) return 'B';
+        if ($pct >= 65) return 'B-';
+        if ($pct >= 60) return 'C+';
+        if ($pct >= 55) return 'C';
+        if ($pct >= 50) return 'C-';
+        if ($pct >= 45) return 'D';
+
+        return 'F';
+    }
+
+    /**
+     * Convert letter grade to GPA points (4.0 scale)
+     * @param string $letterGrade
+     * @return float|null
+     */
+    public static function letterGradeToGPA($letterGrade)
+    {
+        $gpaScale = [
+            'A+' => 4.00,
+            'A'  => 4.00,
+            'A-' => 3.70,
+            'B+' => 3.30,
+            'B'  => 3.00,
+            'B-' => 2.70,
+            'C+' => 2.30,
+            'C'  => 2.00,
+            'C-' => 1.70,
+            'D'  => 1.00,
+            'F'  => 0.00,
+        ];
+
+        return $gpaScale[$letterGrade] ?? null;
+    }
+
+    /**
+     * Convert percentage directly to GPA points
+     * @param float|string $percentage
+     * @return float|null
+     */
+    public static function percentageToGPA($percentage)
+    {
+        $letterGrade = self::percentageToLetterGrade($percentage);
+        return self::letterGradeToGPA($letterGrade);
+    }
+
     public function getSchema()
     {
         $gender = rand(0, 99) > 50 ? 'female' : 'male';
@@ -57,12 +119,13 @@ class Student extends DataSource
     public function getData($ids = [])
     {
         $data = ['gibbonStudentEnrolmentID' => $ids['gibbonStudentEnrolmentID']];
-        $sql = "SELECT 
+        $sql = "SELECT
                 gibbonPerson.gibbonPersonID,
                 gibbonPerson.surname,
                 gibbonPerson.firstName,
                 gibbonPerson.preferredName,
                 gibbonPerson.officialName,
+                CONCAT(gibbonPerson.preferredName, ' ', gibbonPerson.surname) as fullName,
                 gibbonPerson.image_240,
                 gibbonPerson.dob,
                 gibbonPerson.email,
@@ -70,13 +133,14 @@ class Student extends DataSource
                 gibbonPerson.studentID,
                 gibbonPerson.dayType,
                 gibbonPerson.gender,
+                gibbonPerson.status,
                 gibbonYearGroup.gibbonYearGroupID,
                 gibbonYearGroup.name as yearGroupName,
                 gibbonYearGroup.nameShort as yearGroupNameShort,
                 gibbonFormGroup.gibbonFormGroupID,
                 gibbonFormGroup.name as formGroupName,
                 gibbonFormGroup.nameShort as formGroupNameShort
-                FROM gibbonStudentEnrolment 
+                FROM gibbonStudentEnrolment
                 JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID)
                 JOIN gibbonYearGroup ON (gibbonYearGroup.gibbonYearGroupID=gibbonStudentEnrolment.gibbonYearGroupID)
                 JOIN gibbonFormGroup ON (gibbonFormGroup.gibbonFormGroupID=gibbonStudentEnrolment.gibbonFormGroupID)

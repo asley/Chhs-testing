@@ -1,7 +1,7 @@
 <?php
 /*
 Gibbon: the flexible, open school platform
-Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
+Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers, and the Gibbon community (https://gibbonedu.org/about/)
 Copyright © 2010, Gibbon Foundation
 Gibbon™, Gibbon Education Ltd. (Hong Kong)
 
@@ -25,6 +25,7 @@ use Gibbon\Module\Reports\DataSource;
 
 class InternalAssessmentByCourse extends DataSource
 {
+
     public function getSchema()
     {
         return [
@@ -105,8 +106,122 @@ class InternalAssessmentByCourse extends DataSource
 
     public function getData($ids = [])
     {
-        $data = array('gibbonStudentEnrolmentID' => $ids['gibbonStudentEnrolmentID'], 'gibbonReportID' => $ids['gibbonReportID'], 'today' => date('Y-m-d'));
-        $sql = "SELECT gibbonCourse.name as groupBy,
+        $data = array(
+            'gibbonStudentEnrolmentID' => $ids['gibbonStudentEnrolmentID'], 
+            'gibbonReportID' => $ids['gibbonReportID'], 
+            'today' => date('Y-m-d')
+        );
+
+        $sql = "SELECT 
+            gibbonCourse.name AS groupBy,
+            gibbonInternalAssessmentColumn.name, 
+            gibbonInternalAssessmentColumn.description, 
+            gibbonInternalAssessmentColumn.type, 
+            gibbonInternalAssessmentColumn.attainment AS attainmentActive, 
+            gibbonInternalAssessmentEntry.attainmentValue, 
+            gibbonInternalAssessmentEntry.attainmentDescriptor, 
+            gibbonInternalAssessmentColumn.effort AS effortActive, 
+            gibbonInternalAssessmentEntry.effortValue, 
+            gibbonInternalAssessmentEntry.effortDescriptor, 
+            gibbonInternalAssessmentColumn.comment AS commentActive, 
+            gibbonInternalAssessmentEntry.comment, 
+            gibbonCourse.name AS courseName,
+            gibbonCourse.nameShort AS courseNameShort, 
+            gibbonCourseClass.name AS className, 
+            gibbonCourseClass.nameShort AS classNameShort,
+            gibbonInternalAssessmentColumn.completeDate,
+
+            /* ✅ Fetching Teacher Name (Ensuring Only Teachers Are Included) */
+            (SELECT GROUP_CONCAT(DISTINCT CONCAT(gibbonPerson.title, ' ', gibbonPerson.preferredName, ' ', gibbonPerson.surname) 
+                ORDER BY gibbonPerson.surname SEPARATOR ', ') 
+            FROM gibbonCourseClassPerson 
+            JOIN gibbonPerson ON gibbonCourseClassPerson.gibbonPersonID = gibbonPerson.gibbonPersonID
+            WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID
+              AND gibbonCourseClassPerson.role = 'Teacher' /* 🔹 Ensuring only teachers are included */
+            ) AS teacherName
+
+        FROM gibbonReport
+        JOIN gibbonStudentEnrolment 
+            ON gibbonStudentEnrolment.gibbonSchoolYearID = gibbonReport.gibbonSchoolYearID
+        JOIN gibbonInternalAssessmentEntry 
+            ON gibbonInternalAssessmentEntry.gibbonPersonIDStudent = gibbonStudentEnrolment.gibbonPersonID
+        JOIN gibbonInternalAssessmentColumn 
+            ON gibbonInternalAssessmentEntry.gibbonInternalAssessmentColumnID = gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID 
+        JOIN gibbonCourseClassPerson 
+            ON gibbonInternalAssessmentColumn.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID 
+        JOIN gibbonCourseClass 
+            ON gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID 
+        JOIN gibbonCourse 
+            ON gibbonCourseClass.gibbonCourseID = gibbonCourse.gibbonCourseID 
+
+        WHERE gibbonReport.gibbonReportID = :gibbonReportID
+        AND gibbonStudentEnrolment.gibbonStudentEnrolmentID = :gibbonStudentEnrolmentID
+        AND FIND_IN_SET(gibbonStudentEnrolment.gibbonYearGroupID, gibbonReport.gibbonYearGroupIDList)
+        AND gibbonCourse.gibbonSchoolYearID = gibbonStudentEnrolment.gibbonSchoolYearID
+        AND gibbonInternalAssessmentColumn.complete = 'Y'
+        AND gibbonInternalAssessmentColumn.completeDate <= :today 
+
+        GROUP BY gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID, 
+                 gibbonCourse.gibbonCourseID, 
+                 gibbonCourseClass.gibbonCourseClassID
+        ORDER BY gibbonInternalAssessmentColumn.completeDate DESC, gibbonCourse.nameShort, gibbonCourseClass.nameShort";
+
+        // Execute query and fetch results
+
+        $results = $this->db()->select($sql, $data)->fetchAll();
+        $values = ['assessments' => [], 'courses' => []];
+
+        foreach ($results as $result) {
+            $values['courses'][$result['courseNameShort']][$result['name']] = [
+                'name'                 => $result['name'],
+                'description'          => $result['description'],
+                'attainmentActive'     => $result['attainmentActive'],
+                'effortActive'         => $result['effortActive'],
+                'completeDate'         => $result['completeDate'],
+                'comment'              => $result['comment'],
+                'teacherName'          => $result['teacherName'],
+                
+                // ✅ Ensure attainment and effort values are included
+                'attainmentValue'      => $result['attainmentValue'] ?? 'N/A',
+                'attainmentDescriptor' => $result['attainmentDescriptor'] ?? 'N/A',
+                'effortValue'          => $result['effortValue'] ?? 'N/A',
+                'effortDescriptor'     => $result['effortDescriptor'] ?? 'N/A',
+            ];
+        }
+       //$values['courses'][$result['courseNameShort']][$result['name']] = $result;
+        return $values;
+    } 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ✅ Closing bracket added for class
+    
+
+ 
+       
+    //    This is the original code Fe bruary 14, 2025 - Asley Smith
+       
+        /* $sql = "SELECT gibbonCourse.name as groupBy,
                     gibbonInternalAssessmentColumn.name, 
                     gibbonInternalAssessmentColumn.description, 
                     gibbonInternalAssessmentColumn.type, 
@@ -154,5 +269,6 @@ class InternalAssessmentByCourse extends DataSource
         }
 
         return $values;
-    }
+    } */
+
 }

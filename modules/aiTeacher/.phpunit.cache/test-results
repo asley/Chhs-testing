@@ -1,0 +1,1 @@
+{"version":1,"defects":{"ModuleFunctionsTest::testGetAITeacherSettingsSuccess":8,"ModuleFunctionsTest::testGetAITeacherSettingsDatabaseFailure":8},"times":{"ExampleTest::testAddition":0.001,"ModuleFunctionsTest::testGetAITeacherSettingsSuccess":0.003,"ModuleFunctionsTest::testGetAITeacherSettingsDatabaseFailure":0.001}}

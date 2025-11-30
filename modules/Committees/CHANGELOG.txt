@@ -1,0 +1,39 @@
+CHANGELOG
+=========
+v1.3.00
+-------
+Gibbon v28 Compatibility
+
+v1.2.02
+-------
+Fix Staff Not Signed Up report
+
+v1.2.01
+-------
+Refactoring of linkTop divs
+
+v1.2.00
+-------
+Fix deprecated functions
+Requires Gibbon v23.0.00
+
+v1.1.00
+-------
+Session variable and null coalesce refactoring
+Requires Gibbon v22.0.00
+
+v1.0.02
+-------
+Pagination count update
+
+v1.0.01
+-------
+Added an admin role type who can also manage their own committee
+
+v1.0.00
+-------
+Initial feature set:
+    - View committees
+    - Sign-up for committees
+    - Manage roles & members
+    - Manage sign-up availability

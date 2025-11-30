@@ -69,7 +69,8 @@ if (isActionAccessible($guid, $connection2, '/modules/School Admin/gradeScales_m
 
             $row = $form->addRow();
                 $row->addLabel('descriptor', __('Descriptor'));
-                $row->addTextField('descriptor')->required()->maxLength(50);
+                #$row->addTextField('descriptor')->required()->maxLength(50);#
+                $row->addTextArea('descriptor')->setRows(4);
 
             $row = $form->addRow();
                 $row->addLabel('sequenceNumber', __('Sequence Number'))->description(__('Must be unique for this grade scale.'));

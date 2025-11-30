@@ -74,6 +74,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_s
     $bulkActions = array(
         'Generate' => __('Generate'),
         'Delete' => __('Delete'),
+        'BulkDownload' => __('BulkDownload'),
     );
 
     $col = $form->createBulkActionColumn($bulkActions);

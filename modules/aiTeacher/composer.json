@@ -1,0 +1,17 @@
+{
+    "name": "asleysmith/ai-teacher",
+    "autoload": {
+        "psr-4": {
+            "Asleysmith\\AiTeacher\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "asley",
+            "email": "asleysmith@gmail.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^12.1"
+    }
+}

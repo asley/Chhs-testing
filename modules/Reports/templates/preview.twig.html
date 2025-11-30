@@ -75,13 +75,25 @@ For info about editing, see: https://twig.symfony.com/doc/2.x/
     </details>
     {% endif %}
 
-    {% if pageSize|upper == 'LETTER' %}
-        {% set baseWidth = orientation == 'L' ? '279.4' : '215.9' %}
-        {% set baseHeight = orientation == 'L' ? '215.9' : '279.4' %}
-    {% else %}
-        {% set baseWidth = orientation == 'L' ? '297' : '210' %}
-        {% set baseHeight = orientation == 'L' ? '210' : '297' %}
-    {% endif%}
+{% if pageSize|upper == 'LETTER' %}
+{% set baseWidth = orientation == 'L' ? '279.4' : '215.9' %}
+{% set baseHeight = orientation == 'L' ? '215.9' : '279.4' %}
+
+{#
+<!--
+Asley Added February 13, 2025 legal paper size;
+-->#}
+{% elseif pageSize|upper == 'LEGAL' %}
+{% set baseWidth = orientation == 'L' ? '355.6' : '215.9' %}
+{% set baseHeight = orientation == 'L' ? '215.9' : '355.6' %}
+{#
+<!--
+Asley Added February 13, 2025 A4 paper size; end
+-->#}
+{% else %}
+{% set baseWidth = orientation == 'L' ? '297' : '210' %}
+{% set baseHeight = orientation == 'L' ? '210' : '297' %}
+{% endif%}
 
     {% for page in pages %}
     <div class="relative mx-auto bg-white shadow-lg m-4 mb-8"

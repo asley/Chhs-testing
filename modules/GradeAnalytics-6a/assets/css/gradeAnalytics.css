@@ -1,0 +1,429 @@
+/* Chart container styles */
+.card {
+    margin-bottom: 2rem;
+    border: none;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.08) !important;
+}
+
+.card-body {
+    padding: 2rem 1.5rem;
+}
+
+/* Filter sidebar styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-control {
+    border-radius: 0.35rem;
+    border: 1px solid #d1d3e2;
+    padding: 0.375rem 0.75rem;
+}
+
+.form-control:focus {
+    border-color: #bac8f3;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Chart title styles */
+.card-header {
+    background-color: #4e73df;
+    border-bottom: none;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-header h6 {
+    color: #ffffff;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem 1rem;
+    }
+    
+    .filterForm select.form-control {
+        font-size: 16px;
+        height: 2.75rem;
+    }
+    
+    .filterForm .btn-primary {
+        padding: 0.875rem 1.75rem;
+    }
+}
+
+/* Loading state */
+.loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.loading::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 20px auto;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #4e73df;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Filter Form Container */
+.filterForm {
+    padding: 0.5rem;
+}
+
+.filterForm .form-group {
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.filterForm label {
+    display: block;
+    color: #5a5c69;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+}
+
+/* Select Input Styling */
+.filterForm select.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid #e3e6f0;
+    border-radius: 0;
+    color: #6e707e;
+    font-size: 1rem;
+    height: 3rem;
+    padding: 0.75rem 0;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.filterForm select.form-control:focus {
+    border-color: #4e73df;
+    box-shadow: none;
+    color: #3a3b45;
+}
+
+/* Custom Select Arrow */
+.filterForm .form-group::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 1.25rem;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-right: 2px solid #4e73df;
+    border-bottom: 2px solid #4e73df;
+    transform: rotate(45deg);
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.filterForm .form-group:hover::after {
+    border-color: #2e59d9;
+}
+
+/* Button Container */
+.filterForm .form-group:last-child {
+    margin-top: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Apply Filters Button */
+.filterForm .btn-primary {
+    background-color: #4e73df;
+    border: none;
+    border-radius: 50px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 1rem 2rem;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(78, 115, 223, 0.1);
+}
+
+.filterForm .btn-primary:hover {
+    background-color: #2e59d9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(78, 115, 223, 0.2);
+}
+
+.filterForm .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(78, 115, 223, 0.1);
+}
+
+/* Hover Effects */
+.filterForm select.form-control:hover {
+    border-color: #bac8f3;
+}
+
+/* Focus States */
+.filterForm select.form-control:focus + label {
+    color: #4e73df;
+}
+
+/* Filter Card Styles */
+.filter-card {
+    background: #ffffff;
+    border: none;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.filter-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(78, 115, 223, 0.1) !important;
+}
+
+.filter-card .card-header {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    border: none;
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem;
+}
+
+.filter-title {
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Filter Layout */
+.filter-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-item {
+    position: relative;
+}
+
+/* Teacher filter row with button */
+.teacher-filter .filter-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.teacher-select {
+    flex: 1;
+}
+
+/* Form Labels */
+.form-label {
+    color: #5a5c69;
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+/* Select Wrapper */
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid #4e73df;
+    border-bottom: 2px solid #4e73df;
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.select-wrapper:hover::after {
+    border-color: #224abe;
+}
+
+/* Select Inputs */
+.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #f8f9fc;
+    border: 1px solid #e3e6f0;
+    border-radius: 8px;
+    color: #6e707e;
+    font-size: 0.875rem;
+    height: 3rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.form-control:hover {
+    background-color: #ffffff;
+    border-color: #bac8f3;
+}
+
+.form-control:focus {
+    background-color: #ffffff;
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+    color: #3a3b45;
+    outline: none;
+}
+
+/* Filter Action Button */
+.btn-filter {
+    align-items: center;
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    display: inline-flex;
+    font-size: 0.875rem;
+    font-weight: 600;
+    justify-content: center;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1.5rem;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    min-width: 140px;
+    height: 3rem; 
+    visibility: visible !important;
+    display: inline-flex !important;
+    opacity: 1 !important;
+    /* Match height with select inputs */
+}
+
+.btn-filter:hover {
+    background: linear-gradient(45deg, #224abe, #1a3a97);
+    box-shadow: 0 4px 12px rgba(78, 115, 223, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-filter:active {
+    transform: translateY(0);
+}
+
+.btn-filter i {
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .filter-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .teacher-filter .filter-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .teacher-select {
+        width: 100%;
+    }
+    
+    .btn-filter {
+        /*width: 100%;
+        min-width: 100%;*/
+        visibility: visible !important;
+    display: inline-flex !important;
+    opacity: 1 !important;
+    }
+}
+
+/* Top Filter Bar */
+.top-filter-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 0;
+    position: relative;
+    top: 0;
+    z-index: 1000;
+    background: #fff;
+}
+
+.top-filter-bar .btn-filter {
+    margin-left: auto;
+    box-shadow: 0 2px 4px rgba(78, 115, 223, 0.2);
+}
+
+/* Adjust main content spacing */
+.container-fluid {
+    padding-top: 1rem;
+}
+
+/* Ensure charts don't overlap with fixed header */
+.card {
+    margin-top: 1rem;
+}
+
+/* Remove old button styles from teacher filter */
+.teacher-filter {
+    margin-bottom: 0;
+}
+
+.teacher-select {
+    width: 100%;
+}
+
+/* Responsive adjustments for top bar */
+@media (max-width: 768px) {
+    .top-filter-bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .container-fluid {
+        padding-top: 5rem;
+    }
+} 

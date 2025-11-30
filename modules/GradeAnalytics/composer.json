@@ -1,0 +1,20 @@
+{
+    "name": "gibbon/grade-analytics",
+    "description": "Internal Assessment Dashboard with dynamic charts and analytics for Gibbon",
+    "type": "gibbon-module",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Asley Smith",
+            "email": "asley@example.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Gibbon\\Module\\GradeAnalytics\\": "src/"
+        }
+    }
+}
