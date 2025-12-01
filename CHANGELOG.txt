@@ -19,6 +19,221 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
+v30.0.00
+--------
+
+    Headlines
+        Added a new Calendar module to manage events and participants
+        Updated the timetable to display Calendar events and custom layer ordering
+        Added a new Student Alerts module to manage automatic and manual alerts
+        Added the option to create custom Student Alerts in School Admin
+        Catalan, Japanese and Portuguese are now available interface languages
+
+    Security
+        Library: fixed handling of user input in SQL queries (CVE-2025-56573)
+
+    Changes With Important Notices
+        Added a Pastoral heading to the main menu and moved Behaviour, Attendance and Individual Needs
+        The Impersonate User action must be manually enabled in the config.php file
+
+    Tweaks & Additions
+        System: added the option for administrators to impersonate other user accounts
+        System: added a backup table to store person images from previous years
+        System: added Balochi as a spoken language option for user data
+        System: set Catalan, Japanese and Portugese as active languages
+        System: switched interface strings from Value Added License to Catalyst License
+        System: updated SpreadsheetRenderer to support exporting data from multiple DataTables
+        Activities: added a description field to the cost section for activities
+        Activities: added student tags on the Manage Enrolment page
+        Activities: added the option for parents to register their children in activities
+        Activities: fixed Generate Enrolments to not show pre-enrolled students in the unassigned column
+        Activities: fixed staff on inactive activities not showing up in the Manage Staffing page
+        Activities: included the photos in the new copy when an activity is duplicated
+        Behaviour: added Add Multiple button to Behaviour tab of student profile
+        Calendar: added notifyStaff feature as a background process
+        Calendar: added the feature to cross-check student future absences from Event Participants list
+        Formal Assessment: added a Year Group filter option to Manage External Assessment
+        Individual Needs: enabled viewing IN records for past students as read-only
+        Library: added a new type called Digital Publication
+        Library: added the option to send an email to parents when lending a library item
+        Messenger: added clarifying text to Applicants target which only includes Accepted applications
+        Messenger: enabled resending to any recipient when read receipts are off in Send Report
+        Messenger: enabled users with Manage Messages_all access to see shareable link in Send Report
+        Planner: added a button to access Linked Markbook from Edit Lesson Plan page
+        Planner: added a highlight for Off Timetable Lessons in the "Year Overview" mode
+        Planner: added a highlight for Off Timetable students in View Lesson Plan attendance list
+        Planner: added an Online Lesson option in the planner to display a video call link
+        Planner: added shortcut buttons to access the Unit Planner and Lesson Planner from each other
+        Planner: added the option to use smart block names as lesson names in Deploy Lessons
+        Planner: added the total student count to the attendance list in the lesson Planner sidebar
+        Planner: restricted visibility of user photos in Lesson Plans based on planner access permissions
+        Reports: added a way for tracking and displaying who last edited an asset
+        Reports: prevented deletion of template assets that are not set to inactive
+        Reports: updated Attendance data source to handle Off Timetable days where no attendance is taken
+        School Admin: added the option to cancel Staff Duty and cancel Bookings for Special Days
+        Staff: added an option to accept a Staff Application without creating an account
+        Staff: added an option to separate the Staff Duty page into tabs by duty type
+        Staff: limited Add Staff list to users who are not already staff but have a staff role
+        Students: added a drop-down filter to the Student Transport report
+        System Admin: added an attendance importer for Future Absences
+        System Admin: added an HTTPS check to the installer and system check
+        System Admin: added new loaned items import for Library
+        System Admin: added the option to upload user photos in jpeg format
+        Timetable Admin: added the ability to manage exceptions using the timetable in Class Enrolment by Person
+        Timetable Admin: increased the default short name length for both courses and classes with a warning
+        Timetable: added a Calendar drop-down to the timetable and a Only Show My Events option
+        Timetable: added a search field in 'Manage Bookings' and 'Mange Facility Changes'
+        Timetable: added coverage details for staff duty and activities on the timetable
+        Timetable: added the option for users to customize the order of layers in their timetable
+        User Admin: added a backup table to store person images from previous years
+        User Admin: added a None option for the Note Creation Notification in Student Settings
+        User Admin: added an option to view User Image of previous years
+        User Admin: added Prof. as an option in Title select
+        User Admin: added Sibling as option to Emergency Relationship select
+        User Admin: increased the username field length to 40 characters
+
+    Bug Fixes
+        System: fixed toggle field direction for right-to-left languages
+        System: fixed uninitialized variable PHP warnings on Parent Dashboard
+        System: fixed login options not working when using SSO button
+        System: fixed login redirect after public registration
+        System: fixed redirect logic in Payment class causing unnecessary error logs
+        System: fixed TinyMCE editor not saving content when form is submitted with HTML editor open
+        Activities: fixed Manage Enrolment when participants are part of more than one activity
+        Activities: fixed the Activities tab on the parent dashboard to work with new activities system
+        Activities: removed activities with registration turned off from sign up list
+        Admissions: increased the memory limit for the Accept process in Manage Applications
+        Attendance: fixed Student History display when all seven weekdays are set as school days
+        Data Updater: fixed attachments being cleared when new data updates are submitted
+        Library: fixed handling of SQL values in Library Browse page
+        Markbook: fixed the bug preventing to display user inputs and allow decimal inputs
+        Messenger: fixed missing From address on emails when using the Add Recipient action in Send Report
+        Planner: fixed access to class list in Edit Unit when viewing past and upcoming years
+        Planner: fixed Teacher Notes in smart blocks not visible when using the Show Confidential Data toggle
+        Rubrics: fixed the bug preventing to view ATL Rubrics table on mobile devices
+        Staff: fixed coverage longer than one week not including staff duty and activity cover
+        Staff: fixed missing staff name for general coverage in Daily Coverage Planner
+        Staff: fixed order of Staff Directory to honour the biographicalGroupingOrder setting
+        Students: fixed sidebar links for custom modules when viewing Student Profiles for left students
+        Students: updated default value for longTermMedication to N for new medical records
+        System Admin: fixed adding custom fields for different role categories in Form Builder
+        System Admin: fixed the label disappearing for Long Text fields in Form Builder
+        System Admin: fixed unable to add multiple generic fields with the same name in Form Builder
+        System Admin: fixed unable to delete How Did You Hear in Form Builder
+        Timetable Admin: fixed bug to allow timetable deletion
+        Timetable Admin: fixed missing Manage Exceptions button on the timetable in Course Enrolment by Person
+        Timetable Admin: fixed the issue of setting white as the default color for both background and font
+        Timetable: fixed multiple instances of the same TT day in a week not showing up
+        User Admin: fixed uneditable fields for new Personal Documents in Manage Users
+
+    Deprecations
+        Removed all functions in functions.php flagged for deprecation since v25
+
+v29.0.00
+--------
+
+    Headlines
+        A new mobile-responsive Timetable UI with layer visibility toggles
+        An improved library borrowing page in Student Profile with tabs and quick lending actions
+        An option to add new recipients to existing messages in Messenger
+        A color-coded Markbook option for easier visual identification
+        A simple Petty Cash system in Finance for tracking small expenses
+
+    Security
+        System: added nonce and CSRF token handling to all POST forms
+
+    Tweaks & Additions
+        System: removed Date of Birth field from Public Registration when no minimum registration age is set
+        System: improved the colour picker to add a pre-set colour palette
+        System: added IDD country codes to all countries in the database
+        System: added a log entry for resetting password through 'Forgot Password"
+        System: updated jQuery UI library to v1.14.1
+        Activities: added form group name next to student name in Activity Attendance list
+        Admissions: added the ability to re-send the submission email from the Process tab in Edit Application
+        Admissions: added the option to display customised success message when student applications are successfully submitted
+        Admissions: added Emergency Contacts for students as an option in the Form Builder
+        Attendance: updated Student History view to display Off Timetable days
+        Behaviour: added an 'Observation' type to track neutral records
+        Behaviour: added the delete action to the behaviour list in the Student Profile for users with manage access
+        Department: added student "Not Reportable" flag to class participant listing
+        Library: improved the Library Borrowing page on student profiles
+        Library: improved the Lending & Activity Log workflow when scanning in IDs from barcodes
+        Library: enabled students to access the Library Borrowing page on their profile
+        Markbook: added an option to color-code markbook columns in the teacher view
+        Markbook: implemented default grade from Manage Grade Scales in Markbook data entry view
+        Markbook: enabled filtering by term even if Group Columns by Term is off
+        Messenger: added the ability to add new recipients to a sent message and enable easier re-sending
+        Messenger: added the feature to warn and remove [confirmLink] tag from the message body if read receipts are not turned on
+        Messenger: added the ability to customise the From address for users with school-wide sending permissions
+        Planner: added an attendance indicator to the Today's Lessons list for teachers
+        Reports: updated Template Builder to select mPDF renderer by default
+        Reports: added the option to archive unused assets and templates intead of deleting them
+        Reports: added search to the Manage Assets page, moved Manage Fonts to a separate page
+        School Admin: updated various template settings to use Rich Text editors
+        Staff: added the ability to override staff availability when manually adding coverage
+        Students: added Name in Characters to the Emergency Data Summary
+        Students: added the option for parents and students to see activities in the view profile page
+        School Admin: added prefilled times when creating timing changes in Add Special Day
+        School Admin: added the option to edit whether a facility is bookable or not
+        System Admin: added autocomplete with available strings to Add String in String Replacement
+        System Admin: adjusted action access for Column Rows import
+        System Admin: added new imports for Columns and Tie Days to Dates in timetable
+        System Admin: added new Units import for Unit Planner
+        System Admin: added columnColor to Markbook Column import, enabled color field checking in ImportType class
+        Timetable: removed the display of declined events from Google Calendar on the timetable
+        Timetable Admin: added an Edit Timetable by Class button to Course Enrolment by Class
+        User Admin: improved the image uploader in Manage Users, detect invalid images
+        User Admin: added Name in Characters to searchable fields
+        User Admin: added the ability to add Custom Fields to Family records
+    
+    Bug Fixes
+        System: fixed issue with search terms containing a : full colon (special character) 
+        System: fixed max and min limits to Number values in forms
+        System: improved the input detection in the MultiSelect search box for non-standard input sources
+        System: fixed searching unicode characters within stored JSON data
+        System: fixed access of inactive modules through direct URLs
+        Activities: fixed activity missing from the timetable if it doesn't have a category
+        Activities: fixed missing registration button for parents on View Activities page
+        Activities: fixed new sign-up system to honour the registration Y/N setting per activity
+        Activities: fixed the delete action not allowing duplicate enrolments to be deleted in Manage Enrolments
+        Activities: fixed duplicate term names on Activity Choices By Student report
+        Activities: fixed error on Activities Overview when changing Category filter after Activity filter
+        Activities: fixed max length on search filter in View Activities
+        Admissions: fixed default tab selection after saving a form in Edit Application
+        Attendance: fixed unable to add new partial future absence if a future future absence exists
+        Attendance: removed non-Full teachers from Form Groups Not Registered reports
+        Attendance: fixed duplicate classes in Classes Not Registered report
+        Attendance: fixed invalid date formatting in Attendance Summary by Date
+        Attendance: fixed order of days in Student History when first day of the week is Saturday
+        Finance: fixed missing Ad Hoc fee names in bulk-action Export spreadsheet data
+        Finance: fixed bulk action selection and print action on Manage Expenses table
+        Finance: fixed online payment for invoices with a Paid - Partial status
+        Finance: fixed spreadsheet error when exporting invoices with Pending status
+        Finance: fixed missing budget cycle name from Print page in Manage Expenses
+        Individual Needs: fixed search filters on teacher view of Manage Investigations page
+        Library: fixed Advanced Search not searching items by type in Browse Library
+        Markbook: fixed attainment percentage values now updating from raw attainment values
+        Messenger: fixed required members field when editing a Messenger Group
+        Planner: fixed Visual and HTML tabs not working in newly created Smart Blocks 
+        Planner: fixed empty sections displaying below the advanced options in Add Unit Plan
+        Planner: fixed untranslated Role field in lesson planner participant list
+        Reports: fixed missing iframe support for template preview windows
+        Reports: fixed comment character count not updating when writing reports
+        Reports: fixed missing progress bar colour in Proofreading and My Reporting pages
+        Reports: fixed progress bar count for left students in My Reporting page
+        Staff: fixed the horizontal scroll container on the Staff Duty page
+        Students: fixed missing Emergency Contact Number 2 on student profile
+        System Admin: fixed field validation for Student Default Email in Form Builder
+        System Admin: fixed uniqueness check when editing a page in Form Builder
+        System Admin: fixed importer not allowing short-form school year names (eg: 2024-25)
+        System Admin: fixed missing module name for newly created logs in View Log
+        Timetable Admin: fixed support staff not editable in Course Enrolment by Person
+        Timetable Admin: fixed vertical spacing of date names in Tie Days to Dates
+        User Admin: fixed unique username check when values already exist
+
+    Deprecations
+        Removed sendNotificationsAsBcc method from NotificationSender
+
 v28.0.01
 --------
 
@@ -34,7 +249,6 @@ v28.0.01
     Bug Fixes
         System: fixed string format errors in Spanish and Hebrew translation files
         System: fixed the invalid character check when uploading files
-        System: fix the message wall widget code when there are no messages
         Attendance: removed Left teachers from Classes Not Registered report
         Behaviour: fixed behaviour fields hidden on Edit Behaviour Record screen
         Behaviour: fixed users with Manage Behaviour Records_my unable to add follow up comments
@@ -1121,8 +1335,8 @@ v21.0.00
         Timetable: fixed View Available Facilities not counting bookings on Fridays
         Timetable: fixed last week/next week links for facilities involved in multiple TTs
         Tracking: fixed Data Points export when internal or external data points set, but not both
-	    Tests: added fallback environment variables if .env is not defining DB details
-	    Tests: fixed HTTP to HTTPs, so SSL enabled environments don't fail
+        Tests: added fallback environment variables if .env is not defining DB details
+        Tests: fixed HTTP to HTTPs, so SSL enabled environments don't fail
         Tests: fixed install suite admin username and password to be compliant with the default password requirements
 
 v20.0.00
@@ -1635,8 +1849,8 @@ v16.0.00
 
 v15.0.01
 --------
-	Security
-		Fixed privacy-related issue in Student Profile permissions
+    Security
+        Fixed privacy-related issue in Student Profile permissions
 
 v15.0.00
 --------

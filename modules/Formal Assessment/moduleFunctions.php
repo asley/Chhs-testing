@@ -381,3 +381,25 @@ function externalAssessmentDetails($guid, $gibbonPersonID, $connection2, $gibbon
         }
     }
 }
+
+/**
+ * Compatibility function for Gibbon v30
+ * Replaces the deprecated getMaxUpload() function that was removed in v30
+ * Returns the maximum upload size text for forms
+ *
+ * @param bool $asString If true, returns formatted string; if false, returns number
+ * @return string|int Maximum upload size
+ */
+if (!function_exists('getMaxUpload')) {
+    function getMaxUpload($asString = false) {
+        $post = substr(ini_get('post_max_size'), 0, (strlen(ini_get('post_max_size')) - 1));
+        $file = substr(ini_get('upload_max_filesize'), 0, (strlen(ini_get('upload_max_filesize')) - 1));
+        $label = ($post < $file) ? $post : $file;
+
+        if ($asString) {
+            return sprintf(__('Uploads: %sMB max'), $label);
+        }
+
+        return $label;
+    }
+}

@@ -31,6 +31,7 @@ use Gibbon\Forms\FormFactoryInterface;
 use Gibbon\Tables\DataTable;
 use Gibbon\Tables\Action;
 use Gibbon\Contracts\Services\Session;
+use Gibbon\Forms\Layout\Section;
 
 /**
  * FormFactory
@@ -52,6 +53,14 @@ class FormFactory implements FormFactoryInterface
     }
 
     /* LAYOUT TYPES --------------------------- */
+
+    /**
+     * {@inheritDoc}
+     */
+    public function createSection($id, $heading = ''): Section
+    {
+        return new Layout\Section($this, $id, $heading);
+    }
 
     /**
      * {@inheritDoc}
@@ -149,7 +158,7 @@ class FormFactory implements FormFactoryInterface
 
     /* BASIC INPUT --------------------------- */
 
-    public function createCustomField($name, $fields = array())
+    public function createCustomField($name, $fields = [])
     {
         return new Input\CustomField($this, $name, $fields);
     }
@@ -312,10 +321,10 @@ class FormFactory implements FormFactoryInterface
 
     public function createSubmit($label = 'Submit', $id = null)
     {
-        return $this->createButton($label, null, $id)->setType('submit')->addClass('text-right');
+        return $this->createButton(__($label), null, $id)->setType('submit')->addClass('text-right');
     }
 
-    public function createSearchSubmit($session, $clearLabel = 'Clear Filters', $passParams = array())
+    public function createSearchSubmit($session, $clearLabel = 'Clear Filters', $passParams = [])
     {
         $passParams[] = 'q';
         $parameters = array_intersect_key($_GET, array_flip($passParams));
@@ -328,7 +337,7 @@ class FormFactory implements FormFactoryInterface
     public function createConfirmSubmit($label = 'Yes', $cancel = false)
     {
         $cancelLink = ($cancel)? sprintf('<a href="%s" class="right px-3 py-2 text-xs font-medium text-gray-600">%s</a> &nbsp;', $_SERVER['HTTP_REFERER'], __('Cancel')) : '';
-        return $this->createSubmit($label)->prepend($cancelLink);
+        return $this->createSubmit(__($label))->prepend($cancelLink);
     }
 
     public function createAdvancedOptionsToggle()
@@ -363,11 +372,12 @@ class FormFactory implements FormFactoryInterface
     public function createSelectTitle($name)
     {
         return $this->createSelect($name)->fromArray(array(
-            'Ms.'  => __('Ms.'),
-            'Miss' => __('Miss'),
-            'Mr.'  => __('Mr.'),
-            'Mrs.' => __('Mrs.'),
-            'Dr.'  => __('Dr.')
+            'Ms.'   => __('Ms.'),
+            'Miss'  => __('Miss'),
+            'Mr.'   => __('Mr.'),
+            'Mrs.'  => __('Mrs.'),
+            'Dr.'   => __('Dr.'),
+            'Prof.' => __('Prof.'),
         ))->placeholder();
     }
 
@@ -408,6 +418,7 @@ class FormFactory implements FormFactoryInterface
             'Guardian'       => __('Guardian'),
             'Grandmother'    => __('Grandmother'),
             'Grandfather'    => __('Grandfather'),
+            'Sibling'        => __('Sibling'),
             'Friend'         => __('Friend'),
             'Other Relation' => __('Other Relation'),
             'Doctor'         => __('Doctor'),

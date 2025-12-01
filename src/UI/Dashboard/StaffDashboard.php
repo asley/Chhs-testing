@@ -23,19 +23,21 @@ namespace Gibbon\UI\Dashboard;
 
 use Gibbon\Http\Url;
 use Gibbon\View\View;
-use Gibbon\Services\Format;
 use Gibbon\Data\Validator;
+use Gibbon\Services\Format;
+use Gibbon\Domain\System\HookGateway;
 use Gibbon\Forms\OutputableInterface;
-use Gibbon\Domain\System\SettingGateway;
-use Gibbon\Contracts\Database\Connection;
 use Gibbon\Contracts\Services\Session;
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Tables\Prefab\BehaviourTable;
 use Gibbon\Tables\Prefab\EnrolmentTable;
 use Gibbon\Tables\Prefab\FormGroupTable;
+use Gibbon\Contracts\Database\Connection;
 use League\Container\ContainerAwareTrait;
-use League\Container\ContainerAwareInterface;
-use Gibbon\Domain\System\HookGateway;
 use Gibbon\Tables\Prefab\TodaysLessonsTable;
-use Gibbon\Tables\Prefab\BehaviourTable;
+use League\Container\ContainerAwareInterface;
+use Gibbon\Support\Facades\Access;
+
 
 /**
  * Staff Dashboard View Composer
@@ -182,6 +184,14 @@ class StaffDashboard implements OutputableInterface, ContainerAwareInterface
                     ->displayLabel();
             }
 
+            if (Access::allows('Student Alerts', 'report_alertsByFormGroup')) {
+                $formGroupTable->addHeaderAction('alerts', __('Student Alerts'))
+                    ->setURL('/modules/Student Alerts/report_alertsByFormGroup.php')
+                    ->addParam('gibbonFormGroupID', $rowFormGroups['gibbonFormGroupID'])
+                    ->setIcon('warning')
+                    ->displayLabel();
+            }
+
             $formGroupTable->addHeaderAction('export', __('Export to Excel'))
                 ->setURL('/indexExport.php')
                 ->addParam('gibbonFormGroupID', $rowFormGroups['gibbonFormGroupID'])
@@ -246,7 +256,12 @@ class StaffDashboard implements OutputableInterface, ContainerAwareInterface
             if (!file_exists($include)) {
                 $hookOutput = Format::alert(__('The selected page cannot be displayed due to a hook error.'), 'error');
             } else {
-                $hookOutput = include $include;
+                try {
+                    $hookOutput = include $include;
+                } catch (\Throwable $e) {
+                    error_log($e->getMessage());
+                    $hookOutput = Format::alert(__('The selected page cannot be displayed due to a hook error.'), 'error');
+                }
             }
 
             $tabs[$hookData['name']] = [

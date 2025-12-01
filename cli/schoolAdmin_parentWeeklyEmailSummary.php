@@ -31,8 +31,6 @@ use Gibbon\Domain\School\SchoolYearGateway;
 use Gibbon\Domain\FormGroups\FormGroupGateway;
 use Gibbon\Domain\Planner\PlannerParentWeeklyEmailSummaryGateway;
 
-$_POST['address'] = '/modules/School Admin/emailSummarySettings.php';
-
 require __DIR__.'/../gibbon.php';
 
 $settingGateway = $container->get(SettingGateway::class);
@@ -112,8 +110,8 @@ foreach ($families as $gibbonFamilyID => $students) {
         // HOMEWORK
         $criteria = $plannerEntryGateway->newQueryCriteria(true)
             ->sortBy('homeworkDueDateTime', 'ASC')
-            ->filterBy('weekly:Y')
-            ->filterBy('viewableParents:Y')
+            ->filterBy('weekly', 'Y')
+            ->filterBy('viewableParents', 'Y')
             ->fromPOST();
 
         $allHomework = $plannerEntryGateway->queryHomeworkByPerson($criteria, $gibbonSchoolYearID, $student['gibbonPersonID']);

@@ -31,7 +31,7 @@ use Gibbon\Forms\Form;
  */
 class BulkActionForm extends Form
 {
-    public static function create($id, $action, $method = 'post', $class = 'w-full blank bulkActionForm border-0 bg-transparent p-0')
+    public static function create($id, $action, $method = 'post', $class = 'w-full blank bulkActionForm border-0 bg-transparent p-0') : Form
     {
         global $container;
 
@@ -39,9 +39,10 @@ class BulkActionForm extends Form
             ->setID($id)
             ->setClass($class)
             ->setAction($action)
-            ->setMethod($method);
+            ->setMethod($method)
+            ->setTokens($container);
         
-            $form->renderer->setTemplate('components/formBlank.twig.html');
+        $form->renderer->setTemplate('components/formBlank.twig.html');
 
         $form->addConfirmation(__('Are you sure you wish to process this action? It cannot be undone.'));
         $form->addHiddenValue('address', $_GET['q']);

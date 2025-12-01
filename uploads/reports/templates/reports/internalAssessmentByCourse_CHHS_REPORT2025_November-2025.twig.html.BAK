@@ -1,0 +1,236 @@
+ {#<!--
+  name: Internal Assessment Report - February 2025
+  category: Student Data
+  types: Body
+  sources:
+      student: Student
+      internalAssessmentByCourse: InternalAssessmentByCourse
+      reportingCycle: ReportingCycle
+  config:
+      includeAverage:
+          label: Show Cycle Average?
+          type: yesno
+          default: Y
+      limitByReportingCycle:
+          label: Filter by Reporting Period?
+          type: yesno
+          default: Y
+  -->#}
+
+  <style>
+  .report-table {
+      width: 95%;          /* Reduced width */
+      max-width: 800px;    /* Limits maximum width */
+      border-collapse: collapse;
+      font-size: 11px;     /* Smaller base font */
+      margin: 10px auto;   /* Reduced margin */
+      table-layout: fixed; /* Prevents column stretching */
+  }
+  .report-table th {
+      background: #f5f5f5;
+      color: #333;
+      padding: 8px;        /* Reduced padding */
+      text-align: center;
+      border: 1px solid #ddd;
+      white-space: nowrap; /* Prevents header text wrapping */
+  }
+  .report-table td {
+      padding: 6px;        /* Reduced padding */
+      border: 1px solid #ddd;
+      vertical-align: middle;
+      word-wrap: break-word; /* Handles long content */
+  }
+  .report-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+  }
+  .header-row {
+      background: #f5f5f5;
+      color: #333;
+      font-weight: bold;
+      font-size: 11px;     /* Smaller header font */
+  }
+  .subject-cell {
+      font-weight: bold;
+      text-align: left;
+      padding-left: 10px;  /* Reduced padding */
+      background: #f9f9f9;
+      max-width: 150px;    /* Limits subject name width */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+  .comment-row {
+      background: #f0f0f0; /* Light grey background */
+      font-size: 10px;     /* Smaller comment font */
+      line-height: 1.2;
+      padding: 4px 10px;   /* Compact padding */
+      text-align: left;
+  }
+  .average-cell {
+      background: #e0e0e0; /* Soft grey for average */
+      font-weight: bold;
+      padding: 8px;        /* Reduced padding */
+      text-align: right;
+      font-size: 11px;
+  }
+  </style>
+
+  <table class="report-table">
+      <tr class="header-row">
+          <th rowspan="2">Subjects</th>
+          {% if config.limitByReportingCycle == 'Y' %}
+              {# Show only current cycle #}
+              <th colspan="2">{{ reportingCycle.cycles[reportingCycle.cycleNumber] }}</th>
+          {% else %}
+              {# Show all cycles #}
+              {% for cycleNum in 1..reportingCycle.cycleTotal %}
+              <th colspan="2">{{ reportingCycle.cycles[cycleNum] }}</th>
+              {% endfor %}
+          {% endif %}
+      </tr>
+      <tr class="header-row">
+          {% if config.limitByReportingCycle == 'Y' %}
+              {# Show only current cycle headers #}
+              <th>Grade</th>
+              <th>Conduct</th>
+          {% else %}
+              {# Show all cycle headers #}
+              {% for cycleNum in 1..reportingCycle.cycleTotal %}
+              <th>Grade</th>
+              <th>Conduct</th>
+              {% endfor %}
+          {% endif %}
+      </tr>
+
+      {# Initialize totalArray to store cleaned values #}
+      {% set totalArray = [] %}
+
+      {% for course, assessments in internalAssessmentByCourse.courses %}
+          {# Check if the course has active assessments #}
+          {% set isCourseActive = false %}
+          {% for assessmentName, assessmentData in assessments %}
+              {% if assessmentData.attainmentActive == 'Y' or assessmentData.effortActive == 'Y' %}
+                  {% set isCourseActive = true %}
+              {% endif %}
+          {% endfor %}
+
+          {# Only display the course if it is active #}
+          {% if isCourseActive %}
+          <tr>
+              <td class="subject-cell">{{ course }}</td>
+
+              {% if config.limitByReportingCycle == 'Y' %}
+                  {# Show only current cycle data #}
+                  {% set cycleNum = reportingCycle.cycleNumber %}
+                  {% set targetCycleName = reportingCycle.cycles[cycleNum] %}
+                  {% set assessment = {} %}
+
+                  {# Find assessment by cycle name with typo tolerance #}
+                  {% for assessmentName, assessmentData in assessments %}
+                      {% if assessmentData.name|trim|lower == targetCycleName|trim|lower %}
+                          {% set assessment = assessmentData %}
+                      {% endif %}
+                  {% endfor %}
+
+                  <td style="text-align: center;">
+                      {% if assessment.attainmentActive == 'Y' and assessment.attainmentValue is not empty %}
+                          {{ assessment.attainmentValue|default('N/A') }}
+                          {% if config.includeAverage == 'Y' %}
+                              {% set cleanValue = assessment.attainmentValue|replace({'%':''})|trim %}
+                              {% if cleanValue matches '/^\\d+\\.?\\d*$/' %}
+                                  {% set numericValue = cleanValue * 1 %}
+                                  {% set totalArray = totalArray|merge([numericValue]) %}
+                              {% endif %}
+                          {% endif %}
+                      {% else %}
+                          N/A
+                      {% endif %}
+                  </td>
+                  <td style="text-align: center;">{{ assessment.effortValue|default('N/A') }}</td>
+              {% else %}
+                  {# Show all cycles data #}
+                  {% for cycleNum in 1..reportingCycle.cycleTotal %}
+                      {% set targetCycleName = reportingCycle.cycles[cycleNum] %}
+                      {% set assessment = {} %}
+
+                      {# Find assessment by cycle name with typo tolerance #}
+                      {% for assessmentName, assessmentData in assessments %}
+                          {% if assessmentData.name|trim|lower == targetCycleName|trim|lower %}
+                              {% set assessment = assessmentData %}
+                          {% endif %}
+                      {% endfor %}
+
+                      <td style="text-align: center;">
+                          {% if assessment.attainmentActive == 'Y' and assessment.attainmentValue is not empty %}
+                              {{ assessment.attainmentValue|default('N/A') }}
+                              {% if config.includeAverage == 'Y' and cycleNum == reportingCycle.cycleNumber %}
+                                  {% set cleanValue = assessment.attainmentValue|replace({'%':''})|trim %}
+                                  {% if cleanValue matches '/^\\d+\\.?\\d*$/' %}
+                                      {% set numericValue = cleanValue * 1 %}
+                                      {% set totalArray = totalArray|merge([numericValue]) %}
+                                  {% endif %}
+                              {% endif %}
+                          {% else %}
+                              N/A
+                          {% endif %}
+                      </td>
+                      <td style="text-align: center;">{{ assessment.effortValue|default('N/A') }}</td>
+                  {% endfor %}
+              {% endif %}
+          </tr>
+
+          {# Current Cycle Comments Section #}
+          {% set currentCycleName = reportingCycle.cycles[reportingCycle.cycleNumber] %}
+          {% set currentAssessment = {} %}
+          {% for assessmentName, assessmentData in assessments %}
+              {% if assessmentData.name|trim|lower == currentCycleName|trim|lower %}
+                  {% set currentAssessment = assessmentData %}
+              {% endif %}
+          {% endfor %}
+          {% if currentAssessment is not empty %}
+          <tr class="comment-row">
+              {% if config.limitByReportingCycle == 'Y' %}
+              <td colspan="3">
+              {% else %}
+              <td colspan="{{ (reportingCycle.cycleTotal * 2) + 1 }}">
+              {% endif %}
+                  <small>Teacher(s):</small>
+                  <span style="font-size: 7px; color: #666;">{{ currentAssessment.teacherName|default('N/A') }}</span>
+
+                  {% if currentAssessment.comment != 'N' and currentAssessment.comment is not empty %}
+                      <br><em>{{ currentAssessment.comment }}</em>
+                  {% endif %}
+              </td>
+          </tr>
+          {% endif %}
+          {% endif %} {# End of active course check #}
+      {% endfor %}
+
+      {# Cycle-Specific Average Section #}
+      {% if config.includeAverage == 'Y' %}
+      <tr class="average-cell">
+          {% if config.limitByReportingCycle == 'Y' %}
+          <td colspan="3">
+          {% else %}
+          <td colspan="{{ (reportingCycle.cycleTotal * 2) + 1 }}">
+          {% endif %}
+              <strong>Average ({{ reportingCycle.cycles[reportingCycle.cycleNumber] }}):</strong>
+              {% set total = 0 %}
+              {% set count = 0 %}
+              {% for value in totalArray %}
+                  {% set numericValue = value * 1 %}
+                  {% if numericValue >= 0 %}
+                      {% set total = total + numericValue %}
+                      {% set count = count + 1 %}
+                  {% endif %}
+              {% endfor %}
+              {% if count > 0 %}
+                  {{ (total / count)|round(1) }}%
+                  <small style="font-size: 9px;">({{ count }} subjects)</small>
+              {% else %}
+                  N/A
+              {% endif %}
+          </td>
+      </tr>
+      {% endif %}
+  </table>

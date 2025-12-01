@@ -1,0 +1,395 @@
+
+{#<!--
+name: Student Academic Transcript
+category: Student Data
+types: Body
+sources:
+    student: Student
+    school: School
+    transcript: StudentTranscript
+-->#}
+{{- stylesheet ? include(stylesheet) -}}
+
+<style type="text/css">
+.transcript-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.school-info {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.transcript-title {
+    font-size: 16pt;
+    font-weight: bold;
+    text-decoration: underline;
+    margin: 15px 0;
+}
+.student-info-table {
+    width: 100%;
+    margin-bottom: 25px;
+    border: 1px solid #000;
+}
+.student-info-cell {
+    padding: 8px;
+    border: 1px solid #000;
+    font-size: 10pt;
+}
+.info-label {
+    font-weight: bold;
+    width: 25%;
+}
+.academic-year-header {
+    background-color: #2563eb;
+    color: white;
+    font-weight: bold;
+    font-size: 12pt;
+    padding: 10px;
+    text-align: center;
+    margin-top: 20px;
+}
+.term-header {
+    background-color: #64748b;
+    color: white;
+    font-weight: bold;
+    font-size: 10pt;
+    padding: 8px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+.course-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    table-layout: fixed;
+}
+.course-header {
+    background-color: #f1f5f9;
+    font-weight: bold;
+    font-size: 9pt;
+    padding: 6px;
+    border: 1px solid #000;
+    text-align: center;
+}
+.course-data {
+    font-size: 9pt;
+    padding: 5px;
+    border: 1px solid #000;
+    text-align: center;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+.gpa-summary {
+    margin-top: 15px;
+    padding: 8px 10px;
+    border: 1px solid #000;
+    background-color: #f8fafc;
+    width: 100%;
+    page-break-inside: avoid;
+}
+.gpa-title {
+    font-weight: bold;
+    font-size: 10pt;
+    margin-bottom: 5px;
+    text-align: center;
+    padding: 0 0 5px 0;
+    border-bottom: 1px solid #ccc;
+}
+.grade-scale {
+    margin-top: 20px;
+    font-size: 8pt;
+}
+.grade-scale-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.signature-section {
+    margin-top: 40px;
+    display: table;
+    width: 100%;
+}
+.signature-box {
+    display: table-cell;
+    width: 50%;
+    padding: 20px;
+    text-align: center;
+}
+.signature-line {
+    border-bottom: 1px solid #000;
+    margin-bottom: 5px;
+    height: 40px;
+}
+</style>
+
+{# Header Section #}
+<div class="transcript-header">
+    <div class="school-info">{{ school.organisationName }}</div>
+    {% if school.organisationAddress %}
+    <div style="font-size: 10pt;">{{ school.organisationAddress }}</div>
+    {% endif %}
+    {% if school.organisationPhone %}
+    <div style="font-size: 10pt;">{{ __('Phone') }}: {{ school.organisationPhone }}</div>
+    {% endif %}
+    {% if school.organisationEmail %}
+    <div style="font-size: 10pt;">{{ __('Email') }}: {{ school.organisationEmail }}</div>
+    {% endif %}
+    <div class="transcript-title">{{ __('Official Academic Transcript') }}</div>
+</div>
+
+{# Student Information #}
+<table class="student-info-table" cellspacing="0" cellpadding="0">
+    <tr>
+        <td class="student-info-cell info-label">{{ __('Student Name') }}:</td>
+        <td class="student-info-cell">{{ student.fullName }}</td>
+        <td class="student-info-cell info-label">{{ __('Student ID') }}:</td>
+        <td class="student-info-cell">{{ student.studentID }}</td>
+    </tr>
+    <tr>
+        <td class="student-info-cell info-label">{{ __('Date of Birth') }}:</td>
+        <td class="student-info-cell">{{ student.dob ? student.dob|date('F j, Y') : '' }}</td>
+        <td class="student-info-cell info-label">{{ __('Gender') }}:</td>
+        <td class="student-info-cell">{{ student.gender }}</td>
+    </tr>
+    <tr>
+        <td class="student-info-cell info-label">{{ __('Year Group') }}:</td>
+        <td class="student-info-cell">{{ student.yearGroupName }}</td>
+        <td class="student-info-cell info-label">{{ __('Form Group') }}:</td>
+        <td class="student-info-cell">{{ student.formGroupName }}</td>
+    </tr>
+    <tr>
+        <td class="student-info-cell info-label">{{ __('Date Generated') }}:</td>
+        <td class="student-info-cell">{{ "now"|date('F j, Y') }}</td>
+        <td class="student-info-cell info-label">{{ __('Academic Status') }}:</td>
+        <td class="student-info-cell">{{ student.status }}</td>
+    </tr>
+</table>
+
+{# Academic Records by Year #}
+{% set totalCreditsAttempted = 0 %}
+{% set totalCreditsEarned = 0 %}
+{% set totalGradePoints = 0 %}
+{% set totalCoursesCompleted = 0 %}
+
+{% for year in transcript %}
+<div class="academic-year-header">
+    {{ year.schoolYearName }} ({{ year.yearGroupName }})
+</div>
+
+    {% for term in year.terms %}
+    <div class="term-header">
+        {{ term.termName }} - {{ term.firstDay|date('M j') }} to {{ term.lastDay|date('M j, Y') }}
+    </div>
+    
+    <table class="course-table" cellspacing="0" cellpadding="0">
+        <thead>
+            <tr>
+                <td class="course-header" style="width: 26%;">{{ __('Course') }}</td>
+                <td class="course-header" style="width: 12%;">{{ __('Course Code') }}</td>
+                <td class="course-header" style="width: 8%;">{{ __('Credits') }}</td>
+                <td class="course-header" style="width: 11%;">{{ __('Percentage') }}</td>
+                <td class="course-header" style="width: 9%;">{{ __('Grade') }}</td>
+                <td class="course-header" style="width: 9%;">{{ __('GPA') }}</td>
+                <td class="course-header" style="width: 25%;">{{ __('Teacher') }}</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in term.courses %}
+            <tr>
+                <td class="course-data" style="width: 26%; text-align: left;">{{ course.courseName }}</td>
+                <td class="course-data" style="width: 12%;">{{ course.courseCode }}</td>
+                <td class="course-data" style="width: 8%;">{{ course.creditHours|number_format(1) }}</td>
+                <td class="course-data" style="width: 11%;">
+                    {% if course.avgPercentage is not same as(null) %}
+                        {{ course.avgPercentage|number_format(1) }}%
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="course-data" style="width: 9%;">
+                    {% if course.hasFinalGrade %}
+                        <strong>{{ course.finalGrade }}</strong>
+                    {% elseif course.status %}
+                        <em>{{ course.status }}</em>
+                    {% else %}
+                        <em>{{ __('In Progress') }}</em>
+                    {% endif %}
+                </td>
+                <td class="course-data" style="width: 9%;">
+                    {% if course.hasFinalGrade and course.gpaPoints is not same as(null) %}
+                        {{ course.gpaPoints|number_format(2) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="course-data" style="width: 25%; text-align: left;">{{ course.teacherName }}</td>
+            </tr>
+            {% if course.creditHours is not same as(null) %}
+                {% set totalCreditsAttempted = totalCreditsAttempted + course.creditHours %}
+            {% endif %}
+            {% if course.hasFinalGrade and course.creditHours is not same as(null) %}
+                {% set totalCreditsEarned = totalCreditsEarned + course.creditHours %}
+                {% if course.gpaPoints is not same as(null) %}
+                    {% set totalGradePoints = totalGradePoints + (course.gpaPoints * course.creditHours) %}
+                {% endif %}
+                {% set totalCoursesCompleted = totalCoursesCompleted + 1 %}
+            {% endif %}
+            {% endfor %}
+            
+            {% if term.courses|length == 0 %}
+            <tr>
+                <td colspan="7" class="course-data" style="text-align: center; font-style: italic;">
+                    {{ __('No courses recorded for this term') }}
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+        {# Term Summary as table footer #}
+        {% set termCreditsAttempted = 0 %}
+        {% set termCreditsEarned = 0 %}
+        {% set termGradePoints = 0 %}
+        {% for course in term.courses %}
+            {% if course.creditHours is not same as(null) %}
+                {% set termCreditsAttempted = termCreditsAttempted + course.creditHours %}
+            {% endif %}
+            {% if course.hasFinalGrade and course.creditHours is not same as(null) %}
+                {% set termCreditsEarned = termCreditsEarned + course.creditHours %}
+                {% if course.gpaPoints is not same as(null) %}
+                    {% set termGradePoints = termGradePoints + (course.gpaPoints * course.creditHours) %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% if termCreditsAttempted > 0 %}
+        <tfoot>
+            <tr>
+                <td colspan="7" style="background-color: #f1f5f9; padding: 5px 8px; font-size: 9pt; text-align: right; border: 1px solid #000; border-top: 2px solid #000;">
+                    <strong>{{ term.termName }} {{ __('Summary') }}:</strong>
+                    {{ __('Credits Attempted') }}: {{ termCreditsAttempted|number_format(1) }} |
+                    {% if termCreditsEarned > 0 %}
+                        {{ __('Term GPA') }}: {{ (termGradePoints / termCreditsEarned)|number_format(2) }}
+                    {% else %}
+                        {{ __('Term GPA') }}: {{ __('N/A') }}
+                    {% endif %}
+                </td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+    
+    {% endfor %}
+
+{% endfor %}
+
+{# Overall GPA Summary #}
+<div class="gpa-summary">
+    <div class="gpa-title">{{ __('Academic Summary') }}</div>
+    <table style="width: 100%; font-size: 9pt; margin-top: 3px;" cellspacing="0" cellpadding="0">
+        <tr>
+            <td style="width: 32%; padding: 2px 0;"><strong>{{ __('Total Credits Attempted') }}:</strong></td>
+            <td style="width: 13%; padding: 2px 5px 2px 0; text-align: right;">{{ totalCreditsAttempted|number_format(1) }}</td>
+            <td style="width: 5%;"></td>
+            <td style="width: 32%; padding: 2px 0;"><strong>{{ __('Cumulative GPA') }}:</strong></td>
+            <td style="width: 18%; padding: 2px 0; text-align: right;">
+                {% if totalCreditsEarned > 0 %}
+                    <strong>{{ (totalGradePoints / totalCreditsEarned)|number_format(2) }}</strong>
+                {% else %}
+                    {{ __('N/A') }}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 2px 0;"><strong>{{ __('Total Credits Earned') }}:</strong></td>
+            <td style="padding: 2px 5px 2px 0; text-align: right;">{{ totalCreditsEarned|number_format(1) }}</td>
+            <td></td>
+            <td style="padding: 2px 0;"><strong>{{ __('Courses Completed') }}:</strong></td>
+            <td style="padding: 2px 0; text-align: right;">{{ totalCoursesCompleted }}</td>
+        </tr>
+    </table>
+</div>
+
+{# Grade Scale Reference #}
+<div class="grade-scale">
+    <div class="grade-scale-title">{{ __('Grade Scale') }}</div>
+    <table style="width: 60%; font-size: 8pt;" cellspacing="0" cellpadding="3">
+        <tr style="background-color: #f1f5f9;">
+            <td style="border: 1px solid #000; padding: 3px; font-weight: bold;">{{ __('Grade') }}</td>
+            <td style="border: 1px solid #000; padding: 3px; font-weight: bold;">{{ __('GPA Points') }}</td>
+            <td style="border: 1px solid #000; padding: 3px; font-weight: bold;">{{ __('Description') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">A+</td>
+            <td style="border: 1px solid #000; padding: 3px;">4.00</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Excellent') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">A</td>
+            <td style="border: 1px solid #000; padding: 3px;">4.00</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Excellent') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">A-</td>
+            <td style="border: 1px solid #000; padding: 3px;">3.70</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Very Good') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">B+</td>
+            <td style="border: 1px solid #000; padding: 3px;">3.30</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Good') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">B</td>
+            <td style="border: 1px solid #000; padding: 3px;">3.00</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Good') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">B-</td>
+            <td style="border: 1px solid #000; padding: 3px;">2.70</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Satisfactory') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">C+</td>
+            <td style="border: 1px solid #000; padding: 3px;">2.30</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Satisfactory') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">C</td>
+            <td style="border: 1px solid #000; padding: 3px;">2.00</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Acceptable') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">C-</td>
+            <td style="border: 1px solid #000; padding: 3px;">1.70</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Needs Improvement') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">D</td>
+            <td style="border: 1px solid #000; padding: 3px;">1.00</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Poor') }}</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000; padding: 3px;">F</td>
+            <td style="border: 1px solid #000; padding: 3px;">0.00</td>
+            <td style="border: 1px solid #000; padding: 3px;">{{ __('Failure') }}</td>
+        </tr>
+    </table>
+</div>
+
+{# Signature Section #}
+<div class="signature-section">
+    <div class="signature-box">
+        <div class="signature-line"></div>
+        <div style="font-size: 9pt;">{{ __('Registrar Signature') }}</div>
+        <div style="font-size: 8pt; margin-top: 5px;">{{ __('Date') }}: ________________</div>
+    </div>
+    <div class="signature-box">
+        <div class="signature-line"></div>
+        <div style="font-size: 9pt;">{{ __('Principal Signature') }}</div>
+        <div style="font-size: 8pt; margin-top: 5px;">{{ __('Date') }}: ________________</div>
+    </div>
+</div>
+
+{# Footer Note #}
+<div style="margin-top: 30px; font-size: 8pt; text-align: center; border-top: 1px solid #000; padding-top: 10px;">
+    <em>{{ __('This is an official transcript generated by') }} {{ school.organisationName }}. {{ __('Any alterations to this document render it invalid.') }}</em>
+</div>

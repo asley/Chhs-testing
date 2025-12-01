@@ -20,6 +20,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Http\Url;
+use Gibbon\Data\Validator;
+use Gibbon\Session\TokenHandler;
+use Gibbon\Services\ModuleLoader;
 
 // Handle fatal errors more gracefully
 register_shutdown_function(function () {
@@ -46,7 +49,7 @@ require_once __DIR__.'/functions.php';
 // Core Services
 $container = new League\Container\Container();
 $container->delegate(new League\Container\ReflectionContainer);
-$container->add('autoloader', $autoloader);
+$container->share('autoloader', $autoloader);
 
 $container->inflector(\League\Container\ContainerAwareInterface::class)
           ->invokeMethod('setContainer', [$container]);
@@ -138,10 +141,30 @@ if ($gibbon->isInstalled() && $session->has('absoluteURL')) {
 
 // Autoload the current module namespace
 if (!empty($session->get('module'))) {
-    $moduleNamespace = preg_replace('/[^a-zA-Z0-9]/', '', $session->get('module'));
-    $autoloader->addPsr4('Gibbon\\Module\\'.$moduleNamespace.'\\', realpath(__DIR__).'/modules/'.$session->get('module').'/src');
-    $autoloader->register(true);
+    $container->get(ModuleLoader::class)->registerModuleNamespace($session->get('module'));
 }
 
 // Sanitize incoming user-supplied GET variables
-$_GET = $container->get(\Gibbon\Data\Validator::class)->sanitizeUrlParams($_GET);
+$validator = $container->get(Validator::class);
+$_GET = $validator->sanitizeUrlParams($_GET);
+$tokenHandler = $container->get(TokenHandler::class);
+
+// Check for CSRF token and nonce when posting any form
+if (!empty($_POST) && count($_POST) > 1 && stripos($_SERVER['PHP_SELF'], 'Process.php') !== false) {
+    
+    // Validate CSRF token
+    if (!$tokenHandler->validateCsrfToken()) {
+        $URL = $_SERVER['HTTP_REFERER'].'&return=error9';
+        header("Location: {$URL}");
+        exit;
+    }
+
+    // Validate nonce
+    if (!$tokenHandler->validateNonce()) {
+        $URL = $_SERVER['HTTP_REFERER'].'&return=error10';
+        header("Location: {$URL}");
+        exit;
+    }
+}
+
+

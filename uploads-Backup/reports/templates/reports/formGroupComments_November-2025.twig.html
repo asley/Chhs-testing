@@ -1,0 +1,118 @@
+{#<!--
+name: CHHS Form Group Comments 2025
+category: Reporting Cycle
+types: Body
+icon: comment-alt.svg
+sources:
+    tutors: Tutors
+    formGroupCriteria: FormGroupCriteria
+    student: Student
+-->#}
+{{- stylesheet ? include(stylesheet) -}}
+
+{%- set criteriaList = []|merge(formGroupCriteria.perGroup|default([]))|merge(formGroupCriteria.perStudent|default([])) -%}
+{%- set skipIndices = [] -%}
+{%- for criteria in criteriaList -%}
+    {%- if loop.index0 not in skipIndices -%}
+<table class="w-full table" cellspacing="0" cellpadding="0" nobr="true" style="padding: 0;">
+    {% if criteria.valueType in ['Comment', 'Select', 'Grade Scale'] %}
+    <tr>
+        <td class="w-full header" style="line-height:1.8;font-size: 12pt; font-weight: bold;" colspan="2">
+            {{- criteria.criteriaName -}}
+        </td>
+    </tr>
+    <tr><td style="font-size: 4px;">&nbsp;</td></tr>
+    <tr>
+        <td class="w-full" style="font-size: 10pt" colspan="2">
+            {%- set baseText = '' -%}
+            {%- set extraText = '' -%}
+            {%- if criteria.valueType == 'Grade Scale' -%}
+                {%- set baseText = criteria.descriptor|default(criteria.value|default(''))|trim -%}
+                {%- set extraText = criteria.comment|default('')|trim -%}
+                {%- set nextIndex = loop.index0 + 1 -%}
+                {%- set nextCriteria = criteriaList[nextIndex]|default(false) -%}
+                {%- if nextCriteria and nextCriteria.valueType == 'Comment' -%}
+                    {%- set appended = nextCriteria.comment|default('')|trim -%}
+                    {%- if appended != '' -%}
+                        {%- set extraText = extraText ? extraText ~ ' ' ~ appended : appended -%}
+                    {%- endif -%}
+                    {%- set skipIndices = skipIndices|merge([nextIndex]) -%}
+                {%- endif -%}
+            {%- elseif criteria.valueType == 'Select' -%}
+                {%- set baseText = criteria.value|default('')|trim -%}
+                {%- set extraText = criteria.comment|default('')|trim -%}
+                {%- set nextIndex = loop.index0 + 1 -%}
+                {%- set nextCriteria = criteriaList[nextIndex]|default(false) -%}
+                {%- if nextCriteria and nextCriteria.valueType == 'Comment' -%}
+                    {%- set appended = nextCriteria.comment|default('')|trim -%}
+                    {%- if appended != '' -%}
+                        {%- set extraText = extraText ? extraText ~ ' ' ~ appended : appended -%}
+                    {%- endif -%}
+                    {%- set skipIndices = skipIndices|merge([nextIndex]) -%}
+                {%- endif -%}
+            {%- else -%}
+                {%- set baseText = criteria.comment|default('')|trim -%}
+                {%- if baseText == '' and criteria.descriptor is defined -%}
+                    {%- set baseText = criteria.descriptor|trim -%}
+                {%- endif -%}
+            {%- endif -%}
+            {%- set displayText = baseText -%}
+            {%- if extraText != '' -%}
+                {%- set displayText = displayText ? displayText ~ ' ' ~ extraText : extraText -%}
+            {%- endif -%}
+            {# Replace placeholders with actual student data based on gender #}
+            {%- if student.gender == 'M' -%}
+                {%- set displayText = displayText|replace({
+                    '{name}': student.preferredName,
+                    '{Name}': student.preferredName,
+                    '{he}': 'he',
+                    '{He}': 'He',
+                    '{she}': 'he',
+                    '{She}': 'He',
+                    '{his}': 'his',
+                    '{His}': 'His',
+                    '{her}': 'his',
+                    '{Her}': 'His',
+                    '{him}': 'him',
+                    '{Him}': 'Him',
+                    '{himself}': 'himself',
+                    '{Himself}': 'Himself',
+                    '{herself}': 'himself',
+                    '{Herself}': 'Himself'
+                }) -%}
+            {%- else -%}
+                {%- set displayText = displayText|replace({
+                    '{name}': student.preferredName,
+                    '{Name}': student.preferredName,
+                    '{he}': 'she',
+                    '{He}': 'She',
+                    '{she}': 'she',
+                    '{She}': 'She',
+                    '{his}': 'her',
+                    '{His}': 'Her',
+                    '{her}': 'her',
+                    '{Her}': 'Her',
+                    '{him}': 'her',
+                    '{Him}': 'Her',
+                    '{himself}': 'herself',
+                    '{Himself}': 'Herself',
+                    '{herself}': 'herself',
+                    '{Herself}': 'Herself'
+                }) -%}
+            {%- endif -%}
+            "{{- displayText -}}" –&nbsp;
+            <b>
+            {%- for tutor in tutors -%}
+                {{ tutor.title }}&nbsp;{{ tutor.preferredName|first }}.&nbsp;{{ tutor.surname }}
+                {{ not loop.last ? ', ' }}
+            {%- endfor -%}</b>
+        </td>
+    </tr>
+    {% endif %}
+</table>
+{% if not loop.last %}
+    <table cellspacing="0" cellpadding="6"><tr><td style="font-size: 1px;">&nbsp;</td></tr></table>
+{% endif %}
+    {%- endif -%}
+{%- endfor -%}
+<br/>

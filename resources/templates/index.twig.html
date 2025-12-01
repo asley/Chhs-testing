@@ -18,7 +18,7 @@ TODO: add template variable details.
         {% endblock head %}
     </head>
     <body x-data="{ modalOpen: false, modalType: 'none', globalShowHide: false }"
-        class="h-full flex flex-col font-sans {{ bodyBackground  ? '' : 'body-gradient-' ~ themeColour|lower }}" style="{{ bodyBackground  ? bodyBackground : '' }} {{ themeColour is empty ? 'background: linear-gradient(to left top, #402568 2%, #935ee1 65%, #a871ec) no-repeat fixed' : '' }}">
+        class="h-full flex flex-col font-sans {{ bodyBackground  ? '' : 'body-gradient-' ~ themeColour|lower }}" style="{{ bodyBackground  ? bodyBackground : '' }} {{ themeColour is empty ? 'background: linear-gradient(to left top, #402568 2%, #935ee1 65%, #a871ec) no-repeat fixed' : '' }}" @modalwindow="modalType=$event.detail; modalOpen = true">
         <a id="top"></a>
         {% set sidebarPos = isLoggedIn ? 'left' : 'right' %}
 
@@ -34,7 +34,7 @@ TODO: add template variable details.
                     <div class="flex-grow flex items-center justify-end text-right text-sm text-{{ themeColour }}-200">
                         {% if isLoggedIn and currentUser %}
 
-                        <a href="{{ currentUser.url ?? './index.php?q=/preferences.phpe' }}" class="hidden sm:block text-{{ themeColour }}-200 hover:text-white">
+                        <a href="{{ currentUser.url ?? './index.php?q=/preferences.php' }}" class="hidden sm:block text-{{ themeColour }}-200 hover:text-white">
                             {{ currentUser.name }}
                         </a>
 
