@@ -1077,3 +1077,26 @@ table.smallIntBorder td.noPadding {
 .standardForm:not(.blank) .formRow:not(:last-child)  {
     border-bottom-width: 1px;
 }
+
+/* ===================================
+   Custom Top Navigation - Red Hover
+   Added: 2025-11-30
+   Target: Horizontal top menu only (HOME, DASHBOARD, ADMIN, etc.)
+   =================================== */
+
+/* Target the horizontal top navigation bar including HOME */
+header nav > ul > li:hover,
+header nav > ul > li:focus-within,
+header > nav > ul > li:hover,
+header > nav > ul > li:focus-within,
+nav.relative > ul > li:hover,
+nav.relative > ul > li:focus-within {
+    background-color: #dc2626 !important;
+}
+
+/* Keep text white on red hover */
+header nav > ul > li:hover > a,
+header > nav > ul > li:hover > a,
+nav.relative > ul > li:hover > a {
+    color: white !important;
+}

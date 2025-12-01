@@ -1,0 +1,47 @@
+/**
+ * Custom CSS Overrides for Gibbon v30
+ * Navigation Menu - Red Hover Effect
+ */
+
+/* Main navigation menu hover - change from grey to red */
+nav .list-none > li:hover,
+nav .list-none > li:focus-within {
+    background-color: #dc2626 !important; /* Tailwind red-600 */
+}
+
+/* Dropdown submenu items hover - red background */
+nav .list-none > li > ul > li:hover,
+nav .list-none > li > ul > li:focus-within {
+    background-color: #dc2626 !important; /* Red */
+}
+
+/* Alternative selectors for menu hover */
+.menuBar > li:hover,
+.menuBar > li:focus-within {
+    background-color: #dc2626 !important;
+}
+
+/* Dropdown menu hover */
+.menuBar ul li:hover,
+.menuBar ul li:focus-within {
+    background-color: #dc2626 !important;
+}
+
+/* Top navigation bar items */
+header nav > ul > li:hover,
+header nav > ul > li:focus-within {
+    background-color: #dc2626 !important;
+}
+
+/* Submenu items */
+header nav > ul > li > ul > li:hover,
+header nav > ul > li > ul > li > a:hover {
+    background-color: #dc2626 !important;
+    color: white !important;
+}
+
+/* Ensure text stays white on hover */
+nav .list-none > li:hover > a,
+nav .list-none > li > ul > li:hover > a {
+    color: white !important;
+}
