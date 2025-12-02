@@ -99,4 +99,25 @@ $actionRows[] = [
     'categoryPermissionStudent' => 'N',
     'categoryPermissionParent' => 'N',
     'categoryPermissionOther' => 'N'
+];
+
+// Add Broadsheet Export action
+$actionRows[] = [
+    'name' => 'Broadsheet Export',
+    'precedence' => '3',
+    'category' => 'Reports',
+    'description' => 'Export comprehensive grade broadsheet showing all students and their grades across all subjects in CSV format.',
+    'URLList' => 'broadsheetExport.php',
+    'entryURL' => 'broadsheetExport.php',
+    'entrySidebar' => 'Y',
+    'menuShow' => 'Y',
+    'defaultPermissionAdmin' => 'Y',
+    'defaultPermissionTeacher' => 'Y',
+    'defaultPermissionStudent' => 'N',
+    'defaultPermissionParent' => 'N',
+    'defaultPermissionSupport' => 'N',
+    'categoryPermissionStaff' => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent' => 'N',
+    'categoryPermissionOther' => 'N'
 ]; 

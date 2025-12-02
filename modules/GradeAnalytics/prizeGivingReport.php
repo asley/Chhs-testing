@@ -19,7 +19,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Tables\DataTable;
 use Gibbon\Module\GradeAnalytics\GradeAnalyticsGateway;
 
 // Module includes
@@ -159,38 +158,69 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
             echo '</a>';
             echo '</div>';
 
-            // Build data table
-            $table = DataTable::createDetails('prizeGivingReport');
-            $table->addColumn('studentName', __('Student Name'))
-                  ->format(function($row) {
-                      return Format::name('', $row['preferredName'], $row['surname'], 'Student', true);
-                  });
-            $table->addColumn('formGroup', __('Form Group'));
-            $table->addColumn('courseName', __('Subject'));
-            $table->addColumn('assessmentName', __('Assessment'));
-            $table->addColumn('grade', __('Grade'))
-                  ->format(function($row) {
-                      $grade = $row['grade'];
-                      if (is_numeric($grade)) {
-                          return number_format($grade, 2) . '%';
-                      }
-                      return $grade;
-                  });
+            // Build data table with plain HTML for better control
+            echo '<div class="overflow-x-auto">';
+            echo '<table class="fullWidth colorOddEven" cellspacing="0" id="prizeGivingReportTable">';
+            echo '<thead>';
+            echo '<tr>';
+            echo '<th style="width: 25%;">'.__('Student Name').'</th>';
+            echo '<th style="width: 15%;">'.__('Form Group').'</th>';
+            echo '<th style="width: 20%;">'.__('Subject').'</th>';
+            echo '<th style="width: 20%;">'.__('Assessment').'</th>';
+            echo '<th style="width: 20%; text-align: center;">'.__('Grade').'</th>';
+            echo '</tr>';
+            echo '</thead>';
+            echo '<tbody>';
 
-            echo $table->render($students->toDataSet());
+            foreach ($students as $student) {
+                // Build student link to Internal Assessment page
+                $studentLink = $session->get('absoluteURL').'/index.php?q=/modules/Students/student_view_details.php';
+                $studentLink .= '&gibbonPersonID='.$student['gibbonPersonID'];
+                $studentLink .= '&search=&allStudents=&subpage=Internal%20Assessment';
+
+                // Format grade with color coding
+                $grade = $student['grade'];
+                $gradeDisplay = $grade;
+                $color = '';
+
+                if (is_numeric($grade)) {
+                    $gradeDisplay = number_format($grade, 2) . '%';
+                    if ($grade >= 85) {
+                        $color = 'color: #2ecc71; font-weight: bold;';
+                    } elseif ($grade >= 70) {
+                        $color = 'color: #3498db; font-weight: bold;';
+                    } elseif ($grade >= 55) {
+                        $color = 'color: #f39c12; font-weight: bold;';
+                    } else {
+                        $color = 'color: #e74c3c; font-weight: bold;';
+                    }
+                }
+
+                echo '<tr>';
+                echo '<td><a href="'.$studentLink.'">'.Format::name('', $student['preferredName'], $student['surname'], 'Student', true).'</a></td>';
+                echo '<td>'.htmlspecialchars($student['formGroup']).'</td>';
+                echo '<td>'.htmlspecialchars($student['courseName']).'</td>';
+                echo '<td>'.htmlspecialchars($student['assessmentName']).'</td>';
+                echo '<td style="text-align: center;"><span style="'.$color.' font-size: 1.1em;">'.$gradeDisplay.'</span></td>';
+                echo '</tr>';
+            }
+
+            echo '</tbody>';
+            echo '</table>';
+            echo '</div>';
 
             // Add CSV export button
             echo '<div class="linkTop" style="margin-top: 20px;">';
-            echo '<a href="#" onclick="exportTableToCSV(\'prize-giving-report.csv\')" class="button">';
+            echo '<a href="#" onclick="exportPrizeGivingToCSV(); return false;" class="button">';
             echo __('Export to CSV');
             echo '</a>';
             echo '</div>';
 
             // Add JavaScript for CSV export
             echo '<script>
-            function exportTableToCSV(filename) {
+            function exportPrizeGivingToCSV() {
                 var csv = [];
-                var rows = document.querySelectorAll("#prizeGivingReport tr");
+                var rows = document.querySelectorAll("#prizeGivingReportTable tr");
 
                 for (var i = 0; i < rows.length; i++) {
                     var row = [];
@@ -198,7 +228,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
 
                     for (var j = 0; j < cols.length; j++) {
                         var text = cols[j].innerText || "";
-                        text = text.replace(/"/g, \'""\'); // Escape quotes
+                        text = text.replace(/"/g, \'"\' + \'"\'); // Escape quotes
                         row.push(\'"\' + text + \'"\');
                     }
 
@@ -206,15 +236,16 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
                 }
 
                 var csvContent = csv.join("\\n");
-                var blob = new Blob([csvContent], {type: "text/csv"});
+                var blob = new Blob([csvContent], {type: "text/csv;charset=utf-8;"});
                 var url = window.URL.createObjectURL(blob);
                 var downloadLink = document.createElement("a");
                 downloadLink.href = url;
-                downloadLink.download = filename;
+                downloadLink.download = "prize-giving-report.csv";
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 document.body.removeChild(downloadLink);
                 window.URL.revokeObjectURL(url);
+                return false;
             }
             </script>';
         } else {

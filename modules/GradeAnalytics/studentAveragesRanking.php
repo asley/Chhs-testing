@@ -194,7 +194,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
 
         // Add CSV export button
         echo '<div class="linkTop" style="margin-top: 20px;">';
-        echo '<a href="#" onclick="exportTableToCSV(\'student-averages-ranking.csv\')" class="button">';
+        echo '<a href="#" onclick="exportStudentAveragesToCSV(); return false;" class="button">';
         echo __('Export to CSV');
         echo '</a>';
         echo '</div>';
@@ -296,7 +296,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         const studentRankingChart = new Chart(ctx, config);
 
         // CSV Export function
-        function exportTableToCSV(filename) {
+        function exportStudentAveragesToCSV() {
             var csv = [];
             var rows = document.querySelectorAll("#studentAveragesRankingTable tr");
 
@@ -306,7 +306,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
 
                 for (var j = 0; j < cols.length; j++) {
                     var text = cols[j].innerText || "";
-                    text = text.replace(/"/g, \'"\'); // Escape quotes
+                    text = text.replace(/"/g, \'"\' + \'"\'); // Escape quotes
                     row.push(\'"\' + text + \'"\');
                 }
 
@@ -314,15 +314,16 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             }
 
             var csvContent = csv.join("\\n");
-            var blob = new Blob([csvContent], {type: "text/csv"});
+            var blob = new Blob([csvContent], {type: "text/csv;charset=utf-8;"});
             var url = window.URL.createObjectURL(blob);
             var downloadLink = document.createElement("a");
             downloadLink.href = url;
-            downloadLink.download = filename;
+            downloadLink.download = "student-averages-ranking.csv";
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
             window.URL.revokeObjectURL(url);
+            return false;
         }
         </script>';
     } else {

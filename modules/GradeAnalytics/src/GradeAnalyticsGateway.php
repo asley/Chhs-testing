@@ -310,6 +310,7 @@ class GradeAnalyticsGateway extends QueryableGateway
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
 
         $sql = "SELECT DISTINCT
+                s.gibbonPersonID,
                 s.preferredName,
                 s.surname,
                 fg.name as formGroup,
@@ -394,7 +395,20 @@ class GradeAnalyticsGateway extends QueryableGateway
             $data['gradeThreshold'] = $threshold;
         }
 
-        $sql .= " ORDER BY s.surname, s.preferredName, c.name";
+        $sql .= " ORDER BY
+            CASE
+                WHEN me.attainmentValue REGEXP '^[0-9]+(\\.[0-9]+)?%?$' THEN
+                    CAST(REPLACE(REPLACE(me.attainmentValue, '%', ''), ' ', '') AS DECIMAL(10,2))
+                WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 90
+                WHEN me.attainmentValue IN ('B+', 'b+') THEN 75
+                WHEN me.attainmentValue IN ('B', 'b') THEN 70
+                WHEN me.attainmentValue IN ('C+', 'c+') THEN 65
+                WHEN me.attainmentValue IN ('C', 'c') THEN 55
+                WHEN me.attainmentValue IN ('D+', 'd+') THEN 50
+                WHEN me.attainmentValue IN ('D', 'd') THEN 40
+                WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 30
+                ELSE 0
+            END DESC, s.surname, s.preferredName";
 
         return $this->db()->select($sql, $data);
     }
@@ -508,5 +522,116 @@ class GradeAnalyticsGateway extends QueryableGateway
             ORDER BY c.name, iac.name";
 
         return $this->db()->select($sql, $data);
+    }
+
+    /**
+     * Get broadsheet data - all students with their grades across all courses
+     */
+    public function selectBroadsheetData($gibbonSchoolYearID, $filters = [])
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+
+        // Build the WHERE clause
+        $whereConditions = [
+            "s.status = 'Full'",
+            "ccp.role = 'Student'",
+            "se.gibbonSchoolYearID = :gibbonSchoolYearID",
+            "c.gibbonSchoolYearID = :gibbonSchoolYearID",
+            "me.attainmentValue IS NOT NULL",
+            "TRIM(me.attainmentValue) != ''"
+        ];
+
+        if (!empty($filters['formGroupID'])) {
+            $whereConditions[] = "fg.gibbonFormGroupID = :formGroupID";
+            $data['formGroupID'] = $filters['formGroupID'];
+        }
+
+        if (!empty($filters['yearGroup'])) {
+            $whereConditions[] = "se.gibbonYearGroupID = :yearGroup";
+            $data['yearGroup'] = $filters['yearGroup'];
+        }
+
+        if (!empty($filters['teacherID'])) {
+            $whereConditions[] = "ct.gibbonPersonID = :teacherID";
+            $data['teacherID'] = $filters['teacherID'];
+        }
+
+        if (!empty($filters['assessmentType'])) {
+            $whereConditions[] = "iac.type = :assessmentType";
+            $data['assessmentType'] = $filters['assessmentType'];
+        }
+
+        if (!empty($filters['assessmentName'])) {
+            $whereConditions[] = "iac.name = :assessmentName";
+            $data['assessmentName'] = $filters['assessmentName'];
+        }
+
+        $whereClause = implode(' AND ', $whereConditions);
+
+        $sql = "SELECT
+                s.gibbonPersonID,
+                s.preferredName,
+                s.surname,
+                fg.name as formGroup,
+                yg.name as yearGroup,
+                c.name as courseName,
+                CAST(
+                    REPLACE(REPLACE(me.attainmentValue, '%', ''), ' ', '')
+                    AS DECIMAL(10,2)
+                ) as grade
+            FROM gibbonPerson s
+            JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = s.gibbonPersonID
+            JOIN gibbonFormGroup fg ON fg.gibbonFormGroupID = se.gibbonFormGroupID
+            JOIN gibbonYearGroup yg ON yg.gibbonYearGroupID = se.gibbonYearGroupID
+            JOIN gibbonCourseClassPerson ccp ON ccp.gibbonPersonID = s.gibbonPersonID
+            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
+            LEFT JOIN gibbonCourseClassPerson ct ON ct.gibbonCourseClassID = cc.gibbonCourseClassID AND ct.role = 'Teacher'
+            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
+            JOIN gibbonInternalAssessmentEntry me ON me.gibbonPersonIDStudent = s.gibbonPersonID
+                AND me.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
+            WHERE {$whereClause}
+            ORDER BY s.surname, s.preferredName, c.name";
+
+        $results = $this->db()->select($sql, $data);
+
+        // Process results into broadsheet format
+        $broadsheet = [];
+        $studentData = [];
+
+        foreach ($results as $row) {
+            $studentKey = $row['gibbonPersonID'];
+
+            if (!isset($studentData[$studentKey])) {
+                $studentData[$studentKey] = [
+                    'gibbonPersonID' => $row['gibbonPersonID'],
+                    'preferredName' => $row['preferredName'],
+                    'surname' => $row['surname'],
+                    'formGroup' => $row['formGroup'],
+                    'yearGroup' => $row['yearGroup'],
+                    'courses' => [],
+                    'grades' => []
+                ];
+            }
+
+            $studentData[$studentKey]['courses'][$row['courseName']] = $row['grade'];
+            $studentData[$studentKey]['grades'][] = $row['grade'];
+        }
+
+        // Calculate averages and prepare final data
+        foreach ($studentData as $student) {
+            if (!empty($student['grades'])) {
+                $average = array_sum($student['grades']) / count($student['grades']);
+                $student['average'] = $average;
+                $broadsheet[] = $student;
+            }
+        }
+
+        // Sort by average descending
+        usort($broadsheet, function($a, $b) {
+            return $b['average'] <=> $a['average'];
+        });
+
+        return $broadsheet;
     }
 }
