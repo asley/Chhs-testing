@@ -42,7 +42,10 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     echo '</p>';
 
     // Get URL parameters
-    $formGroupID = $_GET['formGroupID'] ?? '';
+    $formGroupID = $_GET['formGroupID'] ?? [];
+    if (!is_array($formGroupID)) {
+        $formGroupID = !empty($formGroupID) ? [$formGroupID] : [];
+    }
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
     $assessmentName = $_GET['assessmentName'] ?? '';
@@ -58,12 +61,14 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     $form->addHiddenValue('q', '/modules/GradeAnalytics/studentAveragesRanking.php');
 
     $row = $form->addRow();
-        $row->addLabel('formGroupID', __('Form Group'));
+        $row->addLabel('formGroupID', __('Form Group'))->description(__('Hold Ctrl/Cmd to select multiple'));
         $formGroups = $gateway->selectFormGroups($gibbonSchoolYearID)->fetchKeyPair();
         $row->addSelect('formGroupID')
             ->fromArray($formGroups)
-            ->placeholder(__('All Form Groups'))
-            ->selected($formGroupID);
+            ->selectMultiple()
+            ->setSize(8)
+            ->selected($formGroupID)
+            ->placeholder();
 
     $row = $form->addRow();
         $row->addLabel('yearGroup', __('Year Group'));

@@ -29,7 +29,10 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     echo "</div>";
 } else {
     // Get URL parameters
-    $formGroupID = $_GET['formGroupID'] ?? '';
+    $formGroupID = $_GET['formGroupID'] ?? [];
+    if (!is_array($formGroupID)) {
+        $formGroupID = !empty($formGroupID) ? [$formGroupID] : [];
+    }
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
     $assessmentName = $_GET['assessmentName'] ?? '';
@@ -58,7 +61,14 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         echo '<p><strong>Filters Applied:</strong><br/>';
         if (!empty($formGroupID)) {
             $formGroups = $gateway->selectFormGroups($gibbonSchoolYearID)->fetchKeyPair();
-            echo 'Form Group: ' . ($formGroups[$formGroupID] ?? 'N/A') . '<br/>';
+            if (is_array($formGroupID)) {
+                $selectedGroups = array_map(function($id) use ($formGroups) {
+                    return $formGroups[$id] ?? 'N/A';
+                }, $formGroupID);
+                echo 'Form Groups: ' . implode(', ', $selectedGroups) . '<br/>';
+            } else {
+                echo 'Form Group: ' . ($formGroups[$formGroupID] ?? 'N/A') . '<br/>';
+            }
         }
         if (!empty($yearGroup)) {
             $yearGroups = $gateway->selectYearGroups($gibbonSchoolYearID)->fetchKeyPair();

@@ -253,8 +253,17 @@ class GradeAnalyticsGateway extends QueryableGateway
         }
 
         if (!empty($filters['formGroupID'])) {
-            $query->where('fg.gibbonFormGroupID = :formGroupID')
-                  ->bindValue('formGroupID', $filters['formGroupID']);
+            if (is_array($filters['formGroupID'])) {
+                $placeholders = [];
+                foreach ($filters['formGroupID'] as $index => $id) {
+                    $placeholders[] = ":formGroupID{$index}";
+                    $query->bindValue("formGroupID{$index}", $id);
+                }
+                $query->where('fg.gibbonFormGroupID IN ('.implode(',', $placeholders).')');
+            } else {
+                $query->where('fg.gibbonFormGroupID = :formGroupID')
+                      ->bindValue('formGroupID', $filters['formGroupID']);
+            }
         }
 
         if (!empty($filters['yearGroup'])) {
@@ -429,8 +438,18 @@ class GradeAnalyticsGateway extends QueryableGateway
             AND TRIM(me.attainmentValue) != ''";
 
         if (!empty($filters['formGroupID'])) {
-            $sql .= " AND fg.gibbonFormGroupID = :formGroupID";
-            $data['formGroupID'] = $filters['formGroupID'];
+            if (is_array($filters['formGroupID'])) {
+                $placeholders = [];
+                foreach ($filters['formGroupID'] as $index => $id) {
+                    $placeholder = ":formGroupID{$index}";
+                    $placeholders[] = $placeholder;
+                    $data["formGroupID{$index}"] = $id;
+                }
+                $sql .= " AND fg.gibbonFormGroupID IN (" . implode(',', $placeholders) . ")";
+            } else {
+                $sql .= " AND fg.gibbonFormGroupID = :formGroupID";
+                $data['formGroupID'] = $filters['formGroupID'];
+            }
         }
 
         if (!empty($filters['yearGroup'])) {
