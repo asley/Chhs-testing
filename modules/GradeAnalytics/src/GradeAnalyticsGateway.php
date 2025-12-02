@@ -129,15 +129,14 @@ class GradeAnalyticsGateway extends QueryableGateway
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
         $sql = "SELECT
                     iac.gibbonInternalAssessmentColumnID as value,
-                    iac.name
+                    CONCAT(c.nameShort, ' - ', iac.name) as name
                 FROM gibbonInternalAssessmentColumn iac
                 JOIN gibbonCourseClass cc ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
                 JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
                 WHERE c.gibbonSchoolYearID = :gibbonSchoolYearID
                 AND iac.name IS NOT NULL
                 AND iac.name != ''
-                GROUP BY iac.name, iac.gibbonInternalAssessmentColumnID
-                ORDER BY iac.name";
+                ORDER BY c.nameShort, iac.name";
 
         return $this->db()->select($sql, $data);
     }
