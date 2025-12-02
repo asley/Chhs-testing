@@ -122,6 +122,26 @@ class GradeAnalyticsGateway extends QueryableGateway
     }
 
     /**
+     * Get distinct assessment column names from internal assessments
+     */
+    public function selectAssessmentColumns($gibbonSchoolYearID)
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+        $sql = "SELECT DISTINCT
+                    iac.gibbonInternalAssessmentColumnID as value,
+                    iac.name
+                FROM gibbonInternalAssessmentColumn iac
+                JOIN gibbonCourseClass cc ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
+                JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
+                WHERE c.gibbonSchoolYearID = :gibbonSchoolYearID
+                AND iac.name IS NOT NULL
+                AND iac.name != ''
+                ORDER BY iac.name";
+
+        return $this->db()->select($sql);
+    }
+
+    /**
      * Get grade distribution data with filters
      */
     public function selectGradeDistribution($gibbonSchoolYearID, $filters = [])
@@ -423,9 +443,9 @@ class GradeAnalyticsGateway extends QueryableGateway
             $data['assessmentType'] = $filters['assessmentType'];
         }
 
-        if (!empty($filters['gibbonReportingCycleID'])) {
-            $sql .= " AND iac.gibbonReportingCycleID = :gibbonReportingCycleID";
-            $data['gibbonReportingCycleID'] = $filters['gibbonReportingCycleID'];
+        if (!empty($filters['gibbonInternalAssessmentColumnID'])) {
+            $sql .= " AND iac.gibbonInternalAssessmentColumnID = :gibbonInternalAssessmentColumnID";
+            $data['gibbonInternalAssessmentColumnID'] = $filters['gibbonInternalAssessmentColumnID'];
         }
 
         $sql .= " GROUP BY s.gibbonPersonID, s.preferredName, s.surname, fg.name, yg.name

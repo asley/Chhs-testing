@@ -32,7 +32,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     $formGroupID = $_GET['formGroupID'] ?? '';
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
-    $gibbonReportingCycleID = $_GET['gibbonReportingCycleID'] ?? '';
+    $gibbonInternalAssessmentColumnID = $_GET['gibbonInternalAssessmentColumnID'] ?? '';
 
     // Initialize Gateway
     $gateway = $container->get(GradeAnalyticsGateway::class);
@@ -43,7 +43,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         'formGroupID' => $formGroupID,
         'yearGroup' => $yearGroup,
         'assessmentType' => $assessmentType,
-        'gibbonReportingCycleID' => $gibbonReportingCycleID
+        'gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID
     ];
 
     // Get student averages
@@ -54,7 +54,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     echo '</h2>';
 
     // Display filter information
-    if (!empty($formGroupID) || !empty($yearGroup) || !empty($assessmentType) || !empty($gibbonReportingCycleID)) {
+    if (!empty($formGroupID) || !empty($yearGroup) || !empty($assessmentType) || !empty($gibbonInternalAssessmentColumnID)) {
         echo '<p><strong>Filters Applied:</strong><br/>';
         if (!empty($formGroupID)) {
             $formGroups = $gateway->selectFormGroups($gibbonSchoolYearID)->fetchKeyPair();
@@ -67,9 +67,9 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         if (!empty($assessmentType)) {
             echo 'Assessment Type: ' . $assessmentType . '<br/>';
         }
-        if (!empty($gibbonReportingCycleID)) {
-            $reportingCycles = $gateway->selectReportingCycles($gibbonSchoolYearID)->fetchKeyPair();
-            echo 'Term: ' . ($reportingCycles[$gibbonReportingCycleID] ?? 'N/A') . '<br/>';
+        if (!empty($gibbonInternalAssessmentColumnID)) {
+            $assessmentColumns = $gateway->selectAssessmentColumns($gibbonSchoolYearID)->fetchKeyPair();
+            echo 'Assessment: ' . ($assessmentColumns[$gibbonInternalAssessmentColumnID] ?? 'N/A') . '<br/>';
         }
         echo '</p>';
     }
