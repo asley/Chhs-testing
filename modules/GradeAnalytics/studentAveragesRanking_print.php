@@ -32,7 +32,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     $formGroupID = $_GET['formGroupID'] ?? '';
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
-    $gibbonInternalAssessmentColumnID = $_GET['gibbonInternalAssessmentColumnID'] ?? '';
+    $assessmentName = $_GET['assessmentName'] ?? '';
 
     // Initialize Gateway
     $gateway = $container->get(GradeAnalyticsGateway::class);
@@ -43,7 +43,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         'formGroupID' => $formGroupID,
         'yearGroup' => $yearGroup,
         'assessmentType' => $assessmentType,
-        'gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID
+        'assessmentName' => $assessmentName
     ];
 
     // Get student averages
@@ -54,7 +54,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     echo '</h2>';
 
     // Display filter information
-    if (!empty($formGroupID) || !empty($yearGroup) || !empty($assessmentType) || !empty($gibbonInternalAssessmentColumnID)) {
+    if (!empty($formGroupID) || !empty($yearGroup) || !empty($assessmentType) || !empty($assessmentName)) {
         echo '<p><strong>Filters Applied:</strong><br/>';
         if (!empty($formGroupID)) {
             $formGroups = $gateway->selectFormGroups($gibbonSchoolYearID)->fetchKeyPair();
@@ -67,9 +67,8 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         if (!empty($assessmentType)) {
             echo 'Assessment Type: ' . $assessmentType . '<br/>';
         }
-        if (!empty($gibbonInternalAssessmentColumnID)) {
-            $assessmentColumns = $gateway->selectAssessmentColumns($gibbonSchoolYearID)->fetchKeyPair();
-            echo 'Assessment: ' . ($assessmentColumns[$gibbonInternalAssessmentColumnID] ?? 'N/A') . '<br/>';
+        if (!empty($assessmentName)) {
+            echo 'Assessment: ' . htmlspecialchars($assessmentName) . '<br/>';
         }
         echo '</p>';
     }

@@ -122,21 +122,21 @@ class GradeAnalyticsGateway extends QueryableGateway
     }
 
     /**
-     * Get distinct assessment column names from internal assessments
+     * Get distinct assessment names from internal assessments
      */
     public function selectAssessmentColumns($gibbonSchoolYearID)
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
-        $sql = "SELECT
-                    iac.gibbonInternalAssessmentColumnID as value,
-                    CONCAT(c.nameShort, ' - ', iac.name) as name
+        $sql = "SELECT DISTINCT
+                    iac.name as value,
+                    iac.name as name
                 FROM gibbonInternalAssessmentColumn iac
                 JOIN gibbonCourseClass cc ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
                 JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
                 WHERE c.gibbonSchoolYearID = :gibbonSchoolYearID
                 AND iac.name IS NOT NULL
                 AND iac.name != ''
-                ORDER BY c.nameShort, iac.name";
+                ORDER BY iac.name";
 
         return $this->db()->select($sql, $data);
     }
@@ -443,9 +443,9 @@ class GradeAnalyticsGateway extends QueryableGateway
             $data['assessmentType'] = $filters['assessmentType'];
         }
 
-        if (!empty($filters['gibbonInternalAssessmentColumnID'])) {
-            $sql .= " AND iac.gibbonInternalAssessmentColumnID = :gibbonInternalAssessmentColumnID";
-            $data['gibbonInternalAssessmentColumnID'] = $filters['gibbonInternalAssessmentColumnID'];
+        if (!empty($filters['assessmentName'])) {
+            $sql .= " AND iac.name = :assessmentName";
+            $data['assessmentName'] = $filters['assessmentName'];
         }
 
         $sql .= " GROUP BY s.gibbonPersonID, s.preferredName, s.surname, fg.name, yg.name

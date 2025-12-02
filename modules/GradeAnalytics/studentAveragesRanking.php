@@ -45,7 +45,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     $formGroupID = $_GET['formGroupID'] ?? '';
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
-    $gibbonInternalAssessmentColumnID = $_GET['gibbonInternalAssessmentColumnID'] ?? '';
+    $assessmentName = $_GET['assessmentName'] ?? '';
 
     // Initialize Gateway
     $gateway = $container->get(GradeAnalyticsGateway::class);
@@ -83,12 +83,12 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             ->selected($assessmentType);
 
     $row = $form->addRow();
-        $row->addLabel('gibbonInternalAssessmentColumnID', __('Assessment'));
+        $row->addLabel('assessmentName', __('Assessment'));
         $assessmentColumns = $gateway->selectAssessmentColumns($gibbonSchoolYearID)->fetchKeyPair();
-        $row->addSelect('gibbonInternalAssessmentColumnID')
+        $row->addSelect('assessmentName')
             ->fromArray($assessmentColumns)
             ->placeholder(__('All Assessments'))
-            ->selected($gibbonInternalAssessmentColumnID);
+            ->selected($assessmentName);
 
     $row = $form->addRow();
         $row->addFooter();
@@ -101,7 +101,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         'formGroupID' => $formGroupID,
         'yearGroup' => $yearGroup,
         'assessmentType' => $assessmentType,
-        'gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID
+        'assessmentName' => $assessmentName
     ];
 
     // Get student averages
