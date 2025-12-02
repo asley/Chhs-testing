@@ -355,4 +355,100 @@ class GradeAnalyticsGateway extends QueryableGateway
 
         return $this->db()->select($sql, $data);
     }
+
+    /**
+     * Get student final averages across all subjects
+     * Calculates the average percentage grade for each student across all their enrolled courses
+     */
+    public function selectStudentAverages($gibbonSchoolYearID, $filters = [])
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+
+        $sql = "SELECT
+                s.gibbonPersonID,
+                s.preferredName,
+                s.surname,
+                fg.name as formGroup,
+                yg.name as yearGroup,
+                COUNT(DISTINCT c.gibbonCourseID) as totalCourses,
+                ROUND(AVG(
+                    CAST(
+                        REPLACE(REPLACE(me.attainmentValue, '%', ''), ' ', '')
+                        AS DECIMAL(10,2)
+                    )
+                ), 2) as finalAverage
+            FROM gibbonPerson s
+            JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = s.gibbonPersonID
+            JOIN gibbonFormGroup fg ON fg.gibbonFormGroupID = se.gibbonFormGroupID
+            JOIN gibbonYearGroup yg ON yg.gibbonYearGroupID = se.gibbonYearGroupID
+            JOIN gibbonCourseClassPerson ccp ON ccp.gibbonPersonID = s.gibbonPersonID
+            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
+            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
+            JOIN gibbonInternalAssessmentEntry me ON me.gibbonPersonIDStudent = s.gibbonPersonID
+                AND me.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
+            WHERE s.status = 'Full'
+            AND ccp.role = 'Student'
+            AND se.gibbonSchoolYearID = :gibbonSchoolYearID
+            AND c.gibbonSchoolYearID = :gibbonSchoolYearID
+            AND me.attainmentValue IS NOT NULL
+            AND TRIM(me.attainmentValue) != ''";
+
+        if (!empty($filters['formGroupID'])) {
+            $sql .= " AND fg.gibbonFormGroupID = :formGroupID";
+            $data['formGroupID'] = $filters['formGroupID'];
+        }
+
+        if (!empty($filters['yearGroup'])) {
+            $sql .= " AND se.gibbonYearGroupID = :yearGroup";
+            $data['yearGroup'] = $filters['yearGroup'];
+        }
+
+        if (!empty($filters['assessmentType'])) {
+            $sql .= " AND iac.type = :assessmentType";
+            $data['assessmentType'] = $filters['assessmentType'];
+        }
+
+        $sql .= " GROUP BY s.gibbonPersonID, s.preferredName, s.surname, fg.name, yg.name
+                  HAVING finalAverage IS NOT NULL
+                  ORDER BY finalAverage DESC, s.surname, s.preferredName";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    /**
+     * Get individual student's subject-wise grades with average
+     */
+    public function selectStudentSubjectGrades($gibbonPersonID, $gibbonSchoolYearID)
+    {
+        $data = [
+            'gibbonPersonID' => $gibbonPersonID,
+            'gibbonSchoolYearID' => $gibbonSchoolYearID
+        ];
+
+        $sql = "SELECT
+                c.name as courseName,
+                iac.name as assessmentName,
+                iac.type as assessmentType,
+                me.attainmentValue as grade,
+                CAST(
+                    REPLACE(REPLACE(me.attainmentValue, '%', ''), ' ', '')
+                    AS DECIMAL(10,2)
+                ) as numericGrade
+            FROM gibbonPerson s
+            JOIN gibbonCourseClassPerson ccp ON ccp.gibbonPersonID = s.gibbonPersonID
+            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
+            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
+            JOIN gibbonInternalAssessmentEntry me ON me.gibbonPersonIDStudent = s.gibbonPersonID
+                AND me.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
+            WHERE s.gibbonPersonID = :gibbonPersonID
+            AND c.gibbonSchoolYearID = :gibbonSchoolYearID
+            AND ccp.role = 'Student'
+            AND me.attainmentValue IS NOT NULL
+            AND TRIM(me.attainmentValue) != ''
+            ORDER BY c.name, iac.name";
+
+        return $this->db()->select($sql, $data);
+    }
 }

@@ -39,7 +39,10 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
     echo '</h2>';
 
     echo '<p>';
-    echo __('Use this page to generate reports for prize giving based on grade criteria.');
+    echo __('Use this page to generate reports for prize giving based on grade criteria. You can also view the ');
+    echo '<a href="'.$session->get('absoluteURL').'/index.php?q=/modules/GradeAnalytics/studentAveragesRanking.php">';
+    echo __('Student Averages Ranking');
+    echo '</a> to see final averages across all subjects.';
     echo '</p>';
 
     // Get URL parameters
@@ -165,7 +168,14 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
             $table->addColumn('formGroup', __('Form Group'));
             $table->addColumn('courseName', __('Subject'));
             $table->addColumn('assessmentName', __('Assessment'));
-            $table->addColumn('grade', __('Grade'));
+            $table->addColumn('grade', __('Grade'))
+                  ->format(function($row) {
+                      $grade = $row['grade'];
+                      if (is_numeric($grade)) {
+                          return number_format($grade, 2) . '%';
+                      }
+                      return $grade;
+                  });
 
             echo $table->render($students->toDataSet());
 

@@ -61,12 +61,33 @@ $actionRows[] = [
 
 // Add Prize Giving Report action
 $actionRows[] = [
-    'name' => 'Prize Giving Report', 
+    'name' => 'Prize Giving Report',
     'precedence' => '1',
     'category' => 'Reports',
     'description' => 'Generate reports for prize giving based on grade criteria.',
     'URLList' => 'prizeGivingReport.php',
     'entryURL' => 'prizeGivingReport.php',
+    'entrySidebar' => 'Y',
+    'menuShow' => 'Y',
+    'defaultPermissionAdmin' => 'Y',
+    'defaultPermissionTeacher' => 'Y',
+    'defaultPermissionStudent' => 'N',
+    'defaultPermissionParent' => 'N',
+    'defaultPermissionSupport' => 'N',
+    'categoryPermissionStaff' => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent' => 'N',
+    'categoryPermissionOther' => 'N'
+];
+
+// Add Student Averages Ranking action
+$actionRows[] = [
+    'name' => 'Student Averages Ranking',
+    'precedence' => '2',
+    'category' => 'Reports',
+    'description' => 'View student rankings based on their final average across all subjects.',
+    'URLList' => 'studentAveragesRanking.php',
+    'entryURL' => 'studentAveragesRanking.php',
     'entrySidebar' => 'Y',
     'menuShow' => 'Y',
     'defaultPermissionAdmin' => 'Y',
