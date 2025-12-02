@@ -45,6 +45,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     $formGroupID = $_GET['formGroupID'] ?? '';
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
+    $gibbonReportingCycleID = $_GET['gibbonReportingCycleID'] ?? '';
 
     // Initialize Gateway
     $gateway = $container->get(GradeAnalyticsGateway::class);
@@ -82,6 +83,14 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             ->selected($assessmentType);
 
     $row = $form->addRow();
+        $row->addLabel('gibbonReportingCycleID', __('Term'));
+        $reportingCycles = $gateway->selectReportingCycles($gibbonSchoolYearID)->fetchKeyPair();
+        $row->addSelect('gibbonReportingCycleID')
+            ->fromArray($reportingCycles)
+            ->placeholder(__('All Terms'))
+            ->selected($gibbonReportingCycleID);
+
+    $row = $form->addRow();
         $row->addFooter();
         $row->addSubmit(__('Apply Filters'));
 
@@ -91,7 +100,8 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
     $filters = [
         'formGroupID' => $formGroupID,
         'yearGroup' => $yearGroup,
-        'assessmentType' => $assessmentType
+        'assessmentType' => $assessmentType,
+        'gibbonReportingCycleID' => $gibbonReportingCycleID
     ];
 
     // Get student averages

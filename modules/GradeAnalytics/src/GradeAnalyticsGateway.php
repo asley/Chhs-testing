@@ -108,6 +108,20 @@ class GradeAnalyticsGateway extends QueryableGateway
     }
 
     /**
+     * Get reporting cycles (terms) for the current school year
+     */
+    public function selectReportingCycles($gibbonSchoolYearID)
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+        $sql = "SELECT gibbonReportingCycleID as value, name
+                FROM gibbonReportingCycle
+                WHERE gibbonSchoolYearID = :gibbonSchoolYearID
+                ORDER BY sequenceNumber, name";
+
+        return $this->db()->select($sql);
+    }
+
+    /**
      * Get grade distribution data with filters
      */
     public function selectGradeDistribution($gibbonSchoolYearID, $filters = [])
@@ -407,6 +421,11 @@ class GradeAnalyticsGateway extends QueryableGateway
         if (!empty($filters['assessmentType'])) {
             $sql .= " AND iac.type = :assessmentType";
             $data['assessmentType'] = $filters['assessmentType'];
+        }
+
+        if (!empty($filters['gibbonReportingCycleID'])) {
+            $sql .= " AND iac.gibbonReportingCycleID = :gibbonReportingCycleID";
+            $data['gibbonReportingCycleID'] = $filters['gibbonReportingCycleID'];
         }
 
         $sql .= " GROUP BY s.gibbonPersonID, s.preferredName, s.surname, fg.name, yg.name
