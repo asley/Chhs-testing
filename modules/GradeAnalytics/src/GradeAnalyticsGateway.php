@@ -127,7 +127,7 @@ class GradeAnalyticsGateway extends QueryableGateway
     public function selectAssessmentColumns($gibbonSchoolYearID)
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
-        $sql = "SELECT DISTINCT
+        $sql = "SELECT
                     iac.gibbonInternalAssessmentColumnID as value,
                     iac.name
                 FROM gibbonInternalAssessmentColumn iac
@@ -136,9 +136,10 @@ class GradeAnalyticsGateway extends QueryableGateway
                 WHERE c.gibbonSchoolYearID = :gibbonSchoolYearID
                 AND iac.name IS NOT NULL
                 AND iac.name != ''
+                GROUP BY iac.name, iac.gibbonInternalAssessmentColumnID
                 ORDER BY iac.name";
 
-        return $this->db()->select($sql);
+        return $this->db()->select($sql, $data);
     }
 
     /**
