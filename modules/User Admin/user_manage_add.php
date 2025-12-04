@@ -102,8 +102,8 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_add
             ->description(__('Accepts images up to 360px by 480px.'))
             ->description(__('Accepts aspect ratio between 1:1.2 and 1:1.4.'));
         $row->addFileUpload('file1')
-            ->accepts('.jpg,.jpeg,.gif,.png')
-            ->setMaxUpload(false);
+            ->accepts('.jpg,.jpeg,.gif,.png');
+            // Note: setMaxUpload(true) is the default, so we removed setMaxUpload(false)
 
     // SYSTEM ACCESS
     $form->addRow()->addHeading('System Access', __('System Access'));
@@ -470,7 +470,6 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_add
 
     // SUBMIT
     $row = $form->addRow();
-        $row->addFooter()->append('<small>'.getMaxUpload(true).'</small>');
         $row->addSubmit();
 
     echo $form->getOutput();

@@ -791,3 +791,23 @@ function returnProcess($guid, $return, $editLink = null, $customReturns = null)
     $page->return->setEditLink($editLink ?? '');
     $page->return->addReturns($customReturns ?? []);
 }
+
+/**
+ * Get the maximum upload size based on PHP configuration.
+ * Returns the smaller of post_max_size and upload_max_filesize.
+ *
+ * @param bool $asString If true, returns formatted string. If false, returns numeric value.
+ * @return string|int Formatted string like "Uploads: 8MB max" or numeric value
+ */
+function getMaxUpload($asString = false)
+{
+    $post = substr(ini_get('post_max_size'), 0, (strlen(ini_get('post_max_size')) - 1));
+    $file = substr(ini_get('upload_max_filesize'), 0, (strlen(ini_get('upload_max_filesize')) - 1));
+    $label = ($post < $file) ? $post : $file;
+
+    if ($asString) {
+        return sprintf(__('Uploads: %sMB max'), $label);
+    }
+
+    return $label;
+}
