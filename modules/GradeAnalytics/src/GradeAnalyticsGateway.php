@@ -118,7 +118,7 @@ class GradeAnalyticsGateway extends QueryableGateway
                 WHERE gibbonSchoolYearID = :gibbonSchoolYearID
                 ORDER BY sequenceNumber, name";
 
-        return $this->db()->select($sql);
+        return $this->db()->select($sql, $data);
     }
 
     /**
@@ -155,8 +155,17 @@ class GradeAnalyticsGateway extends QueryableGateway
         }
 
         if (!empty($filters['formGroupID'])) {
-            $data['formGroupID'] = $filters['formGroupID'];
-            $whereConditions[] = 'se.gibbonFormGroupID = :formGroupID';
+            if (\is_array($filters['formGroupID'])) {
+                $placeholders = [];
+                foreach ($filters['formGroupID'] as $index => $id) {
+                    $placeholders[] = ":formGroupID{$index}";
+                    $data["formGroupID{$index}"] = $id;
+                }
+                $whereConditions[] = 'se.gibbonFormGroupID IN ('.implode(',', $placeholders).')';
+            } else {
+                $data['formGroupID'] = $filters['formGroupID'];
+                $whereConditions[] = 'se.gibbonFormGroupID = :formGroupID';
+            }
         }
 
         if (!empty($filters['teacherID'])) {
@@ -253,7 +262,7 @@ class GradeAnalyticsGateway extends QueryableGateway
         }
 
         if (!empty($filters['formGroupID'])) {
-            if (is_array($filters['formGroupID'])) {
+            if (\is_array($filters['formGroupID'])) {
                 $placeholders = [];
                 foreach ($filters['formGroupID'] as $index => $id) {
                     $placeholders[] = ":formGroupID{$index}";
@@ -279,7 +288,7 @@ class GradeAnalyticsGateway extends QueryableGateway
         // Apply grade threshold criteria
         if (!empty($filters['gradeThreshold']) && !empty($filters['operator'])) {
             $validOperators = ['>', '>=', '<', '<=', '='];
-            $operator = in_array($filters['operator'], $validOperators) ? $filters['operator'] : '>';
+            $operator = \in_array($filters['operator'], $validOperators) ? $filters['operator'] : '>';
 
             $gradeCondition = "(
                 CASE
@@ -337,8 +346,18 @@ class GradeAnalyticsGateway extends QueryableGateway
         }
 
         if (!empty($filters['formGroupID'])) {
-            $sql .= " AND fg.gibbonFormGroupID = :formGroupID";
-            $data['formGroupID'] = $filters['formGroupID'];
+            if (\is_array($filters['formGroupID'])) {
+                $placeholders = [];
+                foreach ($filters['formGroupID'] as $index => $id) {
+                    $placeholder = ":formGroupID{$index}";
+                    $placeholders[] = $placeholder;
+                    $data["formGroupID{$index}"] = $id;
+                }
+                $sql .= " AND fg.gibbonFormGroupID IN (" . implode(',', $placeholders) . ")";
+            } else {
+                $sql .= " AND fg.gibbonFormGroupID = :formGroupID";
+                $data['formGroupID'] = $filters['formGroupID'];
+            }
         }
 
         if (!empty($filters['yearGroup'])) {
@@ -353,8 +372,8 @@ class GradeAnalyticsGateway extends QueryableGateway
 
         if (!empty($filters['gradeThreshold']) && !empty($filters['operator'])) {
             $validOperators = ['>', '>=', '<', '<=', '='];
-            $operator = in_array($filters['operator'], $validOperators) ? $filters['operator'] : '>';
-            $threshold = floatval($filters['gradeThreshold']);
+            $operator = \in_array($filters['operator'], $validOperators) ? $filters['operator'] : '>';
+            $threshold = \floatval($filters['gradeThreshold']);
 
             // First, ensure we only get records with valid grades
             $sql .= " AND me.attainmentValue IS NOT NULL AND TRIM(me.attainmentValue) != ''";
@@ -452,7 +471,7 @@ class GradeAnalyticsGateway extends QueryableGateway
             AND TRIM(me.attainmentValue) != ''";
 
         if (!empty($filters['formGroupID'])) {
-            if (is_array($filters['formGroupID'])) {
+            if (\is_array($filters['formGroupID'])) {
                 $placeholders = [];
                 foreach ($filters['formGroupID'] as $index => $id) {
                     $placeholder = ":formGroupID{$index}";
@@ -542,8 +561,18 @@ class GradeAnalyticsGateway extends QueryableGateway
         ];
 
         if (!empty($filters['formGroupID'])) {
-            $whereConditions[] = "fg.gibbonFormGroupID = :formGroupID";
-            $data['formGroupID'] = $filters['formGroupID'];
+            if (\is_array($filters['formGroupID'])) {
+                $placeholders = [];
+                foreach ($filters['formGroupID'] as $index => $id) {
+                    $placeholder = ":formGroupID{$index}";
+                    $placeholders[] = $placeholder;
+                    $data["formGroupID{$index}"] = $id;
+                }
+                $whereConditions[] = "fg.gibbonFormGroupID IN (" . implode(',', $placeholders) . ")";
+            } else {
+                $whereConditions[] = "fg.gibbonFormGroupID = :formGroupID";
+                $data['formGroupID'] = $filters['formGroupID'];
+            }
         }
 
         if (!empty($filters['yearGroup'])) {
@@ -621,7 +650,7 @@ class GradeAnalyticsGateway extends QueryableGateway
         // Calculate averages and prepare final data
         foreach ($studentData as $student) {
             if (!empty($student['grades'])) {
-                $average = array_sum($student['grades']) / count($student['grades']);
+                $average = array_sum($student['grades']) / \count($student['grades']);
                 $student['average'] = $average;
                 $broadsheet[] = $student;
             }

@@ -46,7 +46,10 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
 
     // Get URL parameters
     $courseID = $_GET['courseID'] ?? '';
-    $formGroupID = $_GET['formGroupID'] ?? '';
+    $formGroupID = $_GET['formGroupID'] ?? [];
+    if (!is_array($formGroupID)) {
+        $formGroupID = !empty($formGroupID) ? [$formGroupID] : [];
+    }
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
     $gradeThreshold = $_GET['gradeThreshold'] ?? '75';
@@ -86,6 +89,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
         $row->addSelect('formGroupID')
             ->fromArray($formGroups)
             ->placeholder(__('All Form Groups'))
+            ->selectMultiple()
             ->selected($formGroupID);
 
     $row = $form->addRow();
