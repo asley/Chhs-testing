@@ -33,7 +33,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Badges/badges_grant_add.ph
     echo '</div>';
 } else {
     //Proceed!
-    $gibbonSchoolYearID = $_GET['gibbonSchoolYearID'] ?? '';
+    $gibbonSchoolYearID = $_GET['gibbonSchoolYearID'] ?? $gibbon->session->get('gibbonSchoolYearID', '');
 
     $page->breadcrumbs
         ->add(__('Grant Badges'), 'badges_grant.php&gibbonSchoolYearID='.$gibbonSchoolYearID)
@@ -44,10 +44,29 @@ if (isActionAccessible($guid, $connection2, '/modules/Badges/badges_grant_add.ph
 
     // Handle pre-selected students from external pages (e.g., Student Averages Ranking)
     $preSelectedStudents = [];
-    if (!empty($_GET['gibbonPersonID']) && is_string($_GET['gibbonPersonID'])) {
-        // Handle comma-separated list of student IDs
-        $preSelectedStudents = explode(',', $_GET['gibbonPersonID']);
-        $preSelectedStudents = array_filter($preSelectedStudents, 'is_numeric');
+    if (!empty($_GET['gibbonPersonID'])) {
+        if (is_string($_GET['gibbonPersonID'])) {
+            // Handle comma-separated list of student IDs
+            $preSelectedStudents = explode(',', $_GET['gibbonPersonID']);
+
+            // Trim whitespace, filter out non-numeric values, and convert to strings
+            $preSelectedStudents = array_map(function($id) {
+                return (string) trim($id);
+            }, $preSelectedStudents);
+            $preSelectedStudents = array_filter($preSelectedStudents, function($id) {
+                return is_numeric($id) && $id > 0;
+            });
+            $preSelectedStudents = array_values($preSelectedStudents); // Re-index array
+        } elseif (is_array($_GET['gibbonPersonID'])) {
+            // Trim, filter array values, and convert to strings
+            $preSelectedStudents = array_map(function($id) {
+                return (string) trim($id);
+            }, $_GET['gibbonPersonID']);
+            $preSelectedStudents = array_filter($preSelectedStudents, function($id) {
+                return is_numeric($id) && $id > 0;
+            });
+            $preSelectedStudents = array_values($preSelectedStudents);
+        }
     }
 
     if (!empty($gibbonPersonID2) || !empty($badgesBadgeID2)) {
@@ -56,6 +75,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Badges/badges_grant_add.ph
             "badgesBadgeID2" => $badgesBadgeID2
         ];
         $page->navigator->addSearchResultsAction(Url::fromModuleRoute('Badges', 'badges_grant.php')->withQueryParams($params));
+    }
+
+    // Display info message if students were pre-selected
+    if (!empty($preSelectedStudents)) {
+        $studentCount = count($preSelectedStudents);
+        echo "<div class='message'>";
+        echo sprintf(__('%d student(s) pre-selected from Student Averages Ranking.'), $studentCount);
+        echo "</div>";
     }
 
     $form = Form::create('grantBadges', $gibbon->session->get('absoluteURL').'/modules/'.$gibbon->session->get('module')."/badges_grant_addProcess.php?gibbonPersonID2=$gibbonPersonID2&badgesBadgeID2=$badgesBadgeID2&gibbonSchoolYearID=$gibbonSchoolYearID");
@@ -67,11 +94,18 @@ if (isActionAccessible($guid, $connection2, '/modules/Badges/badges_grant_add.ph
 
     $row = $form->addRow();
         $row->addLabel('gibbonPersonIDMulti', __('Students'));
-        $studentSelector = $row->addSelectUsers('gibbonPersonIDMulti', $gibbon->session->get('gibbonSchoolYearID'), ['includeStudents' => true])->selectMultiple()->isRequired();
 
-        // Pre-select students if they were passed from another page
-        if (!empty($preSelectedStudents)) {
-            $studentSelector->selected($preSelectedStudents);
+        // If students were pre-selected, use a simpler selector with only those students
+        if (!empty($preSelectedStudents) && count($preSelectedStudents) > 0) {
+            $row->addSelectUsersFromList('gibbonPersonIDMulti', $preSelectedStudents)
+                ->selectMultiple()
+                ->isRequired()
+                ->selected($preSelectedStudents);
+        } else {
+            // Otherwise use the full student selector
+            $row->addSelectUsers('gibbonPersonIDMulti', $gibbon->session->get('gibbonSchoolYearID'), [
+                'includeStudents' => true
+            ])->selectMultiple()->isRequired();
         }
 
     $sql = "SELECT badgesBadgeID as value, name, category FROM badgesBadge WHERE active='Y' ORDER BY category, name";

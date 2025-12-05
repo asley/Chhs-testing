@@ -147,7 +147,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             $studentsArray[] = $student;
         }
 
-        echo '<div id="chartContainer" style="margin: 20px 0; padding: 20px; background: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+        echo '<div id="chartContainer" style="display: none; margin: 20px 0; padding: 20px; background: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
         echo '<canvas id="studentRankingChart" style="max-height: 400px;"></canvas>';
         echo '</div>';
 
@@ -187,7 +187,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             $studentLink .= '&search=&allStudents=&subpage=Internal%20Assessment';
 
             echo '<tr>';
-            echo '<td style="text-align: center;"><input type="checkbox" class="studentCheckbox" value="'.$student['gibbonPersonID'].'" /></td>';
+            echo '<td style="text-align: center;"><input type="checkbox" class="studentCheckbox" value="'.htmlspecialchars($student['gibbonPersonID']).'" data-person-id="'.htmlspecialchars($student['gibbonPersonID']).'" data-debug="'.strlen($student['gibbonPersonID']).'" /></td>';
             echo '<td style="text-align: center; font-weight: bold;">'.$rank.'</td>';
             echo '<td><a href="'.$studentLink.'">'.Format::name('', $student['preferredName'], $student['surname'], 'Student', true).'</a></td>';
             echo '<td>'.htmlspecialchars($student['formGroup']).'</td>';
@@ -356,14 +356,21 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             }
 
             checkboxes.forEach(function(checkbox) {
-                selected.push(checkbox.value);
+                var personId = checkbox.getAttribute("data-person-id") || checkbox.value;
+                selected.push(personId.trim());
             });
 
-            // Redirect to Grant Badges page with selected students
-            var url = "' . $session->get('absoluteURL') . '/index.php?q=/modules/Badges/badges_grant.php";
-            url += "&gibbonPersonID=" + selected.join(",");
-            window.location.href = url;
+            // Use array syntax instead of comma-separated string to avoid server issues
+            // Build URL with array parameters: gibbonPersonID[]=123&gibbonPersonID[]=456
+            var url = "' . $session->get('absoluteURL') . '/index.php?q=/modules/Badges/badges_grant_add.php";
+            var schoolYearId = encodeURIComponent("' . rawurlencode($gibbonSchoolYearID) . '");
+            url += "&gibbonSchoolYearID=" + schoolYearId;
 
+            selected.forEach(function(id) {
+                url += "&gibbonPersonID[]=" + encodeURIComponent(id);
+            });
+
+            window.location.href = url;
             return false;
         }
         </script>';

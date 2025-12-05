@@ -14,7 +14,8 @@ This policy establishes clear guidelines for the use of Gibbon's Internal Assess
 - Consistent and accurate academic record-keeping
 - Fair and transparent grading practices
 - Compliance with institutional reporting requirements
-- Effective communication of student progress to all stakeholders
+- Effective com
+munication of student progress to all stakeholders
 
 ---
 
