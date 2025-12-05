@@ -19,7 +19,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 namespace Gibbon\Module\GradeAnalytics;
 
-use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
 
@@ -31,8 +30,6 @@ use Gibbon\Domain\QueryableGateway;
  */
 class GradeAnalyticsGateway extends QueryableGateway
 {
-    use TableAware;
-
     private static $tableName = 'gibbonInternalAssessmentEntry';
 
     /**
@@ -662,5 +659,22 @@ class GradeAnalyticsGateway extends QueryableGateway
         });
 
         return $broadsheet;
+    }
+
+    /**
+     * Count all records in the table
+     */
+    protected function countAll()
+    {
+        $sql = "SELECT COUNT(*) FROM " . static::$tableName;
+        return $this->db()->selectOne($sql);
+    }
+
+    /**
+     * Get searchable columns for the gateway
+     */
+    protected function getSearchableColumns()
+    {
+        return [];
     }
 }
