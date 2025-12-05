@@ -131,6 +131,14 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         echo '<a href="#" onclick="document.getElementById(\'chartContainer\').style.display = document.getElementById(\'chartContainer\').style.display === \'none\' ? \'block\' : \'none\'; return false;">';
         echo __('Toggle Chart View');
         echo '</a>';
+
+        // Add Grant Badges button if user has access
+        if (isActionAccessible($guid, $connection2, '/modules/Badges/badges_grant.php')) {
+            echo ' | ';
+            echo '<a href="#" id="grantBadgesBtn" onclick="grantBadgesToSelected(); return false;" class="button">';
+            echo __('Grant Badges to Selected');
+            echo '</a>';
+        }
         echo '</div>';
 
         // Convert students to array for multiple iterations
@@ -148,12 +156,13 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         echo '<table class="fullWidth colorOddEven" cellspacing="0" id="studentAveragesRankingTable">';
         echo '<thead>';
         echo '<tr>';
+        echo '<th style="width: 3%; text-align: center;"><input type="checkbox" id="selectAll" onclick="toggleAllStudents(this)" /></th>';
         echo '<th style="width: 5%; text-align: center;">'.__('Rank').'</th>';
-        echo '<th style="width: 25%;">'.__('Student Name').'</th>';
-        echo '<th style="width: 15%;">'.__('Form Group').'</th>';
-        echo '<th style="width: 15%;">'.__('Year Group').'</th>';
-        echo '<th style="width: 15%; text-align: center;">'.__('Total Subjects').'</th>';
-        echo '<th style="width: 15%; text-align: center;">'.__('Final Average').'</th>';
+        echo '<th style="width: 22%;">'.__('Student Name').'</th>';
+        echo '<th style="width: 13%;">'.__('Form Group').'</th>';
+        echo '<th style="width: 13%;">'.__('Year Group').'</th>';
+        echo '<th style="width: 13%; text-align: center;">'.__('Total Subjects').'</th>';
+        echo '<th style="width: 13%; text-align: center;">'.__('Final Average').'</th>';
         echo '</tr>';
         echo '</thead>';
         echo '<tbody>';
@@ -178,6 +187,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             $studentLink .= '&search=&allStudents=&subpage=Internal%20Assessment';
 
             echo '<tr>';
+            echo '<td style="text-align: center;"><input type="checkbox" class="studentCheckbox" value="'.$student['gibbonPersonID'].'" /></td>';
             echo '<td style="text-align: center; font-weight: bold;">'.$rank.'</td>';
             echo '<td><a href="'.$studentLink.'">'.Format::name('', $student['preferredName'], $student['surname'], 'Student', true).'</a></td>';
             echo '<td>'.htmlspecialchars($student['formGroup']).'</td>';
@@ -304,7 +314,8 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
                 var row = [];
                 var cols = rows[i].querySelectorAll("td, th");
 
-                for (var j = 0; j < cols.length; j++) {
+                // Skip first column (checkbox) when exporting
+                for (var j = 1; j < cols.length; j++) {
                     var text = cols[j].innerText || "";
                     text = text.replace(/"/g, \'"\' + \'"\'); // Escape quotes
                     row.push(\'"\' + text + \'"\');
@@ -323,6 +334,36 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             downloadLink.click();
             document.body.removeChild(downloadLink);
             window.URL.revokeObjectURL(url);
+            return false;
+        }
+
+        // Toggle all student checkboxes
+        function toggleAllStudents(checkbox) {
+            var checkboxes = document.querySelectorAll(".studentCheckbox");
+            checkboxes.forEach(function(cb) {
+                cb.checked = checkbox.checked;
+            });
+        }
+
+        // Grant badges to selected students
+        function grantBadgesToSelected() {
+            var selected = [];
+            var checkboxes = document.querySelectorAll(".studentCheckbox:checked");
+
+            if (checkboxes.length === 0) {
+                alert("' . __('Please select at least one student') . '");
+                return false;
+            }
+
+            checkboxes.forEach(function(checkbox) {
+                selected.push(checkbox.value);
+            });
+
+            // Redirect to Grant Badges page with selected students
+            var url = "' . $session->get('absoluteURL') . '/index.php?q=/modules/Badges/badges_grant.php";
+            url += "&gibbonPersonID=" + selected.join(",");
+            window.location.href = url;
+
             return false;
         }
         </script>';

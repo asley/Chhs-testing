@@ -41,6 +41,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Badges/badges_grant_add.ph
 
     $gibbonPersonID2 = $_GET['gibbonPersonID2'] ?? '';
     $badgesBadgeID2 = $_GET['badgesBadgeID2'] ?? '';
+
+    // Handle pre-selected students from external pages (e.g., Student Averages Ranking)
+    $preSelectedStudents = [];
+    if (!empty($_GET['gibbonPersonID']) && is_string($_GET['gibbonPersonID'])) {
+        // Handle comma-separated list of student IDs
+        $preSelectedStudents = explode(',', $_GET['gibbonPersonID']);
+        $preSelectedStudents = array_filter($preSelectedStudents, 'is_numeric');
+    }
+
     if (!empty($gibbonPersonID2) || !empty($badgesBadgeID2)) {
         $params = [
             "gibbonPersonID2" => $gibbonPersonID2,
@@ -58,7 +67,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Badges/badges_grant_add.ph
 
     $row = $form->addRow();
         $row->addLabel('gibbonPersonIDMulti', __('Students'));
-        $row->addSelectUsers('gibbonPersonIDMulti', $gibbon->session->get('gibbonSchoolYearID'), ['includeStudents' => true])->selectMultiple()->isRequired();
+        $studentSelector = $row->addSelectUsers('gibbonPersonIDMulti', $gibbon->session->get('gibbonSchoolYearID'), ['includeStudents' => true])->selectMultiple()->isRequired();
+
+        // Pre-select students if they were passed from another page
+        if (!empty($preSelectedStudents)) {
+            $studentSelector->selected($preSelectedStudents);
+        }
 
     $sql = "SELECT badgesBadgeID as value, name, category FROM badgesBadge WHERE active='Y' ORDER BY category, name";
     $row = $form->addRow();
