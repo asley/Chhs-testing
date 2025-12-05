@@ -128,6 +128,7 @@ class Student extends DataSource
                 CONCAT(gibbonPerson.preferredName, ' ', gibbonPerson.surname) as fullName,
                 gibbonPerson.image_240,
                 gibbonPerson.dob,
+                gibbonPerson.dateStart,
                 gibbonPerson.email,
                 gibbonPerson.nameInCharacters,
                 gibbonPerson.studentID,
