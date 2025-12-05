@@ -34,6 +34,9 @@ use Gibbon\Domain\User\UserGateway;
 //Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
+// Get the database connection
+global $pdo;
+
 if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edit.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
