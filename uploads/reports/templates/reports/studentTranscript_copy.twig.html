@@ -132,9 +132,6 @@ sources:
     {% if school.organisationPhone %}
     <div style="font-size: 10pt;">{{ __('Phone') }}: {{ school.organisationPhone }}</div>
     {% endif %}
-    {% if school.organisationEmail %}
-    <div style="font-size: 10pt;">{{ __('Email') }}: {{ school.organisationEmail }}</div>
-    {% endif %}
     <div class="transcript-title">{{ __('Official Academic Transcript') }}</div>
 </div>
 
@@ -159,10 +156,14 @@ sources:
         <td class="student-info-cell">{{ student.formGroupName }}</td>
     </tr>
     <tr>
-        <td class="student-info-cell info-label">{{ __('Date Generated') }}:</td>
-        <td class="student-info-cell">{{ "now"|date('F j, Y') }}</td>
+        <td class="student-info-cell info-label">{{ __('Admission Date') }}:</td>
+        <td class="student-info-cell">{{ student.dateStart ? student.dateStart|date('F j, Y') : '' }}</td>
         <td class="student-info-cell info-label">{{ __('Academic Status') }}:</td>
         <td class="student-info-cell">{{ student.status }}</td>
+    </tr>
+    <tr>
+        <td class="student-info-cell info-label">{{ __('Date Generated') }}:</td>
+        <td class="student-info-cell" colspan="3">{{ "now"|date('F j, Y') }}</td>
     </tr>
 </table>
 
