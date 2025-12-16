@@ -75,12 +75,10 @@ class BackgroundProcessor implements ContainerAwareInterface
      */
     public function startProcess($processClassName, $processMethodName, array $arguments = []) : int
     {
-        $phpFile = $this->session->get('absolutePath').'/cli/system_backgroundProcessor.php';
+        // Prefer the configured absolutePath, but fall back to project root if it's unavailable.
+        $basePath = $this->session->get('absolutePath') ?: realpath(__DIR__.'/../..');
+        $phpFile = $basePath.'/cli/system_backgroundProcessor.php';
         $phpOutput = '/dev/null';
-
-        if (!file_exists($phpFile)) {
-            throw new \RuntimeException('File not found: '.$phpFile);
-        }
 
         if (empty($processClassName) || !is_array($arguments)) {
             throw new \InvalidArgumentException();
@@ -104,6 +102,12 @@ class BackgroundProcessor implements ContainerAwareInterface
             'serialisedArray'    => serialize($processData),
         ]);
 
+        // If the background worker script is missing/unreadable, run synchronously.
+        if (!is_readable($phpFile)) {
+            $this->runProcess($processID, $processData['key']);
+            return $processID;
+        }
+
         // Allow systems to disable background processing
         if ($this->session->get('backgroundProcessing') == 'N') {
             $this->runProcess($processID, $processData['key']);
@@ -115,17 +119,23 @@ class BackgroundProcessor implements ContainerAwareInterface
         $args = [$phpFile, $processID, $processData['key'], $this->session->get('module')];
         $argsEscaped = implode(' ', array_map('escapeshellarg', $args));
 
+        // If exec is unavailable (often disabled in shared hosting), run synchronously.
+        if (!function_exists('exec') || $this->isExecDisabled()) {
+            $this->runProcess($processID, $processData['key']);
+            return $processID;
+        }
+
         try {
             // Start the background process as a long-running PHP command
             switch ($this->getOS()) {
                 case self::OS_WINDOWS:
                     $command = PHP_BINARY.' '.$argsEscaped;
-                    exec(sprintf('%s > NUL &', $command));
+                    \exec(sprintf('%s > NUL &', $command));
                     break;
 
                 case self::OS_NIX:
                     $command = PHP_BINDIR.'/php '.$argsEscaped;
-                    $pID = exec(sprintf("%s > %s 2>&1 & echo $!", $command, $phpOutput));
+                    $pID = \exec(sprintf("%s > %s 2>&1 & echo $!", $command, $phpOutput));
                     break;
 
                 default:
@@ -275,7 +285,7 @@ class BackgroundProcessor implements ContainerAwareInterface
 
         if ($processData = $this->getProcess($processID)) {
             try {
-                exec('kill -9 '.$processData['pID']);
+                \exec('kill -9 '.$processData['pID']);
                 return $this->endProcess($processID, ['status' => 'Stopped'] + $processData);
             } catch (\Exception $e) {
                 return false;
@@ -303,7 +313,7 @@ class BackgroundProcessor implements ContainerAwareInterface
             }
 
             try {
-                $checkProcess = exec('ps '.$processData['pID']);
+                $checkProcess = \exec('ps '.$processData['pID']);
                 if (stripos($checkProcess, $processData['pID']) !== false) {
                     return true;
                 } else {
@@ -316,6 +326,19 @@ class BackgroundProcessor implements ContainerAwareInterface
         }
 
         return false;
+    }
+
+    /**
+     * Detect if exec is disabled via php.ini disable_functions.
+     *
+     * @return bool
+     */
+    protected function isExecDisabled() : bool
+    {
+        $disabled = ini_get('disable_functions') ?: '';
+        $functions = array_filter(array_map('trim', explode(',', $disabled)));
+
+        return in_array('exec', $functions, true);
     }
 
     protected function handleShutdown($processID, $processData)
