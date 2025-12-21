@@ -317,3 +317,383 @@ function analyzeStudentPerformance($pdo, $studentID, $subject) {
     return $analysis;
 }
 
+/**
+ * Generate a unique session ID for chat conversations
+ *
+ * @return string UUID v4 session ID
+ */
+function generateSessionID() {
+    return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0x0fff) | 0x4000,
+        mt_rand(0, 0x3fff) | 0x8000,
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+    );
+}
+
+/**
+ * Get or create a chat session for a student
+ *
+ * @param \Gibbon\Database\Connection $pdo Database connection
+ * @param int $gibbonPersonID Student ID
+ * @param int $gibbonSchoolYearID School year ID
+ * @param int|null $gibbonCourseID Optional course ID
+ * @return string Session ID
+ */
+function getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID, $gibbonCourseID = null) {
+    try {
+        // Check for existing active session (within last 30 minutes)
+        $sql = "SELECT sessionID FROM aiTeacherChatSessions
+                WHERE gibbonPersonID = :personID
+                AND lastActivity > DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+                ORDER BY lastActivity DESC LIMIT 1";
+
+        $result = $pdo->executeQuery(['personID' => $gibbonPersonID], $sql);
+
+        if ($result && $result->rowCount() > 0) {
+            $row = $result->fetch();
+            return $row['sessionID'];
+        }
+
+        // Create new session
+        $sessionID = generateSessionID();
+        $sql = "INSERT INTO aiTeacherChatSessions
+                (sessionID, gibbonPersonID, startTime, lastActivity, messageCount)
+                VALUES (:sessionID, :personID, NOW(), NOW(), 0)";
+
+        $pdo->executeQuery([
+            'sessionID' => $sessionID,
+            'personID' => $gibbonPersonID
+        ], $sql);
+
+        return $sessionID;
+
+    } catch (Exception $e) {
+        error_log("Error in getOrCreateChatSession: " . $e->getMessage());
+        return generateSessionID(); // Fallback to new session
+    }
+}
+
+/**
+ * Save a student message to the database
+ *
+ * @param \Gibbon\Database\Connection $pdo Database connection
+ * @param int $gibbonPersonID Student ID
+ * @param int $gibbonSchoolYearID School year ID
+ * @param string $sessionID Session ID
+ * @param string $message Student's message
+ * @param int|null $gibbonCourseID Optional course ID
+ * @return bool Success
+ */
+function saveStudentMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $message, $gibbonCourseID = null) {
+    try {
+        $sql = "INSERT INTO aiTeacherStudentConversations
+                (gibbonPersonID, gibbonSchoolYearID, sessionID, message, sender, gibbonCourseID)
+                VALUES (:personID, :schoolYearID, :sessionID, :message, 'student', :courseID)";
+
+        $pdo->executeQuery([
+            'personID' => $gibbonPersonID,
+            'schoolYearID' => $gibbonSchoolYearID,
+            'sessionID' => $sessionID,
+            'message' => $message,
+            'courseID' => $gibbonCourseID
+        ], $sql);
+
+        // Update session activity
+        $sql = "UPDATE aiTeacherChatSessions
+                SET lastActivity = NOW(), messageCount = messageCount + 1
+                WHERE sessionID = :sessionID";
+        $pdo->executeQuery(['sessionID' => $sessionID], $sql);
+
+        return true;
+    } catch (Exception $e) {
+        error_log("Error in saveStudentMessage: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Save an AI response to the database
+ *
+ * @param \Gibbon\Database\Connection $pdo Database connection
+ * @param int $gibbonPersonID Student ID
+ * @param int $gibbonSchoolYearID School year ID
+ * @param string $sessionID Session ID
+ * @param string $message AI's response
+ * @param string|null $context Conversation context (JSON)
+ * @param int|null $gibbonCourseID Optional course ID
+ * @return bool Success
+ */
+function saveAIMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $message, $context = null, $gibbonCourseID = null) {
+    try {
+        $sql = "INSERT INTO aiTeacherStudentConversations
+                (gibbonPersonID, gibbonSchoolYearID, sessionID, message, sender, context, gibbonCourseID)
+                VALUES (:personID, :schoolYearID, :sessionID, :message, 'ai', :context, :courseID)";
+
+        $pdo->executeQuery([
+            'personID' => $gibbonPersonID,
+            'schoolYearID' => $gibbonSchoolYearID,
+            'sessionID' => $sessionID,
+            'message' => $message,
+            'context' => $context,
+            'courseID' => $gibbonCourseID
+        ], $sql);
+
+        // Update session activity
+        $sql = "UPDATE aiTeacherChatSessions
+                SET lastActivity = NOW(), messageCount = messageCount + 1
+                WHERE sessionID = :sessionID";
+        $pdo->executeQuery(['sessionID' => $sessionID], $sql);
+
+        return true;
+    } catch (Exception $e) {
+        error_log("Error in saveAIMessage: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get conversation context (last N messages)
+ *
+ * @param \Gibbon\Database\Connection $pdo Database connection
+ * @param string $sessionID Session ID
+ * @param int $limit Number of messages to retrieve
+ * @return array Array of messages
+ */
+function getConversationContext($pdo, $sessionID, $limit = 10) {
+    try {
+        $sql = "SELECT message, sender, timestamp
+                FROM aiTeacherStudentConversations
+                WHERE sessionID = :sessionID
+                ORDER BY timestamp DESC
+                LIMIT :limit";
+
+        $result = $pdo->executeQuery([
+            'sessionID' => $sessionID,
+            'limit' => $limit
+        ], $sql);
+
+        $messages = [];
+        if ($result && $result->rowCount() > 0) {
+            while ($row = $result->fetch()) {
+                $messages[] = $row;
+            }
+        }
+
+        // Reverse to get chronological order
+        return array_reverse($messages);
+
+    } catch (Exception $e) {
+        error_log("Error in getConversationContext: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Check if message contains inappropriate content
+ *
+ * @param string $message Message to check
+ * @return array ['flagged' => bool, 'reason' => string|null]
+ */
+function checkInappropriateContent($message) {
+    $flagged = false;
+    $reason = null;
+
+    // Self-harm keywords (critical priority)
+    $selfHarmKeywords = ['kill myself', 'suicide', 'end my life', 'want to die', 'hurt myself', 'self harm'];
+    foreach ($selfHarmKeywords as $keyword) {
+        if (stripos($message, $keyword) !== false) {
+            return ['flagged' => true, 'reason' => 'self_harm', 'severity' => 'critical'];
+        }
+    }
+
+    // Cheating detection
+    $cheatingPatterns = [
+        'give me the answer',
+        'what is the answer to',
+        'do my homework',
+        'write my essay',
+        'complete my assignment'
+    ];
+    foreach ($cheatingPatterns as $pattern) {
+        if (stripos($message, $pattern) !== false) {
+            return ['flagged' => true, 'reason' => 'cheating_attempt', 'severity' => 'medium'];
+        }
+    }
+
+    // Profanity check (basic list - extend as needed)
+    $profanityList = ['fuck', 'shit', 'damn', 'bitch', 'ass'];
+    foreach ($profanityList as $word) {
+        if (stripos($message, $word) !== false) {
+            return ['flagged' => true, 'reason' => 'profanity', 'severity' => 'low'];
+        }
+    }
+
+    return ['flagged' => false, 'reason' => null, 'severity' => null];
+}
+
+/**
+ * Get AI tutor response with conversation context
+ *
+ * @param \Gibbon\Database\Connection $pdo Database connection
+ * @param int $gibbonPersonID Student ID
+ * @param int $gibbonSchoolYearID School year ID
+ * @param string $message Student's message
+ * @param string $sessionID Session ID
+ * @param int|null $gibbonCourseID Optional course ID
+ * @return array ['success' => bool, 'response' => string, 'flagged' => bool, 'flagReason' => string|null]
+ */
+function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message, $sessionID, $gibbonCourseID = null) {
+    try {
+        // Check for inappropriate content
+        $contentCheck = checkInappropriateContent($message);
+        if ($contentCheck['flagged']) {
+            // Flag in database
+            $sql = "UPDATE aiTeacherStudentConversations
+                    SET flagged = 1, flagReason = :reason
+                    WHERE sessionID = :sessionID
+                    ORDER BY timestamp DESC LIMIT 1";
+            $pdo->executeQuery([
+                'reason' => $contentCheck['reason'],
+                'sessionID' => $sessionID
+            ], $sql);
+
+            // Critical content - alert and block
+            if ($contentCheck['severity'] === 'critical') {
+                return [
+                    'success' => false,
+                    'response' => 'I notice you might be going through a difficult time. Please speak with a teacher, counselor, or trusted adult immediately. Your wellbeing is important.',
+                    'flagged' => true,
+                    'flagReason' => $contentCheck['reason']
+                ];
+            }
+
+            // Medium severity - warn but allow
+            if ($contentCheck['severity'] === 'medium') {
+                $warningResponse = "I'm here to help you understand concepts, not to do your work for you. Let me guide you to find the answer yourself. " .
+                                   "Can you tell me what you've tried so far?";
+                return [
+                    'success' => true,
+                    'response' => $warningResponse,
+                    'flagged' => true,
+                    'flagReason' => $contentCheck['reason']
+                ];
+            }
+        }
+
+        // Get conversation context
+        $context = getConversationContext($pdo, $sessionID, 10);
+
+        // Build context string for AI
+        $contextString = "";
+        foreach ($context as $msg) {
+            $role = $msg['sender'] === 'student' ? 'Student' : 'AI Tutor';
+            $contextString .= "{$role}: {$msg['message']}\n";
+        }
+
+        // Get AI settings
+        $settings = getAITeacherSettings($pdo);
+        $apiKey = $settings['deepseek_api_key'] ?? null;
+
+        if (empty($apiKey)) {
+            return [
+                'success' => false,
+                'response' => 'AI service is not configured. Please contact your teacher.',
+                'flagged' => false,
+                'flagReason' => null
+            ];
+        }
+
+        // Create AI API instance
+        $api = new \Gibbon\Module\aiTeacher\DeepSeekAPI($apiKey);
+
+        // Build AI prompt with personality and guidelines
+        $systemPrompt = "You are a patient, encouraging CSEC tutor helping a high school student. Your role is to:\n" .
+                       "1. Guide students to understand concepts, not give direct answers\n" .
+                       "2. Ask clarifying questions to understand their confusion\n" .
+                       "3. Break down complex topics into simple steps\n" .
+                       "4. Provide examples and analogies\n" .
+                       "5. Encourage effort and celebrate progress\n" .
+                       "6. If stuck, suggest they review specific textbook sections or ask their teacher\n\n" .
+                       "Guidelines:\n" .
+                       "- Never solve homework problems completely - guide them through it\n" .
+                       "- Use encouraging language\n" .
+                       "- Keep responses concise (2-3 short paragraphs max)\n" .
+                       "- Use simple language appropriate for high school level\n\n";
+
+        if (!empty($contextString)) {
+            $systemPrompt .= "Previous conversation:\n{$contextString}\n\n";
+        }
+
+        $fullPrompt = $systemPrompt . "Student: {$message}\nAI Tutor:";
+
+        // Get AI response
+        $aiResponse = $api->generateResponse($fullPrompt);
+
+        if ($aiResponse === null || empty(trim($aiResponse))) {
+            return [
+                'success' => false,
+                'response' => 'Sorry, I encountered a problem. Please try asking your question again.',
+                'flagged' => false,
+                'flagReason' => null
+            ];
+        }
+
+        // Save AI response to database
+        saveAIMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $aiResponse, json_encode($context), $gibbonCourseID);
+
+        return [
+            'success' => true,
+            'response' => $aiResponse,
+            'flagged' => $contentCheck['flagged'],
+            'flagReason' => $contentCheck['reason'] ?? null
+        ];
+
+    } catch (Exception $e) {
+        error_log("Error in getAITutorResponse: " . $e->getMessage());
+        return [
+            'success' => false,
+            'response' => 'An error occurred. Please try again.',
+            'flagged' => false,
+            'flagReason' => null
+        ];
+    }
+}
+
+/**
+ * Get chat history for a student
+ *
+ * @param \Gibbon\Database\Connection $pdo Database connection
+ * @param int $gibbonPersonID Student ID
+ * @param int $limit Number of recent sessions to retrieve
+ * @return array Array of chat sessions
+ */
+function getChatHistory($pdo, $gibbonPersonID, $limit = 10) {
+    try {
+        $sql = "SELECT s.sessionID, s.startTime, s.lastActivity, s.topic, s.messageCount, s.resolved
+                FROM aiTeacherChatSessions s
+                WHERE s.gibbonPersonID = :personID
+                ORDER BY s.lastActivity DESC
+                LIMIT :limit";
+
+        $result = $pdo->executeQuery([
+            'personID' => $gibbonPersonID,
+            'limit' => $limit
+        ], $sql);
+
+        $sessions = [];
+        if ($result && $result->rowCount() > 0) {
+            while ($row = $result->fetch()) {
+                $sessions[] = $row;
+            }
+        }
+
+        return $sessions;
+
+    } catch (Exception $e) {
+        error_log("Error in getChatHistory: " . $e->getMessage());
+        return [];
+    }
+}
+

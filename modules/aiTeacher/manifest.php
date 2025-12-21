@@ -21,12 +21,12 @@ along with this program.  If not, see <http:// www.gnu.org/licenses/>.
 
 // Basic variables
 $name        = 'aiTeacher';            // The name of the module as it appears to users
-$description = 'AI-powered teaching assistant for CSEC curriculum support, assessment analysis, and teacher productivity tools.';            
-$entryURL    = "index.php";   
-$type        = "Additional";  
-$category    = 'Teaching & Learning';            
-$version     = '1.0.0';            
-$author      = 'Asley Smith';            
+$description = 'AI-powered teaching assistant for CSEC curriculum support, assessment analysis, and teacher productivity tools.';
+$entryURL    = "index.php";
+$type        = "Additional";
+$category    = 'Teaching & Learning';
+$version     = '2.0.00';
+$author      = 'Asley Smith';
 $url         = 'https://tasanz.com';            
 
 
@@ -341,6 +341,25 @@ $actionRows = array(
             'Student'
         ),
         'secure' => true // Mark as secure if it doesn't render a full page
+    ),
+    array(
+        'name'                      => 'AI Tutor Chat',
+        'precedence'                => '9',
+        'category'                  => 'Features',
+        'description'               => 'Chat with your personal AI tutor for homework help and study guidance',
+        'URLList'                   => 'student_ai_tutor.php,student_ai_tutor_ajax.php,student_chat_history.php',
+        'entryURL'                  => 'student_ai_tutor.php',
+        'entrySidebar'              => 'Y',
+        'menuShow'                  => 'Y',
+        'defaultPermissionAdmin'    => 'Y',
+        'defaultPermissionTeacher'  => 'Y',
+        'defaultPermissionStudent'  => 'Y',
+        'defaultPermissionParent'   => 'N',
+        'defaultPermissionSupport'  => 'Y',
+        'categoryPermissionStaff'   => 'Y',
+        'categoryPermissionStudent' => 'Y',
+        'categoryPermissionParent'  => 'N',
+        'categoryPermissionOther'   => 'N'
     )
 );
 
