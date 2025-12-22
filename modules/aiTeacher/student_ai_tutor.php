@@ -35,10 +35,10 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
     $gibbonSchoolYearID = $gibbon->session->get('gibbonSchoolYearID');
 
     // Get or create chat session
-    $sessionID = getOrCreateChatSession($connection2, $gibbonPersonID, $gibbonSchoolYearID);
+    $sessionID = getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID);
 
     // Get AI settings to check if configured
-    $settings = getAITeacherSettings($connection2);
+    $settings = getAITeacherSettings($pdo);
 
     if (empty($settings['deepseek_api_key'])) {
         echo '<div class="error">';
@@ -52,7 +52,7 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
     echo '<script src="' . $gibbon->session->get('absoluteURL') . '/modules/aiTeacher/js/student_tutor.js"></script>';
 
     // Get conversation history for current session
-    $context = getConversationContext($connection2, $sessionID, 50);
+    $context = getConversationContext($pdo, $sessionID, 50);
 
     echo '<div class="ai-tutor-container">';
 
