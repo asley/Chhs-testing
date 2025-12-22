@@ -110,3 +110,70 @@ AND NOT EXISTS (
     AND p.gibbonActionID = a.gibbonActionID
 );end
 ";
+
+// v2.0.01 - Fix auto-installation of AI Tutor Chat action
+$count++;
+$sql[$count][0] = "2.0.01";
+$sql[$count][1] = "
+INSERT INTO gibbonAction (
+    gibbonModuleID,
+    name,
+    precedence,
+    category,
+    description,
+    URLList,
+    entryURL,
+    entrySidebar,
+    menuShow,
+    defaultPermissionAdmin,
+    defaultPermissionTeacher,
+    defaultPermissionStudent,
+    defaultPermissionParent,
+    defaultPermissionSupport,
+    categoryPermissionStaff,
+    categoryPermissionStudent,
+    categoryPermissionParent,
+    categoryPermissionOther
+)
+SELECT
+    gibbonModuleID,
+    'AI Tutor Chat',
+    '9',
+    'Features',
+    'Chat with your personal AI tutor for homework help and study guidance',
+    'student_ai_tutor.php,student_ai_tutor_ajax.php,student_chat_history.php',
+    'student_ai_tutor.php',
+    'Y',
+    'Y',
+    'Y',
+    'Y',
+    'Y',
+    'N',
+    'Y',
+    'Y',
+    'Y',
+    'N',
+    'N'
+FROM gibbonModule
+WHERE name = 'aiTeacher'
+AND NOT EXISTS (
+    SELECT 1 FROM gibbonAction WHERE name = 'AI Tutor Chat'
+);end
+
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID)
+SELECT
+    r.gibbonRoleID,
+    a.gibbonActionID
+FROM gibbonRole r
+CROSS JOIN gibbonAction a
+WHERE a.name = 'AI Tutor Chat'
+AND (
+    (r.category = 'Staff' AND a.defaultPermissionAdmin = 'Y')
+    OR (r.category = 'Student' AND a.defaultPermissionStudent = 'Y')
+)
+AND NOT EXISTS (
+    SELECT 1 FROM gibbonPermission p
+    WHERE p.gibbonRoleID = r.gibbonRoleID
+    AND p.gibbonActionID = a.gibbonActionID
+);end
+";
