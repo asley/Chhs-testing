@@ -22,19 +22,19 @@ use Gibbon\Module\aiTeacher\AITeacherService;
 use Gibbon\Module\aiTeacher\OpenAIAPI; // Add this line
 
 // Module Functions
-function getAITeacherSettings($pdo, $scope = 'aiTeacher') {
+function getAITeacherSettings($connection2, $scope = 'aiTeacher') {
     try {
         // First check if the table exists
         $checkTable = "SHOW TABLES LIKE 'aiTeacherSettings'";
-        $tableExists = $pdo->executeQuery(array(), $checkTable)->rowCount() > 0;
-        
+        $tableExists = $connection2->executeQuery(array(), $checkTable)->rowCount() > 0;
+
         if (!$tableExists) {
             return array();
         }
-        
+
         $sql = "SELECT name, value FROM aiTeacherSettings WHERE scope = :scope";
-        $result = $pdo->executeQuery(array('scope' => $scope), $sql);
-        
+        $result = $connection2->executeQuery(array('scope' => $scope), $sql);
+
         $settings = array();
         while ($row = $result->fetch()) {
             $settings[$row['name']] = $row['value'];
@@ -47,26 +47,26 @@ function getAITeacherSettings($pdo, $scope = 'aiTeacher') {
     }
 }
 
-function logAITeacherAction($pdo, $gibbonPersonID, $action, $subject, $details, $response) {
+function logAITeacherAction($connection2, $gibbonPersonID, $action, $subject, $details, $response) {
     try {
         // First check if the table exists
         $checkTable = "SHOW TABLES LIKE 'aiTeacherLogs'";
-        $tableExists = $pdo->executeQuery(array(), $checkTable)->rowCount() > 0;
-        
+        $tableExists = $connection2->executeQuery(array(), $checkTable)->rowCount() > 0;
+
         if (!$tableExists) {
             error_log("aiTeacherLogs table does not exist");
             return;
         }
 
-        $sql = "INSERT INTO aiTeacherLogs (gibbonPersonID, action, subject, details, response) 
+        $sql = "INSERT INTO aiTeacherLogs (gibbonPersonID, action, subject, details, response)
                 VALUES (:gibbonPersonID, :action, :subject, :details, :response)";
-        
+
         if (empty($sql)) {
             error_log("SQL query is empty in logAITeacherAction");
             return;
         }
 
-        $pdo->executeQuery(array(
+        $connection2->executeQuery(array(
             'gibbonPersonID' => $gibbonPersonID,
             'action' => $action,
             'subject' => $subject,
@@ -78,22 +78,22 @@ function logAITeacherAction($pdo, $gibbonPersonID, $action, $subject, $details, 
     }
 }
 
-function uploadAITeacherResource($pdo, $gibbonPersonID, $file, $subject, $description) {
-    $settings = getAITeacherSettings($pdo);
+function uploadAITeacherResource($connection2, $gibbonPersonID, $file, $subject, $description) {
+    $settings = getAITeacherSettings($connection2);
     $uploadPath = $settings['upload_path'] ?? 'uploads/aiTeacher';
-    
+
     // Create upload directory if it doesn't exist
     if (!file_exists($uploadPath)) {
         mkdir($uploadPath, 0755, true);
     }
-    
+
     $filename = basename($file['name']);
     $filepath = $uploadPath . '/' . $filename;
-    
+
     if (move_uploaded_file($file['tmp_name'], $filepath)) {
-        $sql = "INSERT INTO aiTeacherUploads (gibbonPersonID, filename, filepath, filetype, filesize, subject, description) 
+        $sql = "INSERT INTO aiTeacherUploads (gibbonPersonID, filename, filepath, filetype, filesize, subject, description)
                 VALUES (:gibbonPersonID, :filename, :filepath, :filetype, :filesize, :subject, :description)";
-        $pdo->executeQuery(array(
+        $connection2->executeQuery(array(
             'gibbonPersonID' => $gibbonPersonID,
             'filename' => $filename,
             'filepath' => $filepath,
@@ -123,8 +123,8 @@ function getAITeacherSettings($pdo) {
 }
 */
 
-function generateLessonPlan($pdo, $subject, $topic, $gradeLevel, $objectives) { // Added $objectives parameter
-    $settings = getAITeacherSettings($pdo);
+function generateLessonPlan($connection2, $subject, $topic, $gradeLevel, $objectives) { // Added $objectives parameter
+    $settings = getAITeacherSettings($connection2);
     
     if (empty($settings['openai_api_key'])) {
         error_log("AI Teacher - generateLessonPlan: OpenAI API key is not set.");
@@ -341,7 +341,7 @@ function generateSessionID() {
  * @param int|null $gibbonCourseID Optional course ID
  * @return string Session ID
  */
-function getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID, $gibbonCourseID = null) {
+function getOrCreateChatSession($connection2, $gibbonPersonID, $gibbonSchoolYearID, $gibbonCourseID = null) {
     try {
         // Check for existing active session (within last 30 minutes)
         $sql = "SELECT sessionID FROM aiTeacherChatSessions
@@ -349,7 +349,7 @@ function getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID, $gib
                 AND lastActivity > DATE_SUB(NOW(), INTERVAL 30 MINUTE)
                 ORDER BY lastActivity DESC LIMIT 1";
 
-        $result = $pdo->executeQuery(['personID' => $gibbonPersonID], $sql);
+        $result = $connection2->executeQuery(['personID' => $gibbonPersonID], $sql);
 
         if ($result && $result->rowCount() > 0) {
             $row = $result->fetch();
@@ -362,7 +362,7 @@ function getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID, $gib
                 (sessionID, gibbonPersonID, startTime, lastActivity, messageCount)
                 VALUES (:sessionID, :personID, NOW(), NOW(), 0)";
 
-        $pdo->executeQuery([
+        $connection2->executeQuery([
             'sessionID' => $sessionID,
             'personID' => $gibbonPersonID
         ], $sql);
@@ -386,13 +386,13 @@ function getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID, $gib
  * @param int|null $gibbonCourseID Optional course ID
  * @return bool Success
  */
-function saveStudentMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $message, $gibbonCourseID = null) {
+function saveStudentMessage($connection2, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $message, $gibbonCourseID = null) {
     try {
         $sql = "INSERT INTO aiTeacherStudentConversations
                 (gibbonPersonID, gibbonSchoolYearID, sessionID, message, sender, gibbonCourseID)
                 VALUES (:personID, :schoolYearID, :sessionID, :message, 'student', :courseID)";
 
-        $pdo->executeQuery([
+        $connection2->executeQuery([
             'personID' => $gibbonPersonID,
             'schoolYearID' => $gibbonSchoolYearID,
             'sessionID' => $sessionID,
@@ -404,7 +404,7 @@ function saveStudentMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $session
         $sql = "UPDATE aiTeacherChatSessions
                 SET lastActivity = NOW(), messageCount = messageCount + 1
                 WHERE sessionID = :sessionID";
-        $pdo->executeQuery(['sessionID' => $sessionID], $sql);
+        $connection2->executeQuery(['sessionID' => $sessionID], $sql);
 
         return true;
     } catch (Exception $e) {
@@ -425,13 +425,13 @@ function saveStudentMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $session
  * @param int|null $gibbonCourseID Optional course ID
  * @return bool Success
  */
-function saveAIMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $message, $context = null, $gibbonCourseID = null) {
+function saveAIMessage($connection2, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $message, $context = null, $gibbonCourseID = null) {
     try {
         $sql = "INSERT INTO aiTeacherStudentConversations
                 (gibbonPersonID, gibbonSchoolYearID, sessionID, message, sender, context, gibbonCourseID)
                 VALUES (:personID, :schoolYearID, :sessionID, :message, 'ai', :context, :courseID)";
 
-        $pdo->executeQuery([
+        $connection2->executeQuery([
             'personID' => $gibbonPersonID,
             'schoolYearID' => $gibbonSchoolYearID,
             'sessionID' => $sessionID,
@@ -444,7 +444,7 @@ function saveAIMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $
         $sql = "UPDATE aiTeacherChatSessions
                 SET lastActivity = NOW(), messageCount = messageCount + 1
                 WHERE sessionID = :sessionID";
-        $pdo->executeQuery(['sessionID' => $sessionID], $sql);
+        $connection2->executeQuery(['sessionID' => $sessionID], $sql);
 
         return true;
     } catch (Exception $e) {
@@ -461,17 +461,19 @@ function saveAIMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $
  * @param int $limit Number of messages to retrieve
  * @return array Array of messages
  */
-function getConversationContext($pdo, $sessionID, $limit = 10) {
+function getConversationContext($connection2, $sessionID, $limit = 10) {
     try {
+        // Cast limit to int to avoid SQL binding issues
+        $limit = (int)$limit;
+
         $sql = "SELECT message, sender, timestamp
                 FROM aiTeacherStudentConversations
                 WHERE sessionID = :sessionID
                 ORDER BY timestamp DESC
-                LIMIT :limit";
+                LIMIT $limit";
 
-        $result = $pdo->executeQuery([
-            'sessionID' => $sessionID,
-            'limit' => $limit
+        $result = $connection2->executeQuery([
+            'sessionID' => $sessionID
         ], $sql);
 
         $messages = [];
@@ -544,7 +546,7 @@ function checkInappropriateContent($message) {
  * @param int|null $gibbonCourseID Optional course ID
  * @return array ['success' => bool, 'response' => string, 'flagged' => bool, 'flagReason' => string|null]
  */
-function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message, $sessionID, $gibbonCourseID = null) {
+function getAITutorResponse($connection2, $gibbonPersonID, $gibbonSchoolYearID, $message, $sessionID, $gibbonCourseID = null) {
     try {
         // Check for inappropriate content
         $contentCheck = checkInappropriateContent($message);
@@ -554,7 +556,7 @@ function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message
                     SET flagged = 1, flagReason = :reason
                     WHERE sessionID = :sessionID
                     ORDER BY timestamp DESC LIMIT 1";
-            $pdo->executeQuery([
+            $connection2->executeQuery([
                 'reason' => $contentCheck['reason'],
                 'sessionID' => $sessionID
             ], $sql);
@@ -583,7 +585,7 @@ function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message
         }
 
         // Get conversation context
-        $context = getConversationContext($pdo, $sessionID, 10);
+        $context = getConversationContext($connection2, $sessionID, 10);
 
         // Build context string for AI
         $contextString = "";
@@ -593,7 +595,7 @@ function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message
         }
 
         // Get AI settings
-        $settings = getAITeacherSettings($pdo);
+        $settings = getAITeacherSettings($connection2);
         $apiKey = $settings['deepseek_api_key'] ?? null;
 
         if (empty($apiKey)) {
@@ -641,7 +643,7 @@ function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message
         }
 
         // Save AI response to database
-        saveAIMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $aiResponse, json_encode($context), $gibbonCourseID);
+        saveAIMessage($connection2, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $aiResponse, json_encode($context), $gibbonCourseID);
 
         return [
             'success' => true,

@@ -56,13 +56,13 @@ try {
             }
 
             // Save student message
-            saveStudentMessage($pdo, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $message, $gibbonCourseID);
+            saveStudentMessage($connection2, $gibbonPersonID, $gibbonSchoolYearID, $sessionID, $message, $gibbonCourseID);
 
             // Get AI response
-            $result = getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message, $sessionID, $gibbonCourseID);
+            $result = getAITutorResponse($connection2, $gibbonPersonID, $gibbonSchoolYearID, $message, $sessionID, $gibbonCourseID);
 
             // Log action
-            logAITeacherAction($pdo, $gibbonPersonID, 'AI Tutor Chat', 'General', $message, $result['response'] ?? '');
+            logAITeacherAction($connection2, $gibbonPersonID, 'AI Tutor Chat', 'General', $message, $result['response'] ?? '');
 
             echo json_encode($result);
             break;
@@ -86,7 +86,7 @@ try {
                     AND sender = 'ai'
                     ORDER BY timestamp DESC LIMIT 1";
 
-            $pdo->executeQuery([
+            $connection2->executeQuery([
                 'rating' => $rating,
                 'sessionID' => $sessionID
             ], $sql);
@@ -108,7 +108,7 @@ try {
                     AND sender = 'ai'
                     ORDER BY timestamp DESC LIMIT 1";
 
-            $pdo->executeQuery([
+            $connection2->executeQuery([
                 'reason' => $reason,
                 'sessionID' => $sessionID
             ], $sql);
@@ -128,7 +128,7 @@ try {
                     (sessionID, gibbonPersonID, startTime, lastActivity, messageCount)
                     VALUES (:sessionID, :personID, NOW(), NOW(), 0)";
 
-            $pdo->executeQuery([
+            $connection2->executeQuery([
                 'sessionID' => $newSessionID,
                 'personID' => $gibbonPersonID
             ], $sql);
@@ -151,7 +151,7 @@ try {
                 exit;
             }
 
-            $messages = getConversationContext($pdo, $sessionID, 50);
+            $messages = getConversationContext($connection2, $sessionID, 50);
 
             echo json_encode([
                 'success' => true,
