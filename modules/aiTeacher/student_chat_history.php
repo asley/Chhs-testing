@@ -24,6 +24,8 @@ require_once __DIR__ . '/../../functions.php';
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
+use Gibbon\Services\Format;
+
 $page->breadcrumbs
     ->add(__('AI Tutor Chat'), 'student_ai_tutor.php')
     ->add(__('Chat History'));
@@ -81,8 +83,8 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
 
             while ($row = $result->fetch()) {
                 $sessionID = $row['sessionID'];
-                $startTime = dateConvertBack($guid, date('Y-m-d', strtotime($row['startTime'])));
-                $lastActivity = dateConvertBack($guid, date('Y-m-d H:i', strtotime($row['lastActivity'])));
+                $startTime = Format::date($row['startTime']);
+                $lastActivity = Format::dateTime($row['lastActivity']);
                 $messageCount = $row['messageCount'];
                 $topic = $row['topic'] ?? __('General Discussion');
 

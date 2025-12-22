@@ -24,6 +24,8 @@ require_once __DIR__ . '/../../functions.php';
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
+use Gibbon\Services\Format;
+
 $page->breadcrumbs
     ->add(__('AI Tutor Chat'), 'student_ai_tutor.php')
     ->add(__('Chat History'), 'student_chat_history.php')
@@ -65,11 +67,11 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
             echo '<table class="smallIntBorder fullWidth" cellspacing="0">';
             echo '<tr>';
             echo '<td style="width: 20%; font-weight: bold;">' . __('Started') . '</td>';
-            echo '<td>' . dateConvertBack($guid, date('Y-m-d H:i', strtotime($session['startTime']))) . '</td>';
+            echo '<td>' . Format::dateTime($session['startTime']) . '</td>';
             echo '</tr>';
             echo '<tr>';
             echo '<td style="font-weight: bold;">' . __('Last Activity') . '</td>';
-            echo '<td>' . dateConvertBack($guid, date('Y-m-d H:i', strtotime($session['lastActivity']))) . '</td>';
+            echo '<td>' . Format::dateTime($session['lastActivity']) . '</td>';
             echo '</tr>';
             echo '<tr>';
             echo '<td style="font-weight: bold;">' . __('Total Messages') . '</td>';
