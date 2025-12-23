@@ -34,8 +34,23 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
     $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
     $gibbonSchoolYearID = $gibbon->session->get('gibbonSchoolYearID');
 
-    // Get or create chat session
-    $sessionID = getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID);
+    // Check if resuming an existing session
+    $sessionID = $_GET['sessionID'] ?? null;
+
+    // If sessionID provided, verify it belongs to this user
+    if ($sessionID) {
+        $sql = "SELECT sessionID FROM aiTeacherChatSessions
+                WHERE sessionID = :sessionID AND gibbonPersonID = :personID";
+        $result = $pdo->executeQuery(['sessionID' => $sessionID, 'personID' => $gibbonPersonID], $sql);
+
+        if ($result->rowCount() === 0) {
+            // Invalid session, create new one
+            $sessionID = getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID);
+        }
+    } else {
+        // Get or create chat session
+        $sessionID = getOrCreateChatSession($pdo, $gibbonPersonID, $gibbonSchoolYearID);
+    }
 
     // Get AI settings to check if configured
     $settings = getAITeacherSettings($pdo);

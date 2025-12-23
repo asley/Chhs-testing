@@ -125,7 +125,7 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
             }
 
             echo '<p style="margin-top: 20px;">';
-            echo '<a class="button" href="' . $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/aiTeacher/student_ai_tutor.php">';
+            echo '<a class="button" href="' . $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/aiTeacher/student_ai_tutor.php&sessionID=' . $sessionID . '">';
             echo __('Continue This Conversation');
             echo '</a>';
             echo '</p>';
