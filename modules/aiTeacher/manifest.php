@@ -360,6 +360,26 @@ $actionRows = array(
         'categoryPermissionStudent' => 'Y',
         'categoryPermissionParent'  => 'N',
         'categoryPermissionOther'   => 'N'
+    ),
+
+    array(
+        'name'                      => 'Student AI Tutor Usage',
+        'precedence'                => '0',
+        'category'                  => 'Monitoring',
+        'description'               => 'Monitor student AI tutor conversations and view prompts',
+        'URLList'                   => 'teacher_student_usage.php,teacher_conversation_view.php',
+        'entryURL'                  => 'teacher_student_usage.php',
+        'entrySidebar'              => 'Y',
+        'menuShow'                  => 'Y',
+        'defaultPermissionAdmin'    => 'Y',
+        'defaultPermissionTeacher'  => 'Y',
+        'defaultPermissionStudent'  => 'N',
+        'defaultPermissionParent'   => 'N',
+        'defaultPermissionSupport'  => 'N',
+        'categoryPermissionStaff'   => 'Y',
+        'categoryPermissionStudent' => 'N',
+        'categoryPermissionParent'  => 'N',
+        'categoryPermissionOther'   => 'N'
     )
 );
 
