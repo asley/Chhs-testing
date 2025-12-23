@@ -51,28 +51,26 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
     $form->setTitle(__('Filter'));
     $form->setClass('noIntBorder fullWidth');
 
-    // Get list of students
-    $sqlStudents = "SELECT p.gibbonPersonID, p.preferredName, p.surname, r.name as rollGroup
+    // Get list of students (simplified query without roll group to avoid table issues)
+    $sqlStudents = "SELECT p.gibbonPersonID, p.preferredName, p.surname
                     FROM gibbonPerson p
                     JOIN gibbonStudentEnrolment se ON p.gibbonPersonID = se.gibbonPersonID
-                    LEFT JOIN gibbonRollGroup r ON se.gibbonRollGroupID = r.gibbonRollGroupID
                     WHERE se.gibbonSchoolYearID = :gibbonSchoolYearID
                     AND p.status = 'Full'
                     ORDER BY p.surname, p.preferredName";
     $resultStudents = $pdo->executeQuery(['gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')], $sqlStudents);
 
-    $students = [];
-    $students[''] = __('All Students');
+    $students = ['' => __('All Students')];
     while ($student = $resultStudents->fetch()) {
-        $students[$student['gibbonPersonID']] = $student['surname'] . ', ' . $student['preferredName'] .
-                                                 ($student['rollGroup'] ? ' (' . $student['rollGroup'] . ')' : '');
+        $students[$student['gibbonPersonID']] = $student['surname'] . ', ' . $student['preferredName'];
     }
 
     $row = $form->addRow();
         $row->addLabel('gibbonPersonIDStudent', __('Student'));
         $row->addSelect('gibbonPersonIDStudent')
             ->fromArray($students)
-            ->selected($gibbonPersonIDStudent);
+            ->selected($gibbonPersonIDStudent)
+            ->placeholder();
 
     $row = $form->addRow();
         $row->addLabel('dateFrom', __('Date From'));
