@@ -13,6 +13,12 @@ require_once __DIR__ . '/../../functions.php';
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
+// Clear any output buffer and suppress warnings
+if (ob_get_level()) {
+    ob_clean();
+}
+error_reporting(E_ERROR | E_PARSE);
+
 // Set JSON header
 header('Content-Type: application/json');
 

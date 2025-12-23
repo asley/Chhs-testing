@@ -628,10 +628,10 @@ function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message
                        "- Use *italics* for definitions or examples\n" .
                        "- Use numbered lists (1. 2. 3.) for step-by-step explanations\n" .
                        "- Use bullet points (- item) for listing concepts\n" .
-                       "- For math expressions: Use LaTeX with $ for inline math like $F = ma$ or $$....$$ for equations on their own line\n" .
-                       "- For physics formulas: Use proper symbols like $v = \\frac{d}{t}$, $a = \\frac{\\Delta v}{\\Delta t}$, $E = mc^2$\n" .
-                       "- For chemistry: Use subscripts like H$_2$O, CO$_2$, or superscripts for charges like Ca$^{2+}$\n" .
-                       "- Example: 'The formula for velocity is $v = \\frac{distance}{time}$ where $v$ is velocity in m/s.'\n\n";
+                       "- For math expressions: Use LaTeX with \$ for inline math or \$\$....\$\$ for equations on their own line\n" .
+                       "- For physics formulas: Use proper LaTeX symbols in math mode\n" .
+                       "- For chemistry: Use subscripts and superscripts in LaTeX math mode\n" .
+                       "- Example: 'The formula for velocity is (in LaTeX) where v is velocity in m/s.'\n\n";
 
         if (!empty($contextString)) {
             $systemPrompt .= "Previous conversation:\n{$contextString}\n\n";
