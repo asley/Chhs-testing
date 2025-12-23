@@ -79,24 +79,29 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
         }
 
     // Get list of roll groups/classes (check if table exists first)
+    $showClassFilter = false;
+    $rollGroups = ['' => __('All Classes')];
+
     try {
         $sqlRollGroups = "SELECT gibbonRollGroupID, name, nameShort
                           FROM gibbonRollGroup
                           WHERE gibbonSchoolYearID = :gibbonSchoolYearID
                           ORDER BY name";
         $resultRollGroups = $pdo->executeQuery(['gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')], $sqlRollGroups);
+
+        if ($resultRollGroups && $resultRollGroups->rowCount() > 0) {
+            while ($rollGroup = $resultRollGroups->fetch()) {
+                $rollGroups[$rollGroup['gibbonRollGroupID']] = $rollGroup['name'];
+            }
+            $showClassFilter = true;
+        }
     } catch (Exception $e) {
-        // Table doesn't exist, skip roll group filter
-        $resultRollGroups = null;
+        // Table doesn't exist or query failed, skip roll group filter
+        $showClassFilter = false;
     }
 
-    // Only show class filter if table exists
-    if ($resultRollGroups) {
-        $rollGroups = ['' => __('All Classes')];
-        while ($rollGroup = $resultRollGroups->fetch()) {
-            $rollGroups[$rollGroup['gibbonRollGroupID']] = $rollGroup['name'];
-        }
-
+    // Only show class filter if we successfully loaded roll groups
+    if ($showClassFilter) {
         $row = $form->addRow();
             $row->addLabel('gibbonRollGroupID', __('Class'));
             $selectRollGroup = $row->addSelect('gibbonRollGroupID')
