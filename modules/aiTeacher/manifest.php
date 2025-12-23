@@ -25,7 +25,7 @@ $description = 'AI-powered teaching assistant for CSEC curriculum support, asses
 $entryURL    = "index.php";
 $type        = "Additional";
 $category    = 'Teaching & Learning';
-$version     = '2.0.01';
+$version     = '2.1.00';
 $author      = 'Asley Smith';
 $url         = 'https://tasanz.com';            
 
