@@ -26,6 +26,9 @@ require_once __DIR__ . '/moduleFunctions.php';
 
 use Gibbon\Services\Format;
 
+// Get database from container
+$pdo = $container->get('db');
+
 $page->breadcrumbs
     ->add(__('Student AI Tutor Usage'), 'teacher_student_usage.php')
     ->add(__('View Conversation'));

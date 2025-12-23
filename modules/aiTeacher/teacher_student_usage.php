@@ -28,6 +28,9 @@ use Gibbon\Services\Format;
 use Gibbon\Forms\Form;
 use Gibbon\Tables\DataTable;
 
+// Get database from container
+$pdo = $container->get('db');
+
 $page->breadcrumbs->add(__('Student AI Tutor Usage'));
 
 // Check if user has access
@@ -50,9 +53,8 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
 
     $row = $form->addRow();
         $row->addLabel('gibbonPersonIDStudent', __('Student'));
-        $row->addSelectStudent('gibbonPersonIDStudent', $gibbon->session->get('gibbonSchoolYearID'))
-            ->selected($gibbonPersonIDStudent)
-            ->placeholder();
+        $row->addSelectStudent('gibbonPersonIDStudent', $gibbon->session->get('gibbonSchoolYearID'), ['allStudents' => true])
+            ->setSelected($gibbonPersonIDStudent);
 
     $row = $form->addRow();
         $row->addLabel('dateFrom', __('Date From'));
@@ -79,7 +81,6 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
     ];
 
     $sql = "SELECT
-                c.gibbonAITeacherStudentConversationID,
                 c.gibbonPersonID,
                 c.sessionID,
                 c.message,
