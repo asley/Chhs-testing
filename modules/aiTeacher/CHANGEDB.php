@@ -177,3 +177,46 @@ AND NOT EXISTS (
     AND p.gibbonActionID = a.gibbonActionID
 );end
 ";
+
+// v2.1.00 - Add Teacher Monitoring Dashboard action
+$count++;
+$sql[$count][0] = "2.1.00";
+$sql[$count][1] = "
+-- Add Student AI Tutor Usage action for teachers
+INSERT INTO gibbonAction (
+    gibbonModuleID, name, precedence, category, description,
+    URLList, entryURL, entrySidebar, menuShow,
+    defaultPermissionAdmin, defaultPermissionTeacher,
+    defaultPermissionStudent, defaultPermissionParent,
+    defaultPermissionSupport, categoryPermissionStaff,
+    categoryPermissionStudent, categoryPermissionParent,
+    categoryPermissionOther
+)
+SELECT
+    gibbonModuleID, 'Student AI Tutor Usage', '0', 'Monitoring',
+    'Monitor student AI tutor conversations and view prompts',
+    'teacher_student_usage.php,teacher_conversation_view.php',
+    'teacher_student_usage.php', 'Y', 'Y', 'Y', 'Y', 'N', 'N', 'N',
+    'Y', 'N', 'N', 'N'
+FROM gibbonModule
+WHERE name = 'aiTeacher'
+AND NOT EXISTS (
+    SELECT 1 FROM gibbonAction WHERE name = 'Student AI Tutor Usage'
+);end
+
+-- Grant permissions to teachers and admins
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID)
+SELECT r.gibbonRoleID, a.gibbonActionID
+FROM gibbonRole r
+CROSS JOIN gibbonAction a
+WHERE a.name = 'Student AI Tutor Usage'
+AND (
+    (r.category = 'Staff' AND a.defaultPermissionAdmin = 'Y')
+    OR (r.category = 'Staff' AND a.defaultPermissionTeacher = 'Y')
+)
+AND NOT EXISTS (
+    SELECT 1 FROM gibbonPermission p
+    WHERE p.gibbonRoleID = r.gibbonRoleID
+    AND p.gibbonActionID = a.gibbonActionID
+);end
+";
