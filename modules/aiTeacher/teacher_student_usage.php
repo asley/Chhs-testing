@@ -47,9 +47,13 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
     $flaggedOnly = $_GET['flaggedOnly'] ?? '';
 
     // Create filter form
-    $form = Form::create('filter', $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/aiTeacher/teacher_student_usage.php');
+    $form = Form::create('filter', $gibbon->session->get('absoluteURL') . '/index.php');
     $form->setTitle(__('Filter'));
     $form->setClass('noIntBorder fullWidth');
+    $form->setMethod('GET');
+
+    // Add hidden field for 'q' parameter to preserve page location
+    $form->addHiddenValue('q', '/modules/aiTeacher/teacher_student_usage.php');
 
     // Get list of students (simplified query without roll group to avoid table issues)
     $sqlStudents = "SELECT p.gibbonPersonID, p.preferredName, p.surname
@@ -67,10 +71,11 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
 
     $row = $form->addRow();
         $row->addLabel('gibbonPersonIDStudent', __('Student'));
-        $row->addSelect('gibbonPersonIDStudent')
-            ->fromArray($students)
-            ->selected($gibbonPersonIDStudent)
-            ->placeholder();
+        $select = $row->addSelect('gibbonPersonIDStudent')
+            ->fromArray($students);
+        if (!empty($gibbonPersonIDStudent)) {
+            $select->selected($gibbonPersonIDStudent);
+        }
 
     $row = $form->addRow();
         $row->addLabel('dateFrom', __('Date From'));
