@@ -42,6 +42,7 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
 
     // Get filter parameters
     $gibbonPersonIDStudent = $_GET['gibbonPersonIDStudent'] ?? '';
+    $gibbonRollGroupID = $_GET['gibbonRollGroupID'] ?? '';
     $dateFrom = $_GET['dateFrom'] ?? date('Y-m-d', strtotime('-7 days'));
     $dateTo = $_GET['dateTo'] ?? date('Y-m-d');
     $flaggedOnly = $_GET['flaggedOnly'] ?? '';
@@ -75,6 +76,26 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
             ->fromArray($students);
         if (!empty($gibbonPersonIDStudent)) {
             $select->selected($gibbonPersonIDStudent);
+        }
+
+    // Get list of roll groups/classes
+    $sqlRollGroups = "SELECT gibbonRollGroupID, name, nameShort
+                      FROM gibbonRollGroup
+                      WHERE gibbonSchoolYearID = :gibbonSchoolYearID
+                      ORDER BY name";
+    $resultRollGroups = $pdo->executeQuery(['gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')], $sqlRollGroups);
+
+    $rollGroups = ['' => __('All Classes')];
+    while ($rollGroup = $resultRollGroups->fetch()) {
+        $rollGroups[$rollGroup['gibbonRollGroupID']] = $rollGroup['name'];
+    }
+
+    $row = $form->addRow();
+        $row->addLabel('gibbonRollGroupID', __('Class'));
+        $selectRollGroup = $row->addSelect('gibbonRollGroupID')
+            ->fromArray($rollGroups);
+        if (!empty($gibbonRollGroupID)) {
+            $selectRollGroup->selected($gibbonRollGroupID);
         }
 
     $row = $form->addRow();
@@ -114,15 +135,25 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
                 p.preferredName,
                 s.messageCount,
                 s.startTime,
-                s.lastActivity
+                s.lastActivity,
+                rg.name as rollGroup
             FROM aiTeacherStudentConversations c
             JOIN gibbonPerson p ON c.gibbonPersonID = p.gibbonPersonID
             LEFT JOIN aiTeacherChatSessions s ON c.sessionID = s.sessionID
+            LEFT JOIN gibbonStudentEnrolment se ON p.gibbonPersonID = se.gibbonPersonID AND se.gibbonSchoolYearID = :gibbonSchoolYearID
+            LEFT JOIN gibbonRollGroup rg ON se.gibbonRollGroupID = rg.gibbonRollGroupID
             WHERE c.timestamp BETWEEN :dateFrom AND :dateTo";
+
+    $data['gibbonSchoolYearID'] = $gibbon->session->get('gibbonSchoolYearID');
 
     if (!empty($gibbonPersonIDStudent)) {
         $sql .= " AND c.gibbonPersonID = :gibbonPersonID";
         $data['gibbonPersonID'] = $gibbonPersonIDStudent;
+    }
+
+    if (!empty($gibbonRollGroupID)) {
+        $sql .= " AND se.gibbonRollGroupID = :gibbonRollGroupID";
+        $data['gibbonRollGroupID'] = $gibbonRollGroupID;
     }
 
     if (!empty($flaggedOnly)) {
@@ -152,6 +183,10 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
 
             while ($row = $result->fetch()) {
                 $studentName = Format::name('', $row['preferredName'], $row['surname'], 'Student', true);
+                // Add class name if available
+                if (!empty($row['rollGroup'])) {
+                    $studentName .= ' <span style="color: #666; font-size: 0.9em;">(' . htmlspecialchars($row['rollGroup']) . ')</span>';
+                }
                 $isStudent = ($row['sender'] === 'student');
                 $isFlagged = ($row['flagged'] == 1);
 
@@ -163,7 +198,7 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
 
                 echo '<tr class="' . $rowClass . '">';
 
-                // Student name
+                // Student name with class
                 echo '<td>' . $studentName . '</td>';
 
                 // Timestamp
