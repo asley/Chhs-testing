@@ -64,6 +64,11 @@ try {
             // Log action
             logAITeacherAction($pdo, $gibbonPersonID, 'AI Tutor Chat', 'General', $message, $result['response'] ?? '');
 
+            // Render response with markdown and math
+            if ($result['success'] && !empty($result['response'])) {
+                $result['responseHtml'] = renderMarkdownAndMath($result['response']);
+            }
+
             echo json_encode($result);
             break;
 

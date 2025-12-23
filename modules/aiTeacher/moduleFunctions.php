@@ -622,7 +622,16 @@ function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message
                        "- Never solve homework problems completely - guide them through it\n" .
                        "- Use encouraging language\n" .
                        "- Keep responses concise (2-3 short paragraphs max)\n" .
-                       "- Use simple language appropriate for high school level\n\n";
+                       "- Use simple language appropriate for high school level\n\n" .
+                       "FORMATTING INSTRUCTIONS (IMPORTANT - USE THESE):\n" .
+                       "- Use **bold** for emphasis and key terms\n" .
+                       "- Use *italics* for definitions or examples\n" .
+                       "- Use numbered lists (1. 2. 3.) for step-by-step explanations\n" .
+                       "- Use bullet points (- item) for listing concepts\n" .
+                       "- For math expressions: Use LaTeX with $ for inline math like $F = ma$ or $$....$$ for equations on their own line\n" .
+                       "- For physics formulas: Use proper symbols like $v = \\frac{d}{t}$, $a = \\frac{\\Delta v}{\\Delta t}$, $E = mc^2$\n" .
+                       "- For chemistry: Use subscripts like H$_2$O, CO$_2$, or superscripts for charges like Ca$^{2+}$\n" .
+                       "- Example: 'The formula for velocity is $v = \\frac{distance}{time}$ where $v$ is velocity in m/s.'\n\n";
 
         if (!empty($contextString)) {
             $systemPrompt .= "Previous conversation:\n{$contextString}\n\n";
@@ -661,6 +670,113 @@ function getAITutorResponse($pdo, $gibbonPersonID, $gibbonSchoolYearID, $message
             'flagReason' => null
         ];
     }
+}
+
+/**
+ * Render markdown and mathematical expressions for AI tutor messages
+ *
+ * @param string $text The message text to render
+ * @return string HTML-formatted text
+ */
+function renderMarkdownAndMath($text) {
+    if (empty($text)) {
+        return '';
+    }
+
+    // First, escape HTML to prevent XSS
+    $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    // Split into lines for processing
+    $lines = explode("\n", $text);
+    $html = '';
+    $inList = false;
+    $inNumberedList = false;
+
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+
+        // Check for numbered list (1. item, 2. item, etc.)
+        if (preg_match('/^(\d+)\.\s+(.+)$/', $trimmed, $matches)) {
+            if (!$inNumberedList) {
+                if ($inList) {
+                    $html .= '</ul>';
+                    $inList = false;
+                }
+                $html .= '<ol class="ai-numbered-list">';
+                $inNumberedList = true;
+            }
+            $html .= '<li>' . formatInlineMarkdown($matches[2]) . '</li>';
+            continue;
+        }
+
+        // Check for bullet list (- item or * item)
+        if (preg_match('/^[-\*]\s+(.+)$/', $trimmed, $matches)) {
+            if (!$inList) {
+                if ($inNumberedList) {
+                    $html .= '</ol>';
+                    $inNumberedList = false;
+                }
+                $html .= '<ul class="ai-bullet-list">';
+                $inList = true;
+            }
+            $html .= '<li>' . formatInlineMarkdown($matches[1]) . '</li>';
+            continue;
+        }
+
+        // Close any open lists if we're not in a list line
+        if ($inList) {
+            $html .= '</ul>';
+            $inList = false;
+        }
+        if ($inNumberedList) {
+            $html .= '</ol>';
+            $inNumberedList = false;
+        }
+
+        // Process regular paragraph
+        if (!empty($trimmed)) {
+            $html .= '<p>' . formatInlineMarkdown($line) . '</p>';
+        } else {
+            $html .= '<br>';
+        }
+    }
+
+    // Close any remaining open lists
+    if ($inList) {
+        $html .= '</ul>';
+    }
+    if ($inNumberedList) {
+        $html .= '</ol>';
+    }
+
+    return $html;
+}
+
+/**
+ * Format inline markdown (bold, italics, math)
+ *
+ * @param string $text Text to format
+ * @return string Formatted HTML
+ */
+function formatInlineMarkdown($text) {
+    // Process math expressions first (to protect them from other formatting)
+    // Block math: $$...$$
+    $text = preg_replace_callback('/\$\$(.+?)\$\$/s', function($matches) {
+        return '<span class="math-block">\\[' . $matches[1] . '\\]</span>';
+    }, $text);
+
+    // Inline math: $...$
+    $text = preg_replace_callback('/\$(.+?)\$/s', function($matches) {
+        return '<span class="math-inline">\\(' . $matches[1] . '\\)</span>';
+    }, $text);
+
+    // Bold: **text**
+    $text = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $text);
+
+    // Italics: *text* (but not ** which is bold)
+    $text = preg_replace('/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/s', '<em>$1</em>', $text);
+
+    return $text;
 }
 
 /**

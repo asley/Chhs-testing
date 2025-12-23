@@ -90,6 +90,18 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
             // Add CSS for chat display
             echo '<link rel="stylesheet" type="text/css" href="' . $gibbon->session->get('absoluteURL') . '/modules/aiTeacher/css/student_tutor.css">';
 
+            // Add MathJax for mathematical expressions
+            echo '<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>';
+            echo '<style>
+                .ai-numbered-list, .ai-bullet-list { margin: 10px 0; padding-left: 25px; }
+                .ai-numbered-list li, .ai-bullet-list li { margin: 5px 0; }
+                .math-block { display: block; margin: 15px 0; text-align: center; }
+                .math-inline { display: inline; }
+                .message-bubble p { margin: 8px 0; }
+                .message-bubble p:first-child { margin-top: 0; }
+                .message-bubble p:last-child { margin-bottom: 0; }
+            </style>';
+
             // Get all messages for this session
             $messages = getConversationContext($pdo, $sessionID, 1000);
 
@@ -106,7 +118,12 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
                         echo '<div class="message-avatar">' . $avatar . '</div>';
                     }
                     echo '<div class="message-bubble">';
-                    echo '<p>' . nl2br(htmlspecialchars($msg['message'])) . '</p>';
+                    // Use markdown and math rendering for AI messages, simple formatting for student messages
+                    if ($isStudent) {
+                        echo '<p>' . nl2br(htmlspecialchars($msg['message'])) . '</p>';
+                    } else {
+                        echo renderMarkdownAndMath($msg['message']);
+                    }
                     echo '<span class="message-time" style="font-size: 0.8em; color: #666;">';
                     echo date('g:i A', strtotime($msg['timestamp']));
                     echo '</span>';

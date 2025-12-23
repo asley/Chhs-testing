@@ -59,8 +59,13 @@ async function sendMessage(event) {
         hideTypingIndicator();
 
         if (data.success) {
-            // Add AI response to chat
-            addMessageToChat(data.response, 'ai');
+            // Add AI response to chat (use HTML if available)
+            addMessageToChat(data.response, 'ai', data.responseHtml);
+
+            // Re-render math equations
+            if (window.MathJax) {
+                MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err));
+            }
 
             // Show feedback buttons
             showFeedbackButtons();
@@ -85,8 +90,11 @@ async function sendMessage(event) {
 
 /**
  * Add message to chat UI
+ * @param {string} message - The plain text message
+ * @param {string} sender - 'student' or 'ai'
+ * @param {string} messageHtml - Optional pre-rendered HTML for AI messages
  */
-function addMessageToChat(message, sender) {
+function addMessageToChat(message, sender, messageHtml = null) {
     const messagesContainer = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = sender === 'student' ? 'student-message' : 'ai-message';
@@ -99,7 +107,14 @@ function addMessageToChat(message, sender) {
         html += `<div class="message-avatar">${avatar}</div>`;
     }
     html += `<div class="message-bubble">`;
-    html += `<p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>`;
+
+    // Use pre-rendered HTML for AI messages if available, otherwise escape
+    if (sender === 'ai' && messageHtml) {
+        html += messageHtml;
+    } else {
+        html += `<p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>`;
+    }
+
     html += `<span class="message-time">${time}</span>`;
     html += `</div>`;
     if (sender === 'student') {
