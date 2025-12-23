@@ -78,25 +78,33 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
             $select->selected($gibbonPersonIDStudent);
         }
 
-    // Get list of roll groups/classes
-    $sqlRollGroups = "SELECT gibbonRollGroupID, name, nameShort
-                      FROM gibbonRollGroup
-                      WHERE gibbonSchoolYearID = :gibbonSchoolYearID
-                      ORDER BY name";
-    $resultRollGroups = $pdo->executeQuery(['gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')], $sqlRollGroups);
-
-    $rollGroups = ['' => __('All Classes')];
-    while ($rollGroup = $resultRollGroups->fetch()) {
-        $rollGroups[$rollGroup['gibbonRollGroupID']] = $rollGroup['name'];
+    // Get list of roll groups/classes (check if table exists first)
+    try {
+        $sqlRollGroups = "SELECT gibbonRollGroupID, name, nameShort
+                          FROM gibbonRollGroup
+                          WHERE gibbonSchoolYearID = :gibbonSchoolYearID
+                          ORDER BY name";
+        $resultRollGroups = $pdo->executeQuery(['gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')], $sqlRollGroups);
+    } catch (Exception $e) {
+        // Table doesn't exist, skip roll group filter
+        $resultRollGroups = null;
     }
 
-    $row = $form->addRow();
-        $row->addLabel('gibbonRollGroupID', __('Class'));
-        $selectRollGroup = $row->addSelect('gibbonRollGroupID')
-            ->fromArray($rollGroups);
-        if (!empty($gibbonRollGroupID)) {
-            $selectRollGroup->selected($gibbonRollGroupID);
+    // Only show class filter if table exists
+    if ($resultRollGroups) {
+        $rollGroups = ['' => __('All Classes')];
+        while ($rollGroup = $resultRollGroups->fetch()) {
+            $rollGroups[$rollGroup['gibbonRollGroupID']] = $rollGroup['name'];
         }
+
+        $row = $form->addRow();
+            $row->addLabel('gibbonRollGroupID', __('Class'));
+            $selectRollGroup = $row->addSelect('gibbonRollGroupID')
+                ->fromArray($rollGroups);
+            if (!empty($gibbonRollGroupID)) {
+                $selectRollGroup->selected($gibbonRollGroupID);
+            }
+    }
 
     $row = $form->addRow();
         $row->addLabel('dateFrom', __('Date From'));
