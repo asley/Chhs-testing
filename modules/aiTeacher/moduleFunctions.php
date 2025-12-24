@@ -815,3 +815,167 @@ function getChatHistory($pdo, $gibbonPersonID, $limit = 10) {
     }
 }
 
+/**
+ * Generate a conversation topic from the first question and answer
+ *
+ * @param \Gibbon\Database\Connection $pdo Database connection
+ * @param string $sessionID Session ID
+ * @return bool Success
+ */
+function generateConversationTopic($pdo, $sessionID) {
+    try {
+        // Check if topic already exists
+        $checkSQL = "SELECT topic FROM aiTeacherChatSessions WHERE sessionID = :sessionID";
+        $checkResult = $pdo->select($checkSQL, ['sessionID' => $sessionID]);
+
+        if ($checkResult && $checkResult->rowCount() > 0) {
+            $session = $checkResult->fetch();
+            if (!empty($session['topic'])) {
+                // Topic already exists, don't regenerate
+                return true;
+            }
+        }
+
+        // Get first student question and AI response
+        $sql = "SELECT message, sender FROM aiTeacherStudentConversations
+                WHERE sessionID = :sessionID
+                ORDER BY timestamp ASC LIMIT 2";
+
+        $result = $pdo->select($sql, ['sessionID' => $sessionID]);
+
+        if (!$result || $result->rowCount() < 2) {
+            // Not enough messages yet to generate topic
+            return false;
+        }
+
+        $messages = $result->fetchAll();
+        $firstQuestion = '';
+        $firstResponse = '';
+
+        foreach ($messages as $msg) {
+            if ($msg['sender'] === 'student' && empty($firstQuestion)) {
+                $firstQuestion = $msg['message'];
+            } elseif ($msg['sender'] === 'ai' && empty($firstResponse)) {
+                $firstResponse = $msg['message'];
+            }
+        }
+
+        if (empty($firstQuestion)) {
+            // Fallback: use first 50 chars of first message
+            $fallbackSQL = "SELECT message FROM aiTeacherStudentConversations
+                           WHERE sessionID = :sessionID AND sender = 'student'
+                           ORDER BY timestamp ASC LIMIT 1";
+            $fallbackResult = $pdo->select($fallbackSQL, ['sessionID' => $sessionID]);
+
+            if ($fallbackResult && $fallbackResult->rowCount() > 0) {
+                $fallbackMsg = $fallbackResult->fetch();
+                $topic = substr($fallbackMsg['message'], 0, 50);
+                if (strlen($fallbackMsg['message']) > 50) {
+                    $topic .= '...';
+                }
+
+                $updateSQL = "UPDATE aiTeacherChatSessions SET topic = :topic WHERE sessionID = :sessionID";
+                $pdo->update($updateSQL, ['topic' => $topic, 'sessionID' => $sessionID]);
+                return true;
+            }
+            return false;
+        }
+
+        // Use AI to generate a concise topic
+        $settings = getAITeacherSettings($pdo);
+        $apiKey = $settings['deepseek_api_key'] ?? null;
+
+        if (empty($apiKey)) {
+            // Fallback without AI: use first 50 chars of question
+            $topic = substr($firstQuestion, 0, 50);
+            if (strlen($firstQuestion) > 50) {
+                $topic .= '...';
+            }
+
+            $updateSQL = "UPDATE aiTeacherChatSessions SET topic = :topic WHERE sessionID = :sessionID";
+            $pdo->update($updateSQL, ['topic' => $topic, 'sessionID' => $sessionID]);
+            return true;
+        }
+
+        // Create AI API instance
+        $api = new \Gibbon\Module\aiTeacher\DeepSeekAPI($apiKey);
+
+        // Build prompt for topic generation
+        $prompt = "Based on this student question and AI response, generate a very concise topic title (maximum 6 words). " .
+                 "Only return the topic title, nothing else.\n\n" .
+                 "Student Question: {$firstQuestion}\n\n" .
+                 "AI Response: " . substr($firstResponse, 0, 200) . "...\n\n" .
+                 "Topic Title:";
+
+        $aiTopic = $api->generateResponse($prompt);
+
+        // Clean up the topic (remove quotes, trim, limit length)
+        $topic = trim($aiTopic);
+        $topic = str_replace(['"', "'", "\n", "\r"], '', $topic);
+        $topic = substr($topic, 0, 100); // Max 100 chars
+
+        if (empty($topic)) {
+            // Fallback if AI fails
+            $topic = substr($firstQuestion, 0, 50);
+            if (strlen($firstQuestion) > 50) {
+                $topic .= '...';
+            }
+        }
+
+        // Update session with generated topic
+        $updateSQL = "UPDATE aiTeacherChatSessions SET topic = :topic WHERE sessionID = :sessionID";
+        $pdo->update($updateSQL, ['topic' => $topic, 'sessionID' => $sessionID]);
+
+        return true;
+
+    } catch (Exception $e) {
+        error_log("Error in generateConversationTopic: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Update conversation topic (allows manual editing)
+ *
+ * @param \Gibbon\Database\Connection $pdo Database connection
+ * @param string $sessionID Session ID
+ * @param string $topic New topic
+ * @param int $gibbonPersonID Person ID (for authorization)
+ * @return bool Success
+ */
+function updateConversationTopic($pdo, $sessionID, $topic, $gibbonPersonID) {
+    try {
+        // Verify session belongs to this user
+        $checkSQL = "SELECT gibbonPersonID FROM aiTeacherChatSessions WHERE sessionID = :sessionID";
+        $checkResult = $pdo->select($checkSQL, ['sessionID' => $sessionID]);
+
+        if (!$checkResult || $checkResult->rowCount() === 0) {
+            return false;
+        }
+
+        $session = $checkResult->fetch();
+        if ($session['gibbonPersonID'] != $gibbonPersonID) {
+            // Not authorized
+            return false;
+        }
+
+        // Clean and validate topic
+        $topic = trim($topic);
+        $topic = substr($topic, 0, 100); // Max 100 chars
+
+        if (empty($topic)) {
+            return false;
+        }
+
+        // Update topic
+        $updateSQL = "UPDATE aiTeacherChatSessions SET topic = :topic WHERE sessionID = :sessionID";
+        $pdo->update($updateSQL, ['topic' => $topic, 'sessionID' => $sessionID]);
+
+        return true;
+
+    } catch (Exception $e) {
+        error_log("Error in updateConversationTopic: " . $e->getMessage());
+        return false;
+    }
+}
+

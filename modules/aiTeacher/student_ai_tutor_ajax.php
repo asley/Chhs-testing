@@ -75,6 +75,14 @@ try {
                 $result['responseHtml'] = renderMarkdownAndMath($result['response']);
             }
 
+            // Generate topic after first exchange (runs in background, doesn't affect response)
+            try {
+                generateConversationTopic($pdo, $sessionID);
+            } catch (Exception $e) {
+                // Don't let topic generation failure affect the response
+                error_log("Topic generation failed: " . $e->getMessage());
+            }
+
             echo json_encode($result);
             break;
 
@@ -168,6 +176,33 @@ try {
                 'success' => true,
                 'messages' => $messages
             ]);
+            break;
+
+        case 'updateTopic':
+            $sessionID = $_POST['sessionID'] ?? '';
+            $topic = trim($_POST['topic'] ?? '');
+
+            if (empty($sessionID) || empty($topic)) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Invalid session or topic'
+                ]);
+                exit;
+            }
+
+            $success = updateConversationTopic($pdo, $sessionID, $topic, $gibbonPersonID);
+
+            if ($success) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Conversation topic updated successfully'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Failed to update topic. Please try again.'
+                ]);
+            }
             break;
 
         default:

@@ -34,6 +34,13 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
     $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
     $gibbonSchoolYearID = $gibbon->session->get('gibbonSchoolYearID');
 
+    // Get user photo
+    $sqlPerson = "SELECT image_240 FROM gibbonPerson WHERE gibbonPersonID = :personID";
+    $resultPerson = $pdo->select($sqlPerson, ['personID' => $gibbonPersonID]);
+    $person = $resultPerson->fetch();
+    $userPhoto = $person['image_240'] ?? '';
+    $absoluteURL = $gibbon->session->get('absoluteURL');
+
     // Check if resuming an existing session
     $sessionID = $_GET['sessionID'] ?? null;
 
@@ -110,11 +117,25 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
         foreach ($context as $msg) {
             $isStudent = ($msg['sender'] === 'student');
             $messageClass = $isStudent ? 'student-message' : 'ai-message';
-            $avatar = $isStudent ? '👤' : '🤖';
+
+            // Generate avatar HTML
+            if ($isStudent) {
+                // Use student's photo
+                if (!empty($userPhoto)) {
+                    $photoPath = $absoluteURL . '/' . $userPhoto;
+                    $avatarHTML = '<img src="' . $photoPath . '" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">';
+                } else {
+                    // Default placeholder if no photo
+                    $avatarHTML = '<img src="' . $absoluteURL . '/themes/Default/img/anonymous_240.jpg" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">';
+                }
+            } else {
+                // AI avatar - use robot emoji
+                $avatarHTML = '🤖';
+            }
 
             echo '<div class="' . $messageClass . '">';
             if (!$isStudent) {
-                echo '<div class="message-avatar">' . $avatar . '</div>';
+                echo '<div class="message-avatar">' . $avatarHTML . '</div>';
             }
             echo '<div class="message-bubble">';
             // Use markdown and math rendering for AI messages, simple formatting for student messages
@@ -126,7 +147,7 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
             echo '<span class="message-time">' . date('g:i A', strtotime($msg['timestamp'])) . '</span>';
             echo '</div>';
             if ($isStudent) {
-                echo '<div class="message-avatar">' . $avatar . '</div>';
+                echo '<div class="message-avatar">' . $avatarHTML . '</div>';
             }
             echo '</div>';
         }
@@ -148,7 +169,8 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
     echo '<input type="hidden" id="sessionID" value="' . htmlspecialchars($sessionID) . '">';
     echo '<input type="hidden" id="gibbonPersonID" value="' . htmlspecialchars($gibbonPersonID) . '">';
     echo '<input type="hidden" id="gibbonSchoolYearID" value="' . htmlspecialchars($gibbonSchoolYearID) . '">';
-    echo '<input type="hidden" id="absoluteURL" value="' . $gibbon->session->get('absoluteURL') . '">';
+    echo '<input type="hidden" id="absoluteURL" value="' . $absoluteURL . '">';
+    echo '<input type="hidden" id="userPhoto" value="' . htmlspecialchars($userPhoto) . '">';
 
     echo '<div class="input-wrapper">';
     echo '<textarea id="messageInput"

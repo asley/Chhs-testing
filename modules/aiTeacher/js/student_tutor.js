@@ -99,12 +99,25 @@ function addMessageToChat(message, sender, messageHtml = null) {
     const messageDiv = document.createElement('div');
     messageDiv.className = sender === 'student' ? 'student-message' : 'ai-message';
 
-    const avatar = sender === 'student' ? '👤' : '🤖';
+    // Get avatar HTML
+    let avatarHTML;
+    if (sender === 'student') {
+        const userPhoto = document.getElementById('userPhoto').value;
+        const absoluteURL = document.getElementById('absoluteURL').value;
+        if (userPhoto) {
+            avatarHTML = `<img src="${absoluteURL}/${userPhoto}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">`;
+        } else {
+            avatarHTML = `<img src="${absoluteURL}/themes/Default/img/anonymous_240.jpg" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">`;
+        }
+    } else {
+        avatarHTML = '🤖';
+    }
+
     const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
     let html = '';
     if (sender === 'ai') {
-        html += `<div class="message-avatar">${avatar}</div>`;
+        html += `<div class="message-avatar">${avatarHTML}</div>`;
     }
     html += `<div class="message-bubble">`;
 
@@ -118,7 +131,7 @@ function addMessageToChat(message, sender, messageHtml = null) {
     html += `<span class="message-time">${time}</span>`;
     html += `</div>`;
     if (sender === 'student') {
-        html += `<div class="message-avatar">${avatar}</div>`;
+        html += `<div class="message-avatar">${avatarHTML}</div>`;
     }
 
     messageDiv.innerHTML = html;

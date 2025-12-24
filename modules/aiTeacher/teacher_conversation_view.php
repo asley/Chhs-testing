@@ -42,18 +42,20 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
     if (empty($sessionID)) {
         $page->addError(__('Invalid session ID.'));
     } else {
-        // Get session details
-        $sql = "SELECT s.*, p.surname, p.preferredName, p.gibbonPersonID
+        // Get session details including student photo
+        $sql = "SELECT s.*, p.surname, p.preferredName, p.gibbonPersonID, p.image_240
                 FROM aiTeacherChatSessions s
                 JOIN gibbonPerson p ON s.gibbonPersonID = p.gibbonPersonID
                 WHERE s.sessionID = :sessionID";
-        $result = $pdo->executeQuery(['sessionID' => $sessionID], $sql);
+        $result = $pdo->select($sql, ['sessionID' => $sessionID]);
 
         if ($result->rowCount() === 0) {
             $page->addError(__('Session not found.'));
         } else {
             $session = $result->fetch();
             $studentName = Format::name('', $session['preferredName'], $session['surname'], 'Student', true);
+            $studentPhoto = $session['image_240'] ?? '';
+            $absoluteURL = $gibbon->session->get('absoluteURL');
 
             echo '<div class="linkTop">';
             echo '<a href="' . $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/aiTeacher/teacher_student_usage.php">';
@@ -62,6 +64,14 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
             echo '</div>';
 
             echo '<h2>' . __('Student Conversation') . '</h2>';
+
+            // Display topic prominently if available
+            if (!empty($session['topic'])) {
+                echo '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+                echo '<div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">' . __('Conversation Topic') . '</div>';
+                echo '<div style="font-size: 18px; font-weight: 600;">' . htmlspecialchars($session['topic']) . '</div>';
+                echo '</div>';
+            }
 
             // Session info
             echo '<table class="smallIntBorder fullWidth" cellspacing="0">';
@@ -81,12 +91,6 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
             echo '<td style="font-weight: bold;">' . __('Total Messages') . '</td>';
             echo '<td>' . $session['messageCount'] . '</td>';
             echo '</tr>';
-            if (!empty($session['topic'])) {
-                echo '<tr>';
-                echo '<td style="font-weight: bold;">' . __('Topic') . '</td>';
-                echo '<td>' . htmlspecialchars($session['topic']) . '</td>';
-                echo '</tr>';
-            }
             echo '</table>';
 
             echo '<h3>' . __('Full Conversation') . '</h3>';
@@ -115,13 +119,24 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
                 foreach ($messages as $msg) {
                     $isStudent = ($msg['sender'] === 'student');
                     $messageClass = $isStudent ? 'student-message' : 'ai-message';
-                    $avatar = $isStudent ? '👤' : '🤖';
                     $isFlagged = isset($msg['flagged']) && $msg['flagged'] == 1;
+
+                    // Generate avatar HTML
+                    if ($isStudent) {
+                        if (!empty($studentPhoto)) {
+                            $photoPath = $absoluteURL . '/' . $studentPhoto;
+                            $avatarHTML = '<img src="' . $photoPath . '" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">';
+                        } else {
+                            $avatarHTML = '<img src="' . $absoluteURL . '/themes/Default/img/anonymous_240.jpg" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">';
+                        }
+                    } else {
+                        $avatarHTML = '🤖';
+                    }
 
                     echo '<div class="' . $messageClass . '" style="margin-bottom: 15px; ' . ($isFlagged ? 'border: 2px solid red; background: #ffe6e6;' : '') . '">';
 
                     if (!$isStudent) {
-                        echo '<div class="message-avatar">' . $avatar . '</div>';
+                        echo '<div class="message-avatar">' . $avatarHTML . '</div>';
                     }
 
                     echo '<div class="message-bubble">';
@@ -152,7 +167,7 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
                     echo '</div>';
 
                     if ($isStudent) {
-                        echo '<div class="message-avatar">' . $avatar . '</div>';
+                        echo '<div class="message-avatar">' . $avatarHTML . '</div>';
                     }
 
                     echo '</div>';
@@ -165,11 +180,113 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
                 echo '</div>';
             }
 
-            // Teacher notes section
-            echo '<h3 style="margin-top: 30px;">' . __('Teacher Notes') . '</h3>';
-            echo '<div class="linkTop">';
-            echo '<p><em>' . __('This section could be used for adding teacher observations or follow-up actions.') . '</em></p>';
+            // Teacher Feedback section
+            echo '<h3 style="margin-top: 30px;">' . __('Teacher Feedback') . '</h3>';
+
+            // Create table if it doesn't exist (do this first before any queries)
+            $createTableSQL = "CREATE TABLE IF NOT EXISTS aiTeacherConversationComments (
+                commentID INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                sessionID VARCHAR(64) NOT NULL,
+                gibbonPersonIDTeacher INT(10) UNSIGNED NOT NULL,
+                comment TEXT NOT NULL,
+                timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                INDEX (sessionID)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+            try {
+                $pdo->statement($createTableSQL);
+            } catch (Exception $e) {
+                error_log("Error creating aiTeacherConversationComments table: " . $e->getMessage());
+            }
+
+            // Handle feedback submission
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['teacherComment'])) {
+                $teacherComment = trim($_POST['teacherComment']);
+                $teacherID = $gibbon->session->get('gibbonPersonID');
+
+                if (!empty($teacherComment)) {
+                    try {
+                        // Insert comment
+                        $insertSQL = "INSERT INTO aiTeacherConversationComments
+                                     (sessionID, gibbonPersonIDTeacher, comment, timestamp)
+                                     VALUES (:sessionID, :teacherID, :comment, NOW())";
+                        $pdo->insert($insertSQL, [
+                            'sessionID' => $sessionID,
+                            'teacherID' => $teacherID,
+                            'comment' => $teacherComment
+                        ]);
+
+                        echo '<div class="success">' . __('Feedback added successfully.') . '</div>';
+                    } catch (Exception $e) {
+                        echo '<div class="error">' . __('Error saving feedback.') . '</div>';
+                        error_log("Error saving teacher feedback: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // Get existing comments
+            $commentsSQL = "SELECT c.*, t.preferredName, t.surname, t.image_240
+                           FROM aiTeacherConversationComments c
+                           JOIN gibbonPerson t ON c.gibbonPersonIDTeacher = t.gibbonPersonID
+                           WHERE c.sessionID = :sessionID
+                           ORDER BY c.timestamp DESC";
+
+            try {
+                $commentsResult = $pdo->select($commentsSQL, ['sessionID' => $sessionID]);
+
+                // Display existing comments
+                if ($commentsResult && $commentsResult->rowCount() > 0) {
+                    echo '<div style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px;">';
+                    echo '<h4 style="margin-top: 0;">' . __('Previous Feedback') . '</h4>';
+
+                    while ($comment = $commentsResult->fetch()) {
+                        $teacherName = Format::name('', $comment['preferredName'], $comment['surname'], 'Staff', false);
+                        $teacherPhoto = $comment['image_240'] ?? '';
+
+                        echo '<div style="display: flex; gap: 10px; margin-bottom: 15px; padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #667eea;">';
+
+                        // Teacher photo
+                        if (!empty($teacherPhoto)) {
+                            echo '<img src="' . $absoluteURL . '/' . $teacherPhoto . '" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">';
+                        } else {
+                            echo '<div style="width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center;">👨‍🏫</div>';
+                        }
+
+                        echo '<div style="flex: 1;">';
+                        echo '<div style="font-weight: bold; margin-bottom: 5px;">' . $teacherName . '</div>';
+                        echo '<div style="color: #666; font-size: 0.9em; margin-bottom: 8px;">' . Format::dateTime($comment['timestamp']) . '</div>';
+                        echo '<div style="line-height: 1.5;">' . nl2br(htmlspecialchars($comment['comment'])) . '</div>';
+                        echo '</div>';
+                        echo '</div>';
+                    }
+
+                    echo '</div>';
+                }
+            } catch (Exception $e) {
+                // Table might not exist yet, silently continue
+            }
+
+            // Add new comment form
+            echo '<form method="POST" action="">';
+            echo '<div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">';
+            echo '<h4 style="margin-top: 0;">' . __('Add Feedback') . '</h4>';
+            echo '<p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">' . __('Provide constructive feedback on this student\'s AI tutor conversation. This can help guide their learning and identify areas for improvement.') . '</p>';
+
+            echo '<textarea name="teacherComment"
+                          style="width: 100%; min-height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical;"
+                          placeholder="' . __('Enter your feedback here...') . '"
+                          required></textarea>';
+
+            echo '<div style="margin-top: 15px; text-align: right;">';
+            echo '<button type="submit"
+                          style="background: #667eea; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500;"
+                          onmouseover="this.style.background=\'#5568d3\'"
+                          onmouseout="this.style.background=\'#667eea\'">';
+            echo __('Add Feedback');
+            echo '</button>';
             echo '</div>';
+            echo '</div>';
+            echo '</form>';
         }
     }
 }

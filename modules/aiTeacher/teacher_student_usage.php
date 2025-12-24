@@ -26,7 +26,6 @@ require_once __DIR__ . '/moduleFunctions.php';
 
 use Gibbon\Services\Format;
 use Gibbon\Forms\Form;
-use Gibbon\Tables\DataTable;
 
 // Get database from container
 $pdo = $container->get('db');
@@ -38,14 +37,17 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
     $page->addError(__('You do not have access to this action.'));
 } else {
     echo '<h2>' . __('Student AI Tutor Usage Monitor') . '</h2>';
-    echo '<p>' . __('View what questions your students are asking the AI Tutor and monitor their conversations.') . '</p>';
+    echo '<p>' . __('View and monitor AI Tutor conversations from your students. Filter by class to review conversations for specific assignments.') . '</p>';
 
     // Get filter parameters
     $gibbonPersonIDStudent = $_GET['gibbonPersonIDStudent'] ?? '';
-    $gibbonRollGroupID = $_GET['gibbonRollGroupID'] ?? '';
+    $gibbonCourseClassID = $_GET['gibbonCourseClassID'] ?? '';
     $dateFrom = $_GET['dateFrom'] ?? date('Y-m-d', strtotime('-7 days'));
     $dateTo = $_GET['dateTo'] ?? date('Y-m-d');
     $flaggedOnly = $_GET['flaggedOnly'] ?? '';
+
+    // Get current teacher's ID
+    $currentTeacherID = $gibbon->session->get('gibbonPersonID');
 
     // Create filter form
     $form = Form::create('filter', $gibbon->session->get('absoluteURL') . '/index.php');
@@ -63,7 +65,7 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
                     WHERE se.gibbonSchoolYearID = :gibbonSchoolYearID
                     AND p.status = 'Full'
                     ORDER BY p.surname, p.preferredName";
-    $resultStudents = $pdo->executeQuery(['gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')], $sqlStudents);
+    $resultStudents = $pdo->select($sqlStudents, ['gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')]);
 
     $students = ['' => __('All Students')];
     while ($student = $resultStudents->fetch()) {
@@ -73,43 +75,37 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
     $row = $form->addRow();
         $row->addLabel('gibbonPersonIDStudent', __('Student'));
         $select = $row->addSelect('gibbonPersonIDStudent')
-            ->fromArray($students);
-        if (!empty($gibbonPersonIDStudent)) {
-            $select->selected($gibbonPersonIDStudent);
+            ->fromArray($students)
+            ->selected($gibbonPersonIDStudent);
+
+    // Get classes taught by the current teacher
+    $sqlClasses = "SELECT DISTINCT cc.gibbonCourseClassID, cc.name, cc.nameShort, c.name as courseName
+                   FROM gibbonCourseClass cc
+                   JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
+                   JOIN gibbonCourseClassPerson ccp ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+                   WHERE ccp.gibbonPersonID = :teacherID
+                   AND ccp.role = 'Teacher'
+                   AND c.gibbonSchoolYearID = :gibbonSchoolYearID
+                   ORDER BY c.name, cc.nameShort";
+
+    $resultClasses = $pdo->select($sqlClasses, [
+        'teacherID' => $currentTeacherID,
+        'gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')
+    ]);
+
+    $classes = ['' => __('All Classes')];
+    if ($resultClasses && $resultClasses->rowCount() > 0) {
+        while ($class = $resultClasses->fetch()) {
+            $classes[$class['gibbonCourseClassID']] = $class['courseName'] . ' - ' . $class['nameShort'];
         }
-
-    // Get list of roll groups/classes (check if table exists first)
-    $showClassFilter = false;
-    $rollGroups = ['' => __('All Classes')];
-
-    try {
-        $sqlRollGroups = "SELECT gibbonRollGroupID, name, nameShort
-                          FROM gibbonRollGroup
-                          WHERE gibbonSchoolYearID = :gibbonSchoolYearID
-                          ORDER BY name";
-        $resultRollGroups = $pdo->executeQuery(['gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')], $sqlRollGroups);
-
-        if ($resultRollGroups && $resultRollGroups->rowCount() > 0) {
-            while ($rollGroup = $resultRollGroups->fetch()) {
-                $rollGroups[$rollGroup['gibbonRollGroupID']] = $rollGroup['name'];
-            }
-            $showClassFilter = true;
-        }
-    } catch (Exception $e) {
-        // Table doesn't exist or query failed, skip roll group filter
-        $showClassFilter = false;
     }
 
-    // Only show class filter if we successfully loaded roll groups
-    if ($showClassFilter) {
-        $row = $form->addRow();
-            $row->addLabel('gibbonRollGroupID', __('Class'));
-            $selectRollGroup = $row->addSelect('gibbonRollGroupID')
-                ->fromArray($rollGroups);
-            if (!empty($gibbonRollGroupID)) {
-                $selectRollGroup->selected($gibbonRollGroupID);
-            }
-    }
+    // Add class filter dropdown
+    $row = $form->addRow();
+        $row->addLabel('gibbonCourseClassID', __('Class'));
+        $row->addSelect('gibbonCourseClassID')
+            ->fromArray($classes)
+            ->selected($gibbonCourseClassID);
 
     $row = $form->addRow();
         $row->addLabel('dateFrom', __('Date From'));
@@ -132,64 +128,72 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
     // Build query based on filters
     $data = [
         'dateFrom' => $dateFrom . ' 00:00:00',
-        'dateTo' => $dateTo . ' 23:59:59'
+        'dateTo' => $dateTo . ' 23:59:59',
+        'gibbonSchoolYearID' => $gibbon->session->get('gibbonSchoolYearID')
     ];
 
     $sql = "SELECT
                 c.gibbonPersonID,
                 c.sessionID,
-                c.message,
-                c.sender,
-                c.timestamp,
-                c.flagged,
-                c.flagReason,
-                c.rating,
                 p.surname,
                 p.preferredName,
                 s.messageCount,
                 s.startTime,
                 s.lastActivity,
-                rg.name as rollGroup
+                s.topic,
+                (SELECT CONCAT(course2.name, ' - ', cc2.nameShort)
+                 FROM gibbonCourseClassPerson ccp2
+                 JOIN gibbonCourseClass cc2 ON ccp2.gibbonCourseClassID = cc2.gibbonCourseClassID
+                 JOIN gibbonCourse course2 ON cc2.gibbonCourseID = course2.gibbonCourseID
+                 WHERE ccp2.gibbonPersonID = c.gibbonPersonID
+                 AND ccp2.role = 'Student'
+                 AND course2.gibbonSchoolYearID = :gibbonSchoolYearID
+                 AND (c.gibbonCourseID IS NULL OR course2.gibbonCourseID = c.gibbonCourseID)
+                 LIMIT 1) as className,
+                MAX(CASE WHEN c.flagged = 1 THEN 1 ELSE 0 END) as hasFlagged,
+                COUNT(CASE WHEN c.sender = 'student' THEN 1 END) as studentQuestions,
+                MIN(CASE WHEN c.sender = 'student' THEN c.message END) as firstQuestion
             FROM aiTeacherStudentConversations c
             JOIN gibbonPerson p ON c.gibbonPersonID = p.gibbonPersonID
             LEFT JOIN aiTeacherChatSessions s ON c.sessionID = s.sessionID
-            LEFT JOIN gibbonStudentEnrolment se ON p.gibbonPersonID = se.gibbonPersonID AND se.gibbonSchoolYearID = :gibbonSchoolYearID
-            LEFT JOIN gibbonRollGroup rg ON se.gibbonRollGroupID = rg.gibbonRollGroupID
             WHERE c.timestamp BETWEEN :dateFrom AND :dateTo";
-
-    $data['gibbonSchoolYearID'] = $gibbon->session->get('gibbonSchoolYearID');
 
     if (!empty($gibbonPersonIDStudent)) {
         $sql .= " AND c.gibbonPersonID = :gibbonPersonID";
         $data['gibbonPersonID'] = $gibbonPersonIDStudent;
     }
 
-    if (!empty($gibbonRollGroupID)) {
-        $sql .= " AND se.gibbonRollGroupID = :gibbonRollGroupID";
-        $data['gibbonRollGroupID'] = $gibbonRollGroupID;
+    if (!empty($gibbonCourseClassID)) {
+        $sql .= " AND EXISTS (
+            SELECT 1 FROM gibbonCourseClass filtercc
+            WHERE filtercc.gibbonCourseClassID = :gibbonCourseClassID
+            AND filtercc.gibbonCourseID = c.gibbonCourseID
+        )";
+        $data['gibbonCourseClassID'] = $gibbonCourseClassID;
     }
 
     if (!empty($flaggedOnly)) {
         $sql .= " AND c.flagged = 1";
     }
 
-    $sql .= " ORDER BY c.timestamp DESC LIMIT 500";
+    $sql .= " GROUP BY c.sessionID, c.gibbonPersonID, p.surname, p.preferredName, s.messageCount, s.startTime, s.lastActivity, s.topic";
+    $sql .= " ORDER BY s.startTime DESC LIMIT 100";
 
     try {
-        $result = $pdo->executeQuery($data, $sql);
+        $result = $pdo->select($sql, $data);
 
         if ($result->rowCount() > 0) {
-            echo '<h3>' . __('Conversation History') . ' (' . $result->rowCount() . ' ' . __('messages') . ')</h3>';
+            echo '<h3>' . __('Conversations') . ' (' . $result->rowCount() . ' ' . __('conversations') . ')</h3>';
 
             echo '<table class="fullWidth colorOddEven" cellspacing="0">';
             echo '<thead>';
             echo '<tr class="head">';
-            echo '<th style="width: 15%;">' . __('Student') . '</th>';
-            echo '<th style="width: 10%;">' . __('Date/Time') . '</th>';
-            echo '<th style="width: 8%;">' . __('Sender') . '</th>';
-            echo '<th style="width: 45%;">' . __('Message') . '</th>';
+            echo '<th style="width: 20%;">' . __('Student') . '</th>';
+            echo '<th style="width: 12%;">' . __('Started') . '</th>';
+            echo '<th style="width: 10%;">' . __('Messages') . '</th>';
+            echo '<th style="width: 40%;">' . __('Topic / First Question') . '</th>';
             echo '<th style="width: 10%;">' . __('Status') . '</th>';
-            echo '<th style="width: 12%;">' . __('Actions') . '</th>';
+            echo '<th style="width: 8%;">' . __('Actions') . '</th>';
             echo '</tr>';
             echo '</thead>';
             echo '<tbody>';
@@ -197,15 +201,14 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
             while ($row = $result->fetch()) {
                 $studentName = Format::name('', $row['preferredName'], $row['surname'], 'Student', true);
                 // Add class name if available
-                if (!empty($row['rollGroup'])) {
-                    $studentName .= ' <span style="color: #666; font-size: 0.9em;">(' . htmlspecialchars($row['rollGroup']) . ')</span>';
+                if (!empty($row['className'])) {
+                    $studentName .= ' <span style="color: #666; font-size: 0.9em;">(' . htmlspecialchars($row['className']) . ')</span>';
                 }
-                $isStudent = ($row['sender'] === 'student');
-                $isFlagged = ($row['flagged'] == 1);
+                $hasFlagged = ($row['hasFlagged'] == 1);
 
                 // Row styling
                 $rowClass = '';
-                if ($isFlagged) {
+                if ($hasFlagged) {
                     $rowClass = 'error';
                 }
 
@@ -214,27 +217,36 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
                 // Student name with class
                 echo '<td>' . $studentName . '</td>';
 
-                // Timestamp
-                echo '<td>' . Format::dateTime($row['timestamp']) . '</td>';
+                // Start time
+                echo '<td>' . Format::dateTime($row['startTime']) . '</td>';
 
-                // Sender
-                $senderIcon = $isStudent ? '👤 Student' : '🤖 AI';
-                echo '<td>' . $senderIcon . '</td>';
+                // Message count
+                $messageCount = $row['messageCount'] ?? ($row['studentQuestions'] * 2);
+                echo '<td>' . $messageCount . ' messages<br/>';
+                echo '<small style="color: #666;">' . $row['studentQuestions'] . ' questions</small></td>';
 
-                // Message (truncated if too long)
-                $message = htmlspecialchars($row['message']);
-                $truncated = strlen($message) > 200 ? substr($message, 0, 200) . '...' : $message;
-                echo '<td>' . nl2br($truncated) . '</td>';
+                // Topic or first question
+                echo '<td>';
+                if (!empty($row['topic'])) {
+                    // Show topic prominently
+                    echo '<strong style="color: #667eea; font-size: 1.05em;">📌 ' . htmlspecialchars($row['topic']) . '</strong>';
+                } else {
+                    // Fallback to first question if no topic
+                    $firstQuestion = htmlspecialchars($row['firstQuestion'] ?? 'N/A');
+                    $truncated = strlen($firstQuestion) > 150 ? substr($firstQuestion, 0, 150) . '...' : $firstQuestion;
+                    echo nl2br($truncated);
+                }
+                echo '</td>';
 
                 // Status
                 echo '<td>';
-                if ($isFlagged) {
+                if ($hasFlagged) {
                     echo '<span class="badge" style="background-color: #cc0000; color: white;">';
-                    echo '⚠️ Flagged: ' . ucfirst($row['flagReason']);
+                    echo '⚠️ Flagged';
                     echo '</span>';
-                } else if ($isStudent && $row['rating']) {
-                    echo '<span class="badge">';
-                    echo $row['rating'] === 'helpful' ? '👍 Helpful' : '👎 Not Helpful';
+                } else {
+                    echo '<span class="badge" style="background-color: #28a745; color: white;">';
+                    echo '✓ OK';
                     echo '</span>';
                 }
                 echo '</td>';
@@ -242,7 +254,7 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
                 // Actions
                 echo '<td>';
                 echo '<a href="' . $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/aiTeacher/teacher_conversation_view.php&sessionID=' . $row['sessionID'] . '">';
-                echo __('View Full Conversation');
+                echo __('View');
                 echo '</a>';
                 echo '</td>';
 
@@ -255,35 +267,33 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/teacher_student_
             // Summary statistics
             $result->execute();
             $stats = [
-                'totalMessages' => $result->rowCount(),
-                'studentMessages' => 0,
-                'aiMessages' => 0,
-                'flaggedMessages' => 0,
-                'uniqueSessions' => []
+                'totalConversations' => $result->rowCount(),
+                'totalMessages' => 0,
+                'totalQuestions' => 0,
+                'flaggedConversations' => 0,
+                'uniqueStudents' => []
             ];
 
             while ($row = $result->fetch()) {
-                if ($row['sender'] === 'student') {
-                    $stats['studentMessages']++;
-                } else {
-                    $stats['aiMessages']++;
+                $messageCount = $row['messageCount'] ?? ($row['studentQuestions'] * 2);
+                $stats['totalMessages'] += $messageCount;
+                $stats['totalQuestions'] += $row['studentQuestions'];
+
+                if ($row['hasFlagged'] == 1) {
+                    $stats['flaggedConversations']++;
                 }
 
-                if ($row['flagged'] == 1) {
-                    $stats['flaggedMessages']++;
-                }
-
-                $stats['uniqueSessions'][$row['sessionID']] = true;
+                $stats['uniqueStudents'][$row['gibbonPersonID']] = true;
             }
 
             echo '<div class="linkTop">';
             echo '<h4>' . __('Statistics') . '</h4>';
             echo '<ul>';
+            echo '<li><strong>' . __('Total Conversations') . ':</strong> ' . $stats['totalConversations'] . '</li>';
+            echo '<li><strong>' . __('Unique Students') . ':</strong> ' . count($stats['uniqueStudents']) . '</li>';
             echo '<li><strong>' . __('Total Messages') . ':</strong> ' . $stats['totalMessages'] . '</li>';
-            echo '<li><strong>' . __('Student Questions') . ':</strong> ' . $stats['studentMessages'] . '</li>';
-            echo '<li><strong>' . __('AI Responses') . ':</strong> ' . $stats['aiMessages'] . '</li>';
-            echo '<li><strong>' . __('Flagged Messages') . ':</strong> ' . $stats['flaggedMessages'] . '</li>';
-            echo '<li><strong>' . __('Unique Conversations') . ':</strong> ' . count($stats['uniqueSessions']) . '</li>';
+            echo '<li><strong>' . __('Student Questions') . ':</strong> ' . $stats['totalQuestions'] . '</li>';
+            echo '<li><strong>' . __('Conversations with Flagged Content') . ':</strong> ' . $stats['flaggedConversations'] . '</li>';
             echo '</ul>';
             echo '</div>';
 

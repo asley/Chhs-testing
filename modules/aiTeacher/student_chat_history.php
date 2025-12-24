@@ -45,7 +45,117 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
     echo '</div>';
 
     echo '<h2>' . __('Your Chat History') . '</h2>';
-    echo '<p>' . __('View your previous conversations with the AI tutor.') . '</p>';
+    echo '<p>' . __('View your previous conversations with the AI tutor. Click the pencil icon to rename a conversation.') . '</p>';
+
+    // Add CSS for editing
+    echo '<style>
+        .topic-display { display: flex; align-items: center; gap: 10px; }
+        .topic-text { flex: 1; }
+        .topic-edit-btn {
+            cursor: pointer;
+            color: #667eea;
+            font-size: 14px;
+            padding: 4px 8px;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            background: white;
+            transition: all 0.2s;
+        }
+        .topic-edit-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        .topic-input {
+            padding: 6px;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .topic-save-btn, .topic-cancel-btn {
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-left: 5px;
+        }
+        .topic-save-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+        .topic-cancel-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+        }
+    </style>';
+
+    // Add JavaScript for inline editing
+    echo '<script>
+    function editTopic(sessionID, currentTopic) {
+        const displayDiv = document.getElementById("topic-display-" + sessionID);
+        const editDiv = document.getElementById("topic-edit-" + sessionID);
+
+        displayDiv.style.display = "none";
+        editDiv.style.display = "flex";
+
+        const input = document.getElementById("topic-input-" + sessionID);
+        input.value = currentTopic;
+        input.focus();
+        input.select();
+    }
+
+    function cancelEdit(sessionID) {
+        const displayDiv = document.getElementById("topic-display-" + sessionID);
+        const editDiv = document.getElementById("topic-edit-" + sessionID);
+
+        displayDiv.style.display = "flex";
+        editDiv.style.display = "none";
+    }
+
+    async function saveTopic(sessionID) {
+        const input = document.getElementById("topic-input-" + sessionID);
+        const newTopic = input.value.trim();
+
+        if (!newTopic) {
+            alert("Topic cannot be empty");
+            return;
+        }
+
+        const absoluteURL = "' . $gibbon->session->get('absoluteURL') . '";
+
+        try {
+            const response = await fetch(absoluteURL + "/modules/aiTeacher/student_ai_tutor_ajax.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    action: "updateTopic",
+                    sessionID: sessionID,
+                    topic: newTopic
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update the display
+                const topicText = document.getElementById("topic-text-" + sessionID);
+                topicText.textContent = newTopic;
+
+                // Switch back to display mode
+                cancelEdit(sessionID);
+            } else {
+                alert("Failed to update topic: " + (data.error || "Unknown error"));
+            }
+        } catch (error) {
+            console.error("Error updating topic:", error);
+            alert("Failed to update topic. Please try again.");
+        }
+    }
+    </script>';
 
     // Get all chat sessions for this student
     try {
@@ -92,7 +202,22 @@ if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/student_ai_tutor
                 echo '<td>' . $startTime . '</td>';
                 echo '<td>' . $lastActivity . '</td>';
                 echo '<td>' . $messageCount . ' ' . __('messages') . '</td>';
-                echo '<td>' . htmlspecialchars($topic) . '</td>';
+                echo '<td>';
+
+                // Display mode
+                echo '<div class="topic-display" id="topic-display-' . $sessionID . '">';
+                echo '<span class="topic-text" id="topic-text-' . $sessionID . '">' . htmlspecialchars($topic) . '</span>';
+                echo '<button class="topic-edit-btn" onclick="editTopic(\'' . $sessionID . '\', \'' . htmlspecialchars($topic, ENT_QUOTES) . '\')">✏️ Edit</button>';
+                echo '</div>';
+
+                // Edit mode (hidden by default)
+                echo '<div class="topic-display" id="topic-edit-' . $sessionID . '" style="display: none;">';
+                echo '<input type="text" class="topic-input" id="topic-input-' . $sessionID . '" maxlength="100" />';
+                echo '<button class="topic-save-btn" onclick="saveTopic(\'' . $sessionID . '\')">✓ Save</button>';
+                echo '<button class="topic-cancel-btn" onclick="cancelEdit(\'' . $sessionID . '\')">✕ Cancel</button>';
+                echo '</div>';
+
+                echo '</td>';
                 echo '<td>';
                 echo '<a href="' . $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/aiTeacher/student_chat_view.php&sessionID=' . $sessionID . '">';
                 echo __('View Conversation');
