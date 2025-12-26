@@ -17,7 +17,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_genera
     /* Remove the style that hides the form */
 </style>
 <!-- Resource Generator (Updated Layout Like Curriculum Support) -->
-<form id="assessmentForm" class="w-full bg-white px-6 py-6 rounded shadow-md space-y-6" method="post" action="javascript:void(0);">
+<form id="assessmentForm" class="w-full bg-white px-6 py-6 rounded shadow-md space-y-6">
     <h2 class="text-2xl font-semibold text-indigo-700">Assessment Generator</h2>
 
     <!-- Subject -->
@@ -78,13 +78,32 @@ if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_genera
 
     <!-- Submit Button -->
     <div class="text-right">
-        <button type="Submit" id="generateAssessment" class="button">Generate Assessment</button>
+        <button type="button" id="generateAssessment" class="button" onclick="handleGenerateClick(event)">Generate Assessment</button>
+        <div id="readyIndicator" style="display:none; color:#10b981; font-size:0.85em; margin-top:8px;">✓ Ready to generate</div>
     </div>
 </form>
 <div id="assessmentOutput" style="padding:20px; margin-top:20px; background:#fff; border:1px solid #ddd; border-radius:4px; display:none;"></div>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+console.log("=== Resource Generator Script Loading ===");
+
+// Immediate fallback handler via onclick attribute
+function handleGenerateClick(event) {
+    console.log("Inline onclick handler fired!");
+    event.preventDefault();
+    if (window.resourceGeneratorReady) {
+        console.log("Using main handler");
+    } else {
+        console.warn("Main handler not ready, please wait...");
+        alert("Resource generator is still loading. Please wait a moment and try again.");
+    }
+}
+</script>
+<script>
+// Wait for both DOM and marked library to be ready
+function initResourceGenerator() {
+    console.log("Resource Generator: Initializing...");
+
     const generateBtn = document.getElementById("generateAssessment");
     const outputDiv = document.getElementById("assessmentOutput");
     const form = document.getElementById("assessmentForm");
@@ -94,44 +113,103 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
     }
 
-    generateBtn.addEventListener("click", async () => {
-        console.log("Button pressed!");
+    if (!form) {
+        console.error("Assessment form not found!");
+        return;
+    }
+
+    if (typeof marked === 'undefined') {
+        console.error("marked library not loaded yet, retrying...");
+        setTimeout(initResourceGenerator, 100);
+        return;
+    }
+
+    console.log("Resource Generator: All dependencies loaded, attaching event listener...");
+
+    // Override the inline handler
+    window.handleGenerateClick = async function(event) {
+        event.preventDefault(); // Prevent any default behavior
+
+        console.log("Generate Assessment button clicked!");
+
+        // Validate required fields
+        const subject = document.getElementById("subject").value;
+        const topic = document.getElementById("topic").value;
+        const assessmentType = document.getElementById("assessmentType").value;
+
+        if (!subject || !topic || !assessmentType) {
+            alert("Please fill in all required fields (Subject, Topic, and Assessment Type)");
+            return;
+        }
+
+        // Disable button and show loading
         generateBtn.disabled = true;
-        outputDiv.innerHTML = '<div class="loading">Generating...</div>';
+        generateBtn.textContent = "Generating...";
+        outputDiv.innerHTML = '<div class="loading" style="text-align:center; padding:20px; color:#667eea; font-size:1.1em;">⏳ Generating your assessment... This may take up to 2 minutes.</div>';
         outputDiv.style.display = "block";
+
         const controller = new AbortController();
         const timeout = setTimeout(() => {
             controller.abort();
         }, 120000); // 120 seconds
+
         try {
             const response = await fetch("modules/aiTeacher/resource_generator_ajax.php", {
                 method: "POST",
                 body: new FormData(form),
                 signal: controller.signal
             });
+
             clearTimeout(timeout);
+
+            if (!response.ok) {
+                throw new Error("Server returned error: " + response.status);
+            }
+
             const result = await response.json();
+
             if (result.success) {
                 const html = marked.parse(result.formatted_assessment || '');
                 outputDiv.innerHTML = `
-                    <div style=\"color:#2a7a2a;font-weight:bold;font-size:1.1em;margin-bottom:1em;\">${result.message}</div>
+                    <div style="color:#2a7a2a;font-weight:bold;font-size:1.1em;margin-bottom:1em;">✅ ${result.message}</div>
                     <div>${html}</div>
                 `;
                 outputDiv.scrollIntoView({ behavior: "smooth" });
             } else {
-                outputDiv.innerHTML = `<div class=\"error\" style=\"color:#b00;font-weight:bold;\">${result.message || result.error}</div>`;
+                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">❌ ${result.message || result.error}</div>`;
             }
         } catch (error) {
             clearTimeout(timeout);
             if (error.name === 'AbortError') {
-                outputDiv.innerHTML = `<div class=\"error\" style=\"color:#b00;font-weight:bold;\">The AI service is taking too long to respond. Please try again later.</div>`;
+                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">⏱️ The AI service is taking too long to respond. Please try again later.</div>`;
             } else {
-                outputDiv.innerHTML = `<div class=\"error\" style=\"color:#b00;font-weight:bold;\">${error.message}</div>`;
+                console.error("Error generating assessment:", error);
+                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">❌ ${error.message}</div>`;
             }
         } finally {
             generateBtn.disabled = false;
+            generateBtn.textContent = "Generate Assessment";
             outputDiv.style.display = "block";
         }
-    });
-});
+    };
+
+    // Set ready flag and show indicator
+    window.resourceGeneratorReady = true;
+    const readyIndicator = document.getElementById("readyIndicator");
+    if (readyIndicator) {
+        readyIndicator.style.display = "block";
+    }
+    console.log("Resource Generator: Ready!");
+}
+
+// Initialize when DOM is ready
+console.log("Document readyState:", document.readyState);
+if (document.readyState === 'loading') {
+    console.log("Waiting for DOMContentLoaded...");
+    document.addEventListener('DOMContentLoaded', initResourceGenerator);
+} else {
+    // DOM already loaded
+    console.log("DOM already ready, initializing now...");
+    initResourceGenerator();
+}
 </script>
