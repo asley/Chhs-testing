@@ -811,3 +811,36 @@ function getMaxUpload($asString = false)
 
     return $label;
 }
+
+/**
+ * Get the role category (Staff, Student, Parent, Other) for a given role ID.
+ *
+ * This is a backward compatibility function for v30.
+ * In v30+, use: $container->get(RoleGateway::class)->getRoleCategory($gibbonRoleID)
+ *
+ * @param string $gibbonRoleID The role ID to lookup
+ * @param PDO $connection2 Database connection (for compatibility, not used)
+ * @return string Role category (Staff, Student, Parent, Other)
+ */
+function getRoleCategory($gibbonRoleID, $connection2 = null)
+{
+    global $container;
+
+    if (empty($gibbonRoleID)) {
+        return '';
+    }
+
+    try {
+        $roleGateway = $container->get(\Gibbon\Domain\User\RoleGateway::class);
+        return $roleGateway->getRoleCategory($gibbonRoleID);
+    } catch (\Exception $e) {
+        // Fallback: direct database query if container not available
+        if ($connection2) {
+            $sql = 'SELECT category FROM gibbonRole WHERE gibbonRoleID=:gibbonRoleID';
+            $result = $connection2->prepare($sql);
+            $result->execute(['gibbonRoleID' => $gibbonRoleID]);
+            return $result->fetchColumn();
+        }
+        return '';
+    }
+}
