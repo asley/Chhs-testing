@@ -60,3 +60,8 @@ uploads/reports/*.pdf
 # Modules in development
 modules/Feed/
 modules/Stream/
+
+# Project documentation (internal use only)
+/*.md
+!README.md
+agents/*.md
