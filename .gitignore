@@ -56,3 +56,7 @@ modules/*/debug_*.php
 
 # PDF reports (generated)
 uploads/reports/*.pdf
+
+# Modules in development
+modules/Feed/
+modules/Stream/
