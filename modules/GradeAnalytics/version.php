@@ -1,4 +1,5 @@
 <?php
+$moduleVersion = '1.0.1';
 $version = '1.0.1';
 $releaseDate = '2025-01-03';
 $minimumGibbonVersion = 'v24.0.00';
