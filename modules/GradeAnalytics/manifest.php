@@ -23,7 +23,7 @@ $description = 'Internal Assessment Dashboard with dynamic charts and analytics'
 $entryURL = "gradeDashboard.php";
 $type = "Additional";
 $category = 'Dashboard';
-$version = '1.0.1';
+$version = '1.0.2';
 $author = 'Asley Smith';
 $url = 'https://gibbonedu.org';
 
@@ -53,7 +53,7 @@ $actionRows[] = [
     'defaultPermissionStudent'  => 'N',
     'defaultPermissionParent'   => 'N',
     'defaultPermissionSupport'  => 'N',
-    'categoryPermissionStaff'   => 'N',
+    'categoryPermissionStaff'   => 'Y',
     'categoryPermissionStudent' => 'N',
     'categoryPermissionParent'  => 'N',
     'categoryPermissionOther'   => 'N'
