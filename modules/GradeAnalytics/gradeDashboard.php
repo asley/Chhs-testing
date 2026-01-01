@@ -66,6 +66,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
 
     // Add jQuery for dynamic filtering
     echo "<script src='".$session->get('absoluteURL')."/lib/jquery/jquery.min.js'></script>";
+
+    // Add interactive charts JavaScript
+    echo "<script src='".$session->get('absoluteURL')."/modules/GradeAnalytics/assets/js/interactive-charts.js'></script>";
+
+    // Set base URL for AJAX requests
+    echo '<script>document.body.setAttribute("data-absolute-url", "' . $_SESSION[$guid]['absoluteURL'] . '");</script>';
+
     echo "<script>
         $(document).ready(function() {
             $('#courseID').change(function() {
@@ -201,9 +208,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     ];
 
     foreach ($gradeScale as $scale) {
-        echo '<div style="background-color: ' . $scale['color'] . '; color: ' . $scale['textColor'] . '; padding: 0.75rem; border-radius: 0.5rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+        echo '<div onclick="showStudentsByGrade(\'' . $scale['grade'] . '\')" style="background-color: ' . $scale['color'] . '; color: ' . $scale['textColor'] . '; padding: 0.75rem; border-radius: 0.5rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform=\'scale(1.05)\'; this.style.boxShadow=\'0 4px 8px rgba(0,0,0,0.2)\';" onmouseout="this.style.transform=\'scale(1)\'; this.style.boxShadow=\'0 2px 4px rgba(0,0,0,0.1)\';">';
         echo '<div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.25rem;">' . $scale['grade'] . '</div>';
         echo '<div style="font-size: 0.875rem; opacity: 0.95;">' . $scale['range'] . '%</div>';
+        echo '<div style="font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.9;">Click to view students</div>';
         echo '</div>';
     }
 
@@ -351,7 +359,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     echo '        }]';
     echo '    };';
 
-    // Common options configuration
+    // Common options configuration with click handler
     echo '    const commonOptions = {';
     echo '        responsive: true,';
     echo '        maintainAspectRatio: false,';
@@ -359,7 +367,24 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     echo '            legend: {';
     echo '                display: true,';
     echo '                position: "top"';
+    echo '            },';
+    echo '            tooltip: {';
+    echo '                callbacks: {';
+    echo '                    footer: function() {';
+    echo '                        return "Click to view student details";';
+    echo '                    }';
+    echo '                }';
     echo '            }';
+    echo '        },';
+    echo '        onClick: function(event, elements) {';
+    echo '            if (elements.length > 0) {';
+    echo '                const index = elements[0].index;';
+    echo '                const grade = labels[index];';
+    echo '                showStudentsByGrade(grade);';
+    echo '            }';
+    echo '        },';
+    echo '        onHover: function(event, elements) {';
+    echo '            event.native.target.style.cursor = elements.length > 0 ? "pointer" : "default";';
     echo '        }';
     echo '    };';
 
@@ -427,4 +452,27 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     echo '</div>'; // End col-12
     echo '</div>'; // End row
     echo '</div>'; // End container-fluid
+
+    // Student Details Modal
+    echo '<div id="studentModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">';
+    echo '<div style="background-color: white; margin: 5% auto; padding: 0; border-radius: 0.5rem; max-width: 800px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">';
+
+    // Modal Header
+    echo '<div style="padding: 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(45deg, #4e73df, #224abe); color: white; border-radius: 0.5rem 0.5rem 0 0;">';
+    echo '<h5 id="modalTitle" style="margin: 0; font-weight: bold;">Students</h5>';
+    echo '<button onclick="closeStudentModal()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0; width: 30px; height: 30px;">&times;</button>';
+    echo '</div>';
+
+    // Modal Body
+    echo '<div id="modalBody" style="padding: 1.5rem; max-height: 500px; overflow-y: auto;">';
+    echo '<div id="studentList"></div>';
+    echo '</div>';
+
+    // Modal Footer
+    echo '<div style="padding: 1rem 1.5rem; border-top: 1px solid #e2e8f0; text-align: right;">';
+    echo '<button onclick="closeStudentModal()" style="padding: 0.5rem 1.5rem; background-color: #6c757d; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">Close</button>';
+    echo '</div>';
+
+    echo '</div>'; // End modal content
+    echo '</div>'; // End modal
 } 

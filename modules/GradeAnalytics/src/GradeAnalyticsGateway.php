@@ -666,6 +666,97 @@ class GradeAnalyticsGateway extends QueryableGateway
     }
 
     /**
+     * Get students by grade with filters
+     * Used for interactive chart drill-down
+     */
+    public function selectStudentsByGrade($gibbonSchoolYearID, $grade, $filters = [])
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+        $whereConditions = ['c.gibbonSchoolYearID = :gibbonSchoolYearID', "ct.role = 'Teacher'", 'e.attainmentValue IS NOT NULL'];
+
+        // Add grade filter based on Scale #1
+        switch (strtoupper($grade)) {
+            case 'A':
+                $whereConditions[] = 'e.attainmentValue >= 85';
+                break;
+            case 'B':
+                $whereConditions[] = 'e.attainmentValue >= 70 AND e.attainmentValue < 85';
+                break;
+            case 'C':
+                $whereConditions[] = 'e.attainmentValue >= 55 AND e.attainmentValue < 70';
+                break;
+            case 'D':
+                $whereConditions[] = 'e.attainmentValue >= 40 AND e.attainmentValue < 55';
+                break;
+            case 'F':
+                $whereConditions[] = 'e.attainmentValue >= 0 AND e.attainmentValue < 40';
+                break;
+            default:
+                return [];
+        }
+
+        if (!empty($filters['courseID'])) {
+            $data['courseID'] = $filters['courseID'];
+            $whereConditions[] = 'c.gibbonCourseID = :courseID';
+        }
+
+        if (!empty($filters['formGroupID'])) {
+            if (\is_array($filters['formGroupID'])) {
+                $placeholders = [];
+                foreach ($filters['formGroupID'] as $index => $id) {
+                    $placeholders[] = ":formGroupID{$index}";
+                    $data["formGroupID{$index}"] = $id;
+                }
+                $whereConditions[] = 'se.gibbonFormGroupID IN ('.implode(',', $placeholders).')';
+            } else {
+                $data['formGroupID'] = $filters['formGroupID'];
+                $whereConditions[] = 'se.gibbonFormGroupID = :formGroupID';
+            }
+        }
+
+        if (!empty($filters['teacherID'])) {
+            $data['teacherID'] = $filters['teacherID'];
+            $whereConditions[] = 'ct.gibbonPersonID = :teacherID';
+        }
+
+        if (!empty($filters['yearGroup'])) {
+            $data['yearGroup'] = $filters['yearGroup'];
+            $whereConditions[] = 'se.gibbonYearGroupID = :yearGroup';
+        }
+
+        if (!empty($filters['assessmentType'])) {
+            $data['assessmentType'] = $filters['assessmentType'];
+            $whereConditions[] = 'iac.type = :assessmentType';
+        }
+
+        $whereSQL = implode(' AND ', $whereConditions);
+
+        $sql = "SELECT DISTINCT
+                    s.gibbonPersonID,
+                    s.preferredName,
+                    s.surname,
+                    fg.name as formGroup,
+                    yg.name as yearGroup,
+                    e.attainmentValue as grade,
+                    c.name as courseName,
+                    iac.name as assessmentName
+                FROM gibbonPerson s
+                JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = s.gibbonPersonID
+                    AND se.gibbonSchoolYearID = :gibbonSchoolYearID
+                JOIN gibbonFormGroup fg ON fg.gibbonFormGroupID = se.gibbonFormGroupID
+                JOIN gibbonYearGroup yg ON yg.gibbonYearGroupID = se.gibbonYearGroupID
+                JOIN gibbonInternalAssessmentEntry e ON e.gibbonPersonIDStudent = s.gibbonPersonID
+                JOIN gibbonInternalAssessmentColumn iac ON e.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
+                JOIN gibbonCourseClass cc ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
+                JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
+                LEFT JOIN gibbonCourseClassPerson ct ON cc.gibbonCourseClassID = ct.gibbonCourseClassID
+                WHERE {$whereSQL}
+                ORDER BY s.surname, s.preferredName";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    /**
      * Count all records in the table
      */
     protected function countAll()
