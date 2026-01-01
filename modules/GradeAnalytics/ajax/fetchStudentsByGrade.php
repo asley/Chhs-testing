@@ -36,6 +36,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
 // Get parameters
 $grade = $_GET['grade'] ?? '';
 $courseID = $_GET['courseID'] ?? '';
+$classID = $_GET['classID'] ?? '';
 $formGroupID = $_GET['formGroupID'] ?? '';
 $teacherID = $_GET['teacherID'] ?? '';
 $yearGroup = $_GET['yearGroup'] ?? '';
@@ -64,6 +65,7 @@ try {
     // Build filters array
     $filters = [];
     if (!empty($courseID)) $filters['courseID'] = $courseID;
+    if (!empty($classID)) $filters['classID'] = $classID;
     if (!empty($formGroupID)) $filters['formGroupID'] = $formGroupID;
     if (!empty($teacherID)) $filters['teacherID'] = $teacherID;
     if (!empty($yearGroup)) $filters['yearGroup'] = $yearGroup;

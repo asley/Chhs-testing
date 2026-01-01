@@ -20,12 +20,13 @@ function showStudentsByGrade(grade) {
 
     // Get current filter values
     const courseID = document.getElementById("courseID")?.value || "";
+    const classID = document.getElementById("classID")?.value || "";
     const formGroupID = document.getElementById("formGroupID")?.value || "";
     const yearGroup = document.getElementById("yearGroup")?.value || "";
     const assessmentType = document.getElementById("assessmentType")?.value || "";
     const teacherID = document.getElementById("teacherID")?.value || "";
 
-    console.log("Filters:", {courseID, formGroupID, yearGroup, assessmentType, teacherID});
+    console.log("Filters:", {courseID, classID, formGroupID, yearGroup, assessmentType, teacherID});
 
     // Show modal with loading state
     modalTitle.textContent = "Grade " + grade + " Students";
@@ -36,6 +37,7 @@ function showStudentsByGrade(grade) {
     const params = new URLSearchParams({
         grade: grade,
         courseID: courseID,
+        classID: classID,
         formGroupID: formGroupID,
         yearGroup: yearGroup,
         assessmentType: assessmentType,

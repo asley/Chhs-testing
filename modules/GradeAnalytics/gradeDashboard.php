@@ -31,6 +31,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Module\GradeAnalytics\GradeAnalyticsGateway;
 
 // Common variables
 $gibbonSchoolYearID = $_SESSION[$guid]['gibbonSchoolYearID'];
@@ -49,13 +50,17 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
 } else {
     // Get filter parameters
     $courseID = $_GET['courseID'] ?? '';
+    $classID = $_GET['classID'] ?? '';
     $formGroupID = $_GET['formGroupID'] ?? '';
     $teacherID = $_GET['teacherID'] ?? '';
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
 
     // Get filter options using the database connection
+    $gateway = $container->get(GradeAnalyticsGateway::class);
+
     $courses = getCourses($connection2);
+    $classes = $gateway->selectClasses($_SESSION[$guid]['gibbonSchoolYearID']);
     $formGroups = getFormGroups($connection2);
     $teachers = getTeachers($connection2);
     $yearGroups = getGradeAnalyticsYearGroups($connection2);
@@ -91,11 +96,57 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
 
     // Output the page header
     echo '<div class="container-fluid">';
-    
+
     echo '<div class="row">';
-    
+
     // Main content area with improved layout
     echo '<div class="col-12">';
+
+    // Check if user is restricted to their own classes
+    $roleCategory = $session->get('gibbonRoleIDCurrentCategory');
+    $roleName = $session->get('gibbonRoleIDCurrentName');
+
+    // DEBUG: Show actual session values
+    if (isset($_GET['debug'])) {
+        echo '<div style="background: #fff3cd; border: 2px solid #ffc107; padding: 15px; margin: 10px 0;">';
+        echo '<h3>DEBUG INFO:</h3>';
+        echo '<p><strong>Role Name:</strong> ' . var_export($roleName, true) . '</p>';
+        echo '<p><strong>Role Category:</strong> ' . var_export($roleCategory, true) . '</p>';
+        echo '<p><strong>All Session Keys:</strong><br><pre>' . print_r(array_keys($_SESSION), true) . '</pre></p>';
+        echo '</div>';
+    }
+
+    // Determine if teacher (restricted view) - MUST match GradeAnalyticsGateway.php
+    $unrestrictedRoles = [
+        'Administrator',
+        'School Admin',
+        'Principal',
+        'Vice-Principal',
+        'HOD',
+        'Grade Supervisor',
+        'Super User',
+        'Coordinator',
+        'Director'
+    ];
+    $isRestricted = false;
+    if ($roleCategory === 'Staff') {
+        $isRestricted = true;
+        foreach ($unrestrictedRoles as $role) {
+            if (stripos($roleName, $role) !== false) {
+                $isRestricted = false;
+                break;
+            }
+        }
+    }
+
+    // Show info message for teachers
+    if ($isRestricted) {
+        echo '<div class="alert alert-info" style="border-left: 4px solid #4e73df; background-color: #e7f3ff;">';
+        echo '<i class="fas fa-info-circle"></i> ';
+        echo '<strong>Teacher View:</strong> You are viewing analytics for your assigned classes only.';
+        echo '</div>';
+    }
+
     echo '<div class="card shadow-sm mb-4">';
     echo '<div class="card-header py-3" style="background: linear-gradient(45deg, #4e73df, #224abe); color: white;">';
     echo '<h6 class="m-0 font-weight-bold">Data Analysis Dashboard</h6>';
@@ -116,6 +167,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
         foreach ($courses as $course) {
             $selected = ($courseID == $course['value']) ? 'selected' : '';
             echo '<option value="' . htmlspecialchars($course['value']) . '" ' . $selected . '>' . htmlspecialchars($course['name']) . '</option>';
+        }
+    }
+    echo '</select>';
+    echo '</div>';
+
+    // Class filter
+    echo '<div style="margin-bottom: 1rem;">';
+    echo '<label for="classID" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #4a5568;">Class</label>';
+    echo '<select name="classID" id="classID" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; background-color: white;">';
+    echo '<option value="">All Classes</option>';
+    if (!empty($classes)) {
+        foreach ($classes as $class) {
+            $selected = ($classID == $class['value']) ? 'selected' : '';
+            echo '<option value="' . htmlspecialchars($class['value']) . '" ' . $selected . '>' . htmlspecialchars($class['name']) . '</option>';
         }
     }
     echo '</select>';
@@ -220,7 +285,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     echo '</div>'; // End card
 
     // Get grade distribution data with all filters
-    $gradeData = getGradeDistribution($connection2, $courseID, $formGroupID, $teacherID, $yearGroup, $assessmentType);
+    $gradeData = getGradeDistribution($connection2, $courseID, $formGroupID, $teacherID, $yearGroup, $assessmentType, $classID);
     
     // Debug log the grade data
     error_log('Grade Data received in dashboard: ' . json_encode($gradeData));
