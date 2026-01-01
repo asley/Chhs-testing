@@ -222,10 +222,11 @@ function getInternalAssessmentTypes($connection2) {
  * @param string $teacherID
  * @param string $yearGroup
  * @param string $assessmentType
+ * @param string $classID
  * @return array
  * @phpstan-ignore-next-line
  */
-function getGradeDistribution($connection2, $courseID = null, $formGroupID = null, $teacherID = null, $yearGroup = null, $assessmentType = null) {
+function getGradeDistribution($connection2, $courseID = null, $formGroupID = null, $teacherID = null, $yearGroup = null, $assessmentType = null, $classID = null) {
     global $guid, $container;
     unset($connection2); // Suppress unused parameter warning
     try {
@@ -237,6 +238,7 @@ function getGradeDistribution($connection2, $courseID = null, $formGroupID = nul
 
         $filters = [
             'courseID' => $courseID,
+            'classID' => $classID,
             'formGroupID' => $formGroupID,
             'teacherID' => $teacherID,
             'yearGroup' => $yearGroup,

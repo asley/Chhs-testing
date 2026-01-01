@@ -32,6 +32,10 @@ use Gibbon\Domain\QueryableGateway;
  * - D: 40-54%
  * - F: 0-39%
  *
+ * Role-Based Access:
+ * - Teachers: Only see their assigned classes
+ * - Admin/Principal/HOD: See all classes
+ *
  * @version v29
  * @since   v29
  */
@@ -40,15 +44,98 @@ class GradeAnalyticsGateway extends QueryableGateway
     private static $tableName = 'gibbonInternalAssessmentEntry';
 
     /**
+     * Check if current user should be restricted to their own classes
+     * Teachers see only their classes, Admin/Principal/VP/HOD see all
+     */
+    private function shouldRestrictToOwnClasses($gibbonPersonID = null)
+    {
+        global $guid, $session, $pdo;
+
+        // Get current user's role ID
+        $gibbonRoleIDCurrent = $session->get('gibbonRoleIDCurrent');
+
+        // If no role, default to restricted
+        if (empty($gibbonRoleIDCurrent)) {
+            return true;
+        }
+
+        // Query database to get role name and category
+        $dataRole = ['gibbonRoleIDCurrent' => $gibbonRoleIDCurrent];
+        $sqlRole = "SELECT name, category FROM gibbonRole WHERE gibbonRoleID = :gibbonRoleIDCurrent";
+        $resultRole = $pdo->select($sqlRole, $dataRole);
+
+        if ($resultRole->rowCount() !== 1) {
+            return true; // Default to restricted if role not found
+        }
+
+        $roleData = $resultRole->fetch();
+        $roleName = $roleData['name'] ?? '';
+        $roleCategory = $roleData['category'] ?? '';
+
+        // Admin, Principal, VP, HOD, and Coordinators can see all classes
+        // These role names must match exactly as defined in Gibbon
+        $unrestrictedRoles = [
+            'Administrator',
+            'School Admin',
+            'Principal',
+            'Vice-Principal',  // Note: hyphenated, not spaced
+            'HOD',
+            'Grade Supervisor',
+            'Super User',
+            'Coordinator',
+            'Director'
+        ];
+
+        // Check if role allows unrestricted access
+        foreach ($unrestrictedRoles as $role) {
+            if (stripos($roleName, $role) !== false) {
+                return false;
+            }
+        }
+
+        // If Staff category but not in unrestricted list, restrict to own classes (Teachers)
+        if ($roleCategory === 'Staff') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get current user's person ID
+     */
+    private function getCurrentPersonID()
+    {
+        global $guid, $session;
+        return $session->get('gibbonPersonID');
+    }
+
+    /**
      * Get all courses for the current school year
+     * Filtered by teacher's assigned classes if applicable
      */
     public function selectCourses($gibbonSchoolYearID)
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
-        $sql = "SELECT gibbonCourseID as value, name
-                FROM gibbonCourse
-                WHERE gibbonSchoolYearID = :gibbonSchoolYearID
-                ORDER BY name";
+
+        if ($this->shouldRestrictToOwnClasses()) {
+            // Teacher: Only show courses they teach
+            $data['gibbonPersonID'] = $this->getCurrentPersonID();
+            $sql = "SELECT DISTINCT c.gibbonCourseID as value, c.name
+                    FROM gibbonCourse c
+                    JOIN gibbonCourseClass cc ON c.gibbonCourseID = cc.gibbonCourseID
+                    JOIN gibbonCourseClassPerson ccp ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+                    WHERE c.gibbonSchoolYearID = :gibbonSchoolYearID
+                    AND ccp.gibbonPersonID = :gibbonPersonID
+                    AND ccp.role = 'Teacher'
+                    ORDER BY c.name";
+        } else {
+            // Admin/Principal/HOD: Show all courses
+            $sql = "SELECT gibbonCourseID as value, name
+                    FROM gibbonCourse
+                    WHERE gibbonSchoolYearID = :gibbonSchoolYearID
+                    ORDER BY name";
+        }
 
         return $this->db()->select($sql, $data);
     }
@@ -69,18 +156,64 @@ class GradeAnalyticsGateway extends QueryableGateway
 
     /**
      * Get all teaching staff
+     * Teachers only see themselves, Admin/Principal/HOD see all
      */
     public function selectTeachers()
     {
-        $sql = "SELECT DISTINCT p.gibbonPersonID as value,
-                CONCAT(p.preferredName, ' ', p.surname) as name
-                FROM gibbonPerson p
-                JOIN gibbonStaff s ON p.gibbonPersonID = s.gibbonPersonID
-                WHERE p.status = 'Full'
-                AND s.type = 'Teaching'
-                ORDER BY p.surname, p.preferredName";
+        if ($this->shouldRestrictToOwnClasses()) {
+            // Teacher: Only show themselves
+            $data = ['gibbonPersonID' => $this->getCurrentPersonID()];
+            $sql = "SELECT p.gibbonPersonID as value,
+                    CONCAT(p.preferredName, ' ', p.surname) as name
+                    FROM gibbonPerson p
+                    WHERE p.gibbonPersonID = :gibbonPersonID
+                    AND p.status = 'Full'";
+        } else {
+            // Admin/Principal/HOD: Show all teachers
+            $sql = "SELECT DISTINCT p.gibbonPersonID as value,
+                    CONCAT(p.preferredName, ' ', p.surname) as name
+                    FROM gibbonPerson p
+                    JOIN gibbonStaff s ON p.gibbonPersonID = s.gibbonPersonID
+                    WHERE p.status = 'Full'
+                    AND s.type = 'Teaching'
+                    ORDER BY p.surname, p.preferredName";
+            $data = [];
+        }
 
-        return $this->db()->select($sql);
+        return $this->db()->select($sql, $data);
+    }
+
+    /**
+     * Get classes for current school year
+     * Filtered by teacher's assigned classes if applicable
+     */
+    public function selectClasses($gibbonSchoolYearID)
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+
+        if ($this->shouldRestrictToOwnClasses()) {
+            // Teacher: Only show classes they teach
+            $data['gibbonPersonID'] = $this->getCurrentPersonID();
+            $sql = "SELECT DISTINCT cc.gibbonCourseClassID as value,
+                    CONCAT(c.nameShort, '.', cc.nameShort) as name
+                    FROM gibbonCourseClass cc
+                    JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
+                    JOIN gibbonCourseClassPerson ccp ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+                    WHERE c.gibbonSchoolYearID = :gibbonSchoolYearID
+                    AND ccp.gibbonPersonID = :gibbonPersonID
+                    AND ccp.role = 'Teacher'
+                    ORDER BY c.nameShort, cc.nameShort";
+        } else {
+            // Admin/Principal/HOD: Show all classes
+            $sql = "SELECT cc.gibbonCourseClassID as value,
+                    CONCAT(c.nameShort, '.', cc.nameShort) as name
+                    FROM gibbonCourseClass cc
+                    JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
+                    WHERE c.gibbonSchoolYearID = :gibbonSchoolYearID
+                    ORDER BY c.nameShort, cc.nameShort";
+        }
+
+        return $this->db()->select($sql, $data);
     }
 
     /**
@@ -147,15 +280,27 @@ class GradeAnalyticsGateway extends QueryableGateway
 
     /**
      * Get grade distribution data with filters
+     * Restricted to teacher's classes if applicable
      */
     public function selectGradeDistribution($gibbonSchoolYearID, $filters = [])
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
         $whereConditions = ['c.gibbonSchoolYearID = :gibbonSchoolYearID', "ct.role = 'Teacher'", 'e.attainmentValue IS NOT NULL'];
 
+        // Restrict to teacher's own classes if applicable
+        if ($this->shouldRestrictToOwnClasses()) {
+            $data['currentTeacherID'] = $this->getCurrentPersonID();
+            $whereConditions[] = 'ct.gibbonPersonID = :currentTeacherID';
+        }
+
         if (!empty($filters['courseID'])) {
             $data['courseID'] = $filters['courseID'];
             $whereConditions[] = 'c.gibbonCourseID = :courseID';
+        }
+
+        if (!empty($filters['classID'])) {
+            $data['classID'] = $filters['classID'];
+            $whereConditions[] = 'cc.gibbonCourseClassID = :classID';
         }
 
         if (!empty($filters['formGroupID'])) {
@@ -668,11 +813,18 @@ class GradeAnalyticsGateway extends QueryableGateway
     /**
      * Get students by grade with filters
      * Used for interactive chart drill-down
+     * Restricted to teacher's classes if applicable
      */
     public function selectStudentsByGrade($gibbonSchoolYearID, $grade, $filters = [])
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
         $whereConditions = ['c.gibbonSchoolYearID = :gibbonSchoolYearID', "ct.role = 'Teacher'", 'e.attainmentValue IS NOT NULL'];
+
+        // Restrict to teacher's own classes if applicable
+        if ($this->shouldRestrictToOwnClasses()) {
+            $data['currentTeacherID'] = $this->getCurrentPersonID();
+            $whereConditions[] = 'ct.gibbonPersonID = :currentTeacherID';
+        }
 
         // Add grade filter based on Scale #1
         switch (strtoupper($grade)) {
@@ -698,6 +850,11 @@ class GradeAnalyticsGateway extends QueryableGateway
         if (!empty($filters['courseID'])) {
             $data['courseID'] = $filters['courseID'];
             $whereConditions[] = 'c.gibbonCourseID = :courseID';
+        }
+
+        if (!empty($filters['classID'])) {
+            $data['classID'] = $filters['classID'];
+            $whereConditions[] = 'cc.gibbonCourseClassID = :classID';
         }
 
         if (!empty($filters['formGroupID'])) {
