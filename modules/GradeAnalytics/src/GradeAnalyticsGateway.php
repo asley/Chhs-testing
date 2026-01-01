@@ -25,6 +25,13 @@ use Gibbon\Domain\QueryableGateway;
 /**
  * Grade Analytics Gateway
  *
+ * Official Grading Scale (Scale #1):
+ * - A: 85-100%
+ * - B: 70-84%
+ * - C: 55-69%
+ * - D: 40-54%
+ * - F: 0-39%
+ *
  * @version v29
  * @since   v29
  */
@@ -283,6 +290,7 @@ class GradeAnalyticsGateway extends QueryableGateway
         }
 
         // Apply grade threshold criteria
+        // Using Scale #1: A=85-100, B=70-84, C=55-69, D=40-54, F=0-39
         if (!empty($filters['gradeThreshold']) && !empty($filters['operator'])) {
             $validOperators = ['>', '>=', '<', '<=', '='];
             $operator = \in_array($filters['operator'], $validOperators) ? $filters['operator'] : '>';
@@ -292,11 +300,15 @@ class GradeAnalyticsGateway extends QueryableGateway
                     WHEN me.attainmentValue REGEXP '^[0-9]+(\\\\.[0-9]+)?%?\$' THEN
                         CAST(REPLACE(me.attainmentValue, '%', '') AS DECIMAL(10,2)) {$operator} :gradeThreshold
                     WHEN me.attainmentValue IN ('A*', 'A+', 'A') THEN
-                        90 {$operator} :gradeThreshold
+                        85 {$operator} :gradeThreshold
                     WHEN me.attainmentValue IN ('B+', 'B') THEN
-                        75 {$operator} :gradeThreshold
+                        70 {$operator} :gradeThreshold
                     WHEN me.attainmentValue IN ('C+', 'C') THEN
-                        65 {$operator} :gradeThreshold
+                        55 {$operator} :gradeThreshold
+                    WHEN me.attainmentValue IN ('D+', 'D') THEN
+                        40 {$operator} :gradeThreshold
+                    WHEN me.attainmentValue IN ('E', 'F') THEN
+                        0 {$operator} :gradeThreshold
                     ELSE FALSE
                 END
             )";
@@ -376,20 +388,18 @@ class GradeAnalyticsGateway extends QueryableGateway
             $sql .= " AND me.attainmentValue IS NOT NULL AND TRIM(me.attainmentValue) != ''";
 
             // Create a subquery to convert grades to numeric values, then filter
+            // Using Scale #1: A=85-100, B=70-84, C=55-69, D=40-54, F=0-39
             $sql .= " AND (
                 CASE
                     -- Numeric grades (remove % and spaces, then convert)
                     WHEN me.attainmentValue REGEXP '^[0-9]+(\\.[0-9]+)?%?$' THEN
                         CAST(REPLACE(REPLACE(me.attainmentValue, '%', ''), ' ', '') AS DECIMAL(10,2))
-                    -- Letter grades mapped to numeric equivalents
-                    WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 90
-                    WHEN me.attainmentValue IN ('B+', 'b+') THEN 75
-                    WHEN me.attainmentValue IN ('B', 'b') THEN 70
-                    WHEN me.attainmentValue IN ('C+', 'c+') THEN 65
-                    WHEN me.attainmentValue IN ('C', 'c') THEN 55
-                    WHEN me.attainmentValue IN ('D+', 'd+') THEN 50
-                    WHEN me.attainmentValue IN ('D', 'd') THEN 40
-                    WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 30
+                    -- Letter grades mapped to minimum numeric value for that grade range
+                    WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 85
+                    WHEN me.attainmentValue IN ('B+', 'B', 'b+', 'b') THEN 70
+                    WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 55
+                    WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 40
+                    WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 0
                     ELSE NULL
                 END IS NOT NULL
                 AND
@@ -397,15 +407,12 @@ class GradeAnalyticsGateway extends QueryableGateway
                     -- Numeric grades (remove % and spaces, then convert)
                     WHEN me.attainmentValue REGEXP '^[0-9]+(\\.[0-9]+)?%?$' THEN
                         CAST(REPLACE(REPLACE(me.attainmentValue, '%', ''), ' ', '') AS DECIMAL(10,2))
-                    -- Letter grades mapped to numeric equivalents
-                    WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 90
-                    WHEN me.attainmentValue IN ('B+', 'b+') THEN 75
-                    WHEN me.attainmentValue IN ('B', 'b') THEN 70
-                    WHEN me.attainmentValue IN ('C+', 'c+') THEN 65
-                    WHEN me.attainmentValue IN ('C', 'c') THEN 55
-                    WHEN me.attainmentValue IN ('D+', 'd+') THEN 50
-                    WHEN me.attainmentValue IN ('D', 'd') THEN 40
-                    WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 30
+                    -- Letter grades mapped to minimum numeric value for that grade range
+                    WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 85
+                    WHEN me.attainmentValue IN ('B+', 'B', 'b+', 'b') THEN 70
+                    WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 55
+                    WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 40
+                    WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 0
                 END {$operator} :gradeThreshold
             )";
             $data['gradeThreshold'] = $threshold;
@@ -415,14 +422,11 @@ class GradeAnalyticsGateway extends QueryableGateway
             CASE
                 WHEN me.attainmentValue REGEXP '^[0-9]+(\\.[0-9]+)?%?$' THEN
                     CAST(REPLACE(REPLACE(me.attainmentValue, '%', ''), ' ', '') AS DECIMAL(10,2))
-                WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 90
-                WHEN me.attainmentValue IN ('B+', 'b+') THEN 75
-                WHEN me.attainmentValue IN ('B', 'b') THEN 70
-                WHEN me.attainmentValue IN ('C+', 'c+') THEN 65
-                WHEN me.attainmentValue IN ('C', 'c') THEN 55
-                WHEN me.attainmentValue IN ('D+', 'd+') THEN 50
-                WHEN me.attainmentValue IN ('D', 'd') THEN 40
-                WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 30
+                WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 85
+                WHEN me.attainmentValue IN ('B+', 'B', 'b+', 'b') THEN 70
+                WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 55
+                WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 40
+                WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 0
                 ELSE 0
             END DESC, s.surname, s.preferredName";
 

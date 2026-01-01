@@ -56,7 +56,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
 
     // Get filter options using the database connection
     $courses = getCourses($connection2);
-    $formGroups = getFormGroups($connection2, $_SESSION[$guid]['gibbonSchoolYearID']);
+    $formGroups = getFormGroups($connection2);
     $teachers = getTeachers($connection2);
     $yearGroups = getGradeAnalyticsYearGroups($connection2);
     $assessmentTypes = getInternalAssessmentTypes($connection2);
@@ -180,6 +180,34 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     echo '</div>';
 
     echo '</form>';
+    echo '</div>'; // End card-body
+    echo '</div>'; // End card
+
+    // Display Grade Scale Key
+    echo '<div class="card shadow-sm mb-4" style="border-left: 4px solid #4e73df;">';
+    echo '<div class="card-header py-2" style="background-color: #f8f9fc;">';
+    echo '<h6 class="m-0 font-weight-bold text-primary">Grading Scale</h6>';
+    echo '</div>';
+    echo '<div class="card-body" style="padding: 1rem;">';
+    echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">';
+
+    // Grade scale items with color coding
+    $gradeScale = [
+        ['grade' => 'A', 'range' => '85-100', 'color' => 'rgba(0, 200, 81, 0.8)', 'textColor' => 'white'],
+        ['grade' => 'B', 'range' => '70-84', 'color' => 'rgba(54, 162, 235, 0.8)', 'textColor' => 'white'],
+        ['grade' => 'C', 'range' => '55-69', 'color' => 'rgba(255, 206, 86, 0.8)', 'textColor' => '#333'],
+        ['grade' => 'D', 'range' => '40-54', 'color' => 'rgba(75, 192, 192, 0.8)', 'textColor' => 'white'],
+        ['grade' => 'F', 'range' => '0-39', 'color' => 'rgba(255, 99, 132, 0.8)', 'textColor' => 'white']
+    ];
+
+    foreach ($gradeScale as $scale) {
+        echo '<div style="background-color: ' . $scale['color'] . '; color: ' . $scale['textColor'] . '; padding: 0.75rem; border-radius: 0.5rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+        echo '<div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.25rem;">' . $scale['grade'] . '</div>';
+        echo '<div style="font-size: 0.875rem; opacity: 0.95;">' . $scale['range'] . '%</div>';
+        echo '</div>';
+    }
+
+    echo '</div>'; // End grid
     echo '</div>'; // End card-body
     echo '</div>'; // End card
 
