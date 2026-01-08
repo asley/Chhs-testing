@@ -22,8 +22,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 function getBadges($connection2, $guid, $gibbonPersonID)
 {
     global $session;
-        
+
     $output = '';
+
+    // Add modal HTML for badge preview
+    $output .= '<div id="badgeModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.8);">';
+    $output .= '  <div style="position:relative; background-color:#fefefe; margin:5% auto; padding:20px; border:1px solid #888; width:80%; max-width:800px; border-radius:8px;">';
+    $output .= '    <span id="closeBadgeModal" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>';
+    $output .= '    <div id="badgeModalContent" style="text-align:center; padding:20px;"></div>';
+    $output .= '  </div>';
+    $output .= '</div>';
+
+    // Add JavaScript for modal functionality
+    $output .= '<script>';
+    $output .= 'function showBadgeModal(imageSrc, badgeName, category, comment, date) {';
+    $output .= '  var modal = document.getElementById("badgeModal");';
+    $output .= '  var modalContent = document.getElementById("badgeModalContent");';
+    $output .= '  var html = "<img src=\"" + imageSrc + "\" style=\"max-width:100%; max-height:500px; margin-bottom:20px;\"><br>";';
+    $output .= '  html += "<h2>" + badgeName + "</h2>";';
+    $output .= '  if (category) html += "<p style=\"font-style:italic; color:#666;\">" + category + "</p>";';
+    $output .= '  if (comment) html += "<p>" + comment + "</p>";';
+    $output .= '  if (date) html += "<p style=\"color:#999; font-size:0.9em;\">Awarded: " + date + "</p>";';
+    $output .= '  html += "<a href=\"" + imageSrc + "\" download=\"" + badgeName.replace(/[^a-z0-9]/gi, "_") + ".png\" style=\"display:inline-block; margin-top:20px; padding:10px 20px; background-color:#4CAF50; color:white; text-decoration:none; border-radius:5px; font-weight:bold;\">Download Badge</a>";';
+    $output .= '  modalContent.innerHTML = html;';
+    $output .= '  modal.style.display = "block";';
+    $output .= '}';
+    $output .= 'document.addEventListener("DOMContentLoaded", function() {';
+    $output .= '  var closeBtn = document.getElementById("closeBadgeModal");';
+    $output .= '  var modal = document.getElementById("badgeModal");';
+    $output .= '  if (closeBtn) closeBtn.onclick = function() { modal.style.display = "none"; };';
+    $output .= '  window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } };';
+    $output .= '});';
+    $output .= '</script>';
 
     //Licenses
     try {
@@ -57,11 +87,22 @@ function getBadges($connection2, $guid, $gibbonPersonID)
             }
 
             $output .= "<td style='padding-top: 15px!important; padding-bottom: 15px!important; width:33%; text-align: center; vertical-align: top'>";
+
+            $licenseImage = '';
             if ($row['logo'] != '') {
-                $output .= "<img style='margin-bottom: 20px; max-width: 150px' src='".$session->get('absoluteURL').'/'.$row['logo']."'/><br/>";
+                $licenseImage = $session->get('absoluteURL').'/'.$row['logo'];
             } else {
-                $output .= "<img style='margin-bottom: 20px; max-width: 150px' src='".$session->get('absoluteURL').'/themes/'.$session->get('gibbonThemeName')."/img/anonymous_240_square.jpg'/><br/>";
+                $licenseImage = $session->get('absoluteURL').'/themes/'.$session->get('gibbonThemeName')."/img/anonymous_240_square.jpg";
             }
+
+            // Make license badge clickable
+            $badgeName = htmlspecialchars($row['award'], ENT_QUOTES);
+            $category = htmlspecialchars($row['category'], ENT_QUOTES);
+            $comment = !empty($row['comment']) ? htmlspecialchars($row['comment'], ENT_QUOTES) : '';
+            $date = htmlspecialchars($row['year'], ENT_QUOTES);
+
+            $output .= "<img onclick='showBadgeModal(\"$licenseImage\", \"$badgeName\", \"$category\", \"$comment\", \"$date\")' style='margin-bottom: 20px; max-width: 150px; cursor: pointer; transition: transform 0.2s;' onmouseover='this.style.transform=\"scale(1.05)\"' onmouseout='this.style.transform=\"scale(1)\"' src='$licenseImage' title='Click to enlarge and download'/><br/>";
+
             $output .= '<b>'.$row['award'].'</b><br/>';
             $output .= '<span class=\'emphasis small\'>'.$row['category'].'</span><br/>';
             if (!empty($row['comment'])) {
@@ -137,11 +178,22 @@ function getBadges($connection2, $guid, $gibbonPersonID)
                 }
 
                 $output .= "<td style='padding-top: 15px!important; padding-bottom: 15px!important; width:33%; text-align: center; vertical-align: top'>";
+
+                $badgeImage = '';
                 if ($awardYear[2][$count] != '') {
-                    $output .= "<img style='margin-bottom: 20px; max-width: 150px' src='".$session->get('absoluteURL').'/'.$awardYear[2][$count]."'/><br/>";
+                    $badgeImage = $session->get('absoluteURL').'/'.$awardYear[2][$count];
                 } else {
-                    $output .= "<img style='margin-bottom: 20px; max-width: 150px' src='".$session->get('absoluteURL').'/themes/'.$session->get('gibbonThemeName')."/img/anonymous_240_square.jpg'/><br/>";
+                    $badgeImage = $session->get('absoluteURL').'/themes/'.$session->get('gibbonThemeName')."/img/anonymous_240_square.jpg";
                 }
+
+                // Make badge clickable with larger view and download option
+                $badgeName = htmlspecialchars($awards, ENT_QUOTES);
+                $category = htmlspecialchars($awardYear[3][$count], ENT_QUOTES);
+                $comment = array_key_exists($count,$awardYear[4]) ? htmlspecialchars($awardYear[4][$count], ENT_QUOTES) : '';
+                $date = htmlspecialchars($awardYear[0], ENT_QUOTES);
+
+                $output .= "<img onclick='showBadgeModal(\"$badgeImage\", \"$badgeName\", \"$category\", \"$comment\", \"$date\")' style='margin-bottom: 20px; max-width: 150px; cursor: pointer; transition: transform 0.2s;' onmouseover='this.style.transform=\"scale(1.05)\"' onmouseout='this.style.transform=\"scale(1)\"' src='$badgeImage' title='Click to enlarge and download'/><br/>";
+
                 $output .= '<b>'.$awards.'</b><br/>';
                 $output .= '<span class=\'emphasis small\'>'.$awardYear[3][$count].'</span><br/>';
                 if(array_key_exists($count,$awardYear[4]))
