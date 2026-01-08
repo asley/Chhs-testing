@@ -267,9 +267,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     $gradeScale = [
         ['grade' => 'A', 'range' => '85-100', 'color' => 'rgba(0, 200, 81, 0.8)', 'textColor' => 'white'],
         ['grade' => 'B', 'range' => '70-84', 'color' => 'rgba(54, 162, 235, 0.8)', 'textColor' => 'white'],
-        ['grade' => 'C', 'range' => '55-69', 'color' => 'rgba(255, 206, 86, 0.8)', 'textColor' => '#333'],
-        ['grade' => 'D', 'range' => '40-54', 'color' => 'rgba(75, 192, 192, 0.8)', 'textColor' => 'white'],
-        ['grade' => 'F', 'range' => '0-39', 'color' => 'rgba(255, 99, 132, 0.8)', 'textColor' => 'white']
+        ['grade' => 'C', 'range' => '60-69', 'color' => 'rgba(255, 206, 86, 0.8)', 'textColor' => '#333'],
+        ['grade' => 'D', 'range' => '50-59', 'color' => 'rgba(75, 192, 192, 0.8)', 'textColor' => 'white'],
+        ['grade' => 'F', 'range' => '0-49', 'color' => 'rgba(255, 99, 132, 0.8)', 'textColor' => 'white']
     ];
 
     foreach ($gradeScale as $scale) {

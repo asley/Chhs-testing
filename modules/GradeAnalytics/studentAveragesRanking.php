@@ -175,7 +175,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
                 $color = 'color: #2ecc71; font-weight: bold;';
             } elseif ($student['finalAverage'] >= 70) {
                 $color = 'color: #3498db; font-weight: bold;';
-            } elseif ($student['finalAverage'] >= 55) {
+            } elseif ($student['finalAverage'] >= 60) {
                 $color = 'color: #f39c12; font-weight: bold;';
             } else {
                 $color = 'color: #e74c3c; font-weight: bold;';
@@ -234,14 +234,14 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
                     const value = context.parsed.y;
                     if (value >= 85) return "rgba(46, 204, 113, 0.8)";
                     if (value >= 70) return "rgba(52, 152, 219, 0.8)";
-                    if (value >= 55) return "rgba(243, 156, 18, 0.8)";
+                    if (value >= 60) return "rgba(243, 156, 18, 0.8)";
                     return "rgba(231, 76, 60, 0.8)";
                 },
                 borderColor: function(context) {
                     const value = context.parsed.y;
                     if (value >= 85) return "rgba(46, 204, 113, 1)";
                     if (value >= 70) return "rgba(52, 152, 219, 1)";
-                    if (value >= 55) return "rgba(243, 156, 18, 1)";
+                    if (value >= 60) return "rgba(243, 156, 18, 1)";
                     return "rgba(231, 76, 60, 1)";
                 },
                 borderWidth: 2

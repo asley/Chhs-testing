@@ -193,7 +193,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
                         $color = 'color: #2ecc71; font-weight: bold;';
                     } elseif ($grade >= 70) {
                         $color = 'color: #3498db; font-weight: bold;';
-                    } elseif ($grade >= 55) {
+                    } elseif ($grade >= 60) {
                         $color = 'color: #f39c12; font-weight: bold;';
                     } else {
                         $color = 'color: #e74c3c; font-weight: bold;';
