@@ -28,9 +28,9 @@ use Gibbon\Domain\QueryableGateway;
  * Official Grading Scale (Scale #1):
  * - A: 85-100%
  * - B: 70-84%
- * - C: 55-69%
- * - D: 40-54%
- * - F: 0-39%
+ * - C: 60-69%
+ * - D: 50-59%
+ * - F: 0-49%
  *
  * Role-Based Access:
  * - Teachers: Only see their assigned classes
@@ -343,8 +343,8 @@ class GradeAnalyticsGateway extends QueryableGateway
                         CASE
                             WHEN e.attainmentValue >= 85 THEN 'A'
                             WHEN e.attainmentValue >= 70 THEN 'B'
-                            WHEN e.attainmentValue >= 55 THEN 'C'
-                            WHEN e.attainmentValue >= 40 THEN 'D'
+                            WHEN e.attainmentValue >= 60 THEN 'C'
+                            WHEN e.attainmentValue >= 50 THEN 'D'
                             ELSE 'F'
                         END as grade
                     FROM gibbonInternalAssessmentEntry e
@@ -435,7 +435,7 @@ class GradeAnalyticsGateway extends QueryableGateway
         }
 
         // Apply grade threshold criteria
-        // Using Scale #1: A=85-100, B=70-84, C=55-69, D=40-54, F=0-39
+        // Using Scale #1: A=85-100, B=70-84, C=60-69, D=50-59, F=0-49
         if (!empty($filters['gradeThreshold']) && !empty($filters['operator'])) {
             $validOperators = ['>', '>=', '<', '<=', '='];
             $operator = \in_array($filters['operator'], $validOperators) ? $filters['operator'] : '>';
@@ -449,9 +449,9 @@ class GradeAnalyticsGateway extends QueryableGateway
                     WHEN me.attainmentValue IN ('B+', 'B') THEN
                         70 {$operator} :gradeThreshold
                     WHEN me.attainmentValue IN ('C+', 'C') THEN
-                        55 {$operator} :gradeThreshold
+                        60 {$operator} :gradeThreshold
                     WHEN me.attainmentValue IN ('D+', 'D') THEN
-                        40 {$operator} :gradeThreshold
+                        50 {$operator} :gradeThreshold
                     WHEN me.attainmentValue IN ('E', 'F') THEN
                         0 {$operator} :gradeThreshold
                     ELSE FALSE
@@ -533,7 +533,7 @@ class GradeAnalyticsGateway extends QueryableGateway
             $sql .= " AND me.attainmentValue IS NOT NULL AND TRIM(me.attainmentValue) != ''";
 
             // Create a subquery to convert grades to numeric values, then filter
-            // Using Scale #1: A=85-100, B=70-84, C=55-69, D=40-54, F=0-39
+            // Using Scale #1: A=85-100, B=70-84, C=60-69, D=50-59, F=0-49
             $sql .= " AND (
                 CASE
                     -- Numeric grades (remove % and spaces, then convert)
@@ -542,8 +542,8 @@ class GradeAnalyticsGateway extends QueryableGateway
                     -- Letter grades mapped to minimum numeric value for that grade range
                     WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 85
                     WHEN me.attainmentValue IN ('B+', 'B', 'b+', 'b') THEN 70
-                    WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 55
-                    WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 40
+                    WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 60
+                    WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 50
                     WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 0
                     ELSE NULL
                 END IS NOT NULL
@@ -555,8 +555,8 @@ class GradeAnalyticsGateway extends QueryableGateway
                     -- Letter grades mapped to minimum numeric value for that grade range
                     WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 85
                     WHEN me.attainmentValue IN ('B+', 'B', 'b+', 'b') THEN 70
-                    WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 55
-                    WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 40
+                    WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 60
+                    WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 50
                     WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 0
                 END {$operator} :gradeThreshold
             )";
@@ -569,8 +569,8 @@ class GradeAnalyticsGateway extends QueryableGateway
                     CAST(REPLACE(REPLACE(me.attainmentValue, '%', ''), ' ', '') AS DECIMAL(10,2))
                 WHEN me.attainmentValue IN ('A*', 'A+', 'A', 'a*', 'a+', 'a') THEN 85
                 WHEN me.attainmentValue IN ('B+', 'B', 'b+', 'b') THEN 70
-                WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 55
-                WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 40
+                WHEN me.attainmentValue IN ('C+', 'C', 'c+', 'c') THEN 60
+                WHEN me.attainmentValue IN ('D+', 'D', 'd+', 'd') THEN 50
                 WHEN me.attainmentValue IN ('E', 'e', 'F', 'f') THEN 0
                 ELSE 0
             END DESC, s.surname, s.preferredName";
@@ -835,13 +835,13 @@ class GradeAnalyticsGateway extends QueryableGateway
                 $whereConditions[] = 'e.attainmentValue >= 70 AND e.attainmentValue < 85';
                 break;
             case 'C':
-                $whereConditions[] = 'e.attainmentValue >= 55 AND e.attainmentValue < 70';
+                $whereConditions[] = 'e.attainmentValue >= 60 AND e.attainmentValue < 70';
                 break;
             case 'D':
-                $whereConditions[] = 'e.attainmentValue >= 40 AND e.attainmentValue < 55';
+                $whereConditions[] = 'e.attainmentValue >= 50 AND e.attainmentValue < 60';
                 break;
             case 'F':
-                $whereConditions[] = 'e.attainmentValue >= 0 AND e.attainmentValue < 40';
+                $whereConditions[] = 'e.attainmentValue >= 0 AND e.attainmentValue < 50';
                 break;
             default:
                 return [];
