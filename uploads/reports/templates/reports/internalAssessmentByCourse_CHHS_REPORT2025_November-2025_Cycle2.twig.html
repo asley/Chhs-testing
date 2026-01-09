@@ -22,7 +22,7 @@ config:
     width: 95%;          /* Reduced width */
     max-width: 800px;    /* Limits maximum width */
     border-collapse: collapse;
-    font-size: 11px;     /* Smaller base font */
+    font-size: 12px;     /* Base font */
     margin: 10px auto;   /* Reduced margin */
     table-layout: fixed; /* Prevents column stretching */
 }
@@ -47,7 +47,7 @@ config:
     background: #f5f5f5;
     color: #333;
     font-weight: bold;
-    font-size: 11px;     /* Smaller header font */
+    font-size: 12px;     /* Header font */
 }
 .subject-cell {
     font-weight: bold;
@@ -61,7 +61,7 @@ config:
 }
 .comment-row {
     background: #f0f0f0; /* Light grey background */
-    font-size: 10px;     /* Smaller comment font */
+    font-size: 12px;     /* Comment font */
     line-height: 1.2;
     padding: 4px 10px;   /* Compact padding */
     text-align: left;
@@ -71,7 +71,7 @@ config:
     font-weight: bold;
     padding: 8px;        /* Reduced padding */
     text-align: right;
-    font-size: 11px;
+    font-size: 16px;
 }
 </style>
 
@@ -195,7 +195,7 @@ config:
             <td colspan="{{ (reportingCycle.cycleTotal * 2) + 1 }}">
             {% endif %}
                 <small>Teacher(s):</small>
-                <span style="font-size: 7px; color: #666;">{{ currentAssessment.teacherName|default('N/A') }}</span>
+                <span style="font-size: 10px; color: #666;">{{ currentAssessment.teacherName|default('N/A') }}</span>
 
                 {% if currentAssessment.comment != 'N' and currentAssessment.comment is not empty %}
                     <br><em>{{ currentAssessment.comment }}</em>
@@ -226,7 +226,7 @@ config:
             {% endfor %}
             {% if count > 0 %}
                 {{ (total / count)|round(1) }}%
-                <small style="font-size: 9px;">({{ count }} subjects)</small>
+                <small style="font-size: 13px;">({{ count }} subjects)</small>
             {% else %}
                 N/A
             {% endif %}
