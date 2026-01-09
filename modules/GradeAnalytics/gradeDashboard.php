@@ -269,7 +269,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
         ['grade' => 'B', 'range' => '70-84', 'color' => 'rgba(54, 162, 235, 0.8)', 'textColor' => 'white'],
         ['grade' => 'C', 'range' => '60-69', 'color' => 'rgba(255, 206, 86, 0.8)', 'textColor' => '#333'],
         ['grade' => 'D', 'range' => '50-59', 'color' => 'rgba(75, 192, 192, 0.8)', 'textColor' => 'white'],
-        ['grade' => 'F', 'range' => '0-49', 'color' => 'rgba(255, 99, 132, 0.8)', 'textColor' => 'white']
+        ['grade' => 'E', 'range' => '0-49', 'color' => 'rgba(255, 99, 132, 0.8)', 'textColor' => 'white']
     ];
 
     foreach ($gradeScale as $scale) {
@@ -295,7 +295,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     $data = array();
     
     // Ensure we have data for all grades in correct order
-    $gradeOrder = ['A', 'B', 'C', 'D', 'F'];
+    $gradeOrder = ['A', 'B', 'C', 'D', 'E'];
     $gradeDataMap = array();
     
     // Create a map of grade => count from the query results
@@ -336,7 +336,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
                 $dataColors[] = 'rgba(75, 192, 192, 0.5)';  // Teal
                 $dataBorders[] = 'rgba(75, 192, 192, 1)';
                 break;
-            case 'F':
+            case 'E':
                 $dataColors[] = 'rgba(255, 99, 132, 0.5)';  // Red
                 $dataBorders[] = 'rgba(255, 99, 132, 1)';
                 break;

@@ -335,7 +335,7 @@ class GradeAnalyticsGateway extends QueryableGateway
         $whereSQL = implode(' AND ', $whereConditions);
 
         $sql = "WITH grade_ranges AS (
-                    SELECT 'A' as grade UNION SELECT 'B' UNION SELECT 'C' UNION SELECT 'D' UNION SELECT 'F'
+                    SELECT 'A' as grade UNION SELECT 'B' UNION SELECT 'C' UNION SELECT 'D' UNION SELECT 'E'
                 ),
                 student_grades AS (
                     SELECT
@@ -345,7 +345,7 @@ class GradeAnalyticsGateway extends QueryableGateway
                             WHEN e.attainmentValue >= 70 THEN 'B'
                             WHEN e.attainmentValue >= 60 THEN 'C'
                             WHEN e.attainmentValue >= 50 THEN 'D'
-                            ELSE 'F'
+                            ELSE 'E'
                         END as grade
                     FROM gibbonInternalAssessmentEntry e
                     JOIN gibbonInternalAssessmentColumn iac ON e.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
@@ -368,7 +368,7 @@ class GradeAnalyticsGateway extends QueryableGateway
                         WHEN 'B' THEN 2
                         WHEN 'C' THEN 3
                         WHEN 'D' THEN 4
-                        WHEN 'F' THEN 5
+                        WHEN 'E' THEN 5
                     END";
 
         return $this->db()->select($sql, $data);
@@ -840,7 +840,7 @@ class GradeAnalyticsGateway extends QueryableGateway
             case 'D':
                 $whereConditions[] = 'e.attainmentValue >= 50 AND e.attainmentValue < 60';
                 break;
-            case 'F':
+            case 'E':
                 $whereConditions[] = 'e.attainmentValue >= 0 AND e.attainmentValue < 50';
                 break;
             default:
