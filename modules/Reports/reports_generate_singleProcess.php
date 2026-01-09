@@ -101,8 +101,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
                 }
                 // Replace spaces with underscores and remove unwanted characters
                 $studentNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $studentName));
-                // Use the student's actual name as the PDF file name
-                $path = $studentNameSafe . '.pdf';
+                // Create a safe report name for the filename
+                $reportNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $report['name']));
+                // Use the student's actual name and report name as the PDF file name
+                $path = $studentNameSafe . '_' . $reportNameSafe . '.pdf';
                 $fullPath = $session->get('absolutePath').$archive['path'].'/'.$path;
                 
                 // Render the report to the friendly file path
