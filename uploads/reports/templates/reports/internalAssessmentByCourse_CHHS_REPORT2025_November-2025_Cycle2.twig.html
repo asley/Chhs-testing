@@ -23,19 +23,20 @@ config:
     max-width: 800px;    /* Limits maximum width */
     border-collapse: collapse;
     font-size: 12px;     /* Base font */
-    margin: 10px auto;   /* Reduced margin */
+    margin: 5px auto;    /* Compact margin */
     table-layout: fixed; /* Prevents column stretching */
+    page-break-inside: avoid; /* Prevent page breaks in table */
 }
 .report-table th {
     background: #f5f5f5;
     color: #333;
-    padding: 8px;        /* Reduced padding */
+    padding: 5px;        /* Compact padding */
     text-align: center;
     border: 1px solid #ddd;
     white-space: nowrap; /* Prevents header text wrapping */
 }
 .report-table td {
-    padding: 6px;        /* Reduced padding */
+    padding: 4px;        /* Compact padding */
     border: 1px solid #ddd;
     vertical-align: middle;
     word-wrap: break-word; /* Handles long content */
@@ -62,14 +63,14 @@ config:
 .comment-row {
     background: #f0f0f0; /* Light grey background */
     font-size: 12px;     /* Comment font */
-    line-height: 1.2;
-    padding: 4px 10px;   /* Compact padding */
+    line-height: 1.15;   /* Compact line height */
+    padding: 3px 8px;    /* Compact padding */
     text-align: left;
 }
 .average-cell {
     background: #e0e0e0; /* Soft grey for average */
     font-weight: bold;
-    padding: 8px;        /* Reduced padding */
+    padding: 6px;        /* Compact padding */
     text-align: right;
     font-size: 16px;
 }
