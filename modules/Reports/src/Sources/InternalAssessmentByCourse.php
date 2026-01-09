@@ -112,66 +112,57 @@ class InternalAssessmentByCourse extends DataSource
             'today' => date('Y-m-d')
         );
 
-        $sql = "SELECT
+        $sql = "SELECT 
             gibbonCourse.name AS groupBy,
-            gibbonInternalAssessmentColumn.name,
-            gibbonInternalAssessmentColumn.description,
-            gibbonInternalAssessmentColumn.type,
-            gibbonInternalAssessmentColumn.attainment AS attainmentActive,
-            gibbonInternalAssessmentEntry.attainmentValue,
-            gibbonInternalAssessmentEntry.attainmentDescriptor,
-            gibbonInternalAssessmentColumn.effort AS effortActive,
-            gibbonInternalAssessmentEntry.effortValue,
-            gibbonInternalAssessmentEntry.effortDescriptor,
-            gibbonInternalAssessmentColumn.comment AS commentActive,
-            gibbonInternalAssessmentEntry.comment,
+            gibbonInternalAssessmentColumn.name, 
+            gibbonInternalAssessmentColumn.description, 
+            gibbonInternalAssessmentColumn.type, 
+            gibbonInternalAssessmentColumn.attainment AS attainmentActive, 
+            gibbonInternalAssessmentEntry.attainmentValue, 
+            gibbonInternalAssessmentEntry.attainmentDescriptor, 
+            gibbonInternalAssessmentColumn.effort AS effortActive, 
+            gibbonInternalAssessmentEntry.effortValue, 
+            gibbonInternalAssessmentEntry.effortDescriptor, 
+            gibbonInternalAssessmentColumn.comment AS commentActive, 
+            gibbonInternalAssessmentEntry.comment, 
             gibbonCourse.name AS courseName,
-            gibbonCourse.nameShort AS courseNameShort,
-            gibbonCourseClass.name AS className,
+            gibbonCourse.nameShort AS courseNameShort, 
+            gibbonCourseClass.name AS className, 
             gibbonCourseClass.nameShort AS classNameShort,
             gibbonInternalAssessmentColumn.completeDate,
 
             /* ✅ Fetching Teacher Name (Ensuring Only Teachers Are Included) */
-            (SELECT GROUP_CONCAT(DISTINCT CONCAT(gibbonPerson.title, ' ', gibbonPerson.preferredName, ' ', gibbonPerson.surname)
-                ORDER BY gibbonPerson.surname SEPARATOR ', ')
-            FROM gibbonCourseClassPerson
+            (SELECT GROUP_CONCAT(DISTINCT CONCAT(gibbonPerson.title, ' ', gibbonPerson.preferredName, ' ', gibbonPerson.surname) 
+                ORDER BY gibbonPerson.surname SEPARATOR ', ') 
+            FROM gibbonCourseClassPerson 
             JOIN gibbonPerson ON gibbonCourseClassPerson.gibbonPersonID = gibbonPerson.gibbonPersonID
             WHERE gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID
               AND gibbonCourseClassPerson.role = 'Teacher' /* 🔹 Ensuring only teachers are included */
             ) AS teacherName
 
         FROM gibbonReport
-        JOIN gibbonReportingCycle AS reportCycle
-            ON gibbonReport.gibbonReportingCycleID = reportCycle.gibbonReportingCycleID
-        JOIN gibbonStudentEnrolment
+        JOIN gibbonStudentEnrolment 
             ON gibbonStudentEnrolment.gibbonSchoolYearID = gibbonReport.gibbonSchoolYearID
-        JOIN gibbonInternalAssessmentEntry
+        JOIN gibbonInternalAssessmentEntry 
             ON gibbonInternalAssessmentEntry.gibbonPersonIDStudent = gibbonStudentEnrolment.gibbonPersonID
-        JOIN gibbonInternalAssessmentColumn
-            ON gibbonInternalAssessmentEntry.gibbonInternalAssessmentColumnID = gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID
-        LEFT JOIN gibbonReportingCycle AS assessmentCycle
-            ON gibbonInternalAssessmentColumn.gibbonReportingCycleID = assessmentCycle.gibbonReportingCycleID
-        JOIN gibbonCourseClassPerson
-            ON gibbonInternalAssessmentColumn.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID
-        JOIN gibbonCourseClass
-            ON gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID
-        JOIN gibbonCourse
-            ON gibbonCourseClass.gibbonCourseID = gibbonCourse.gibbonCourseID
+        JOIN gibbonInternalAssessmentColumn 
+            ON gibbonInternalAssessmentEntry.gibbonInternalAssessmentColumnID = gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID 
+        JOIN gibbonCourseClassPerson 
+            ON gibbonInternalAssessmentColumn.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID 
+        JOIN gibbonCourseClass 
+            ON gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID 
+        JOIN gibbonCourse 
+            ON gibbonCourseClass.gibbonCourseID = gibbonCourse.gibbonCourseID 
 
         WHERE gibbonReport.gibbonReportID = :gibbonReportID
         AND gibbonStudentEnrolment.gibbonStudentEnrolmentID = :gibbonStudentEnrolmentID
         AND FIND_IN_SET(gibbonStudentEnrolment.gibbonYearGroupID, gibbonReport.gibbonYearGroupIDList)
         AND gibbonCourse.gibbonSchoolYearID = gibbonStudentEnrolment.gibbonSchoolYearID
         AND gibbonInternalAssessmentColumn.complete = 'Y'
-        AND gibbonInternalAssessmentColumn.completeDate <= :today
-        AND (
-            gibbonInternalAssessmentColumn.gibbonReportingCycleID = gibbonReport.gibbonReportingCycleID
-            OR (assessmentCycle.sequenceNumber IS NOT NULL AND assessmentCycle.sequenceNumber < reportCycle.sequenceNumber)
-            OR gibbonInternalAssessmentColumn.gibbonReportingCycleID IS NULL
-        )
+        AND gibbonInternalAssessmentColumn.completeDate <= :today 
 
-        GROUP BY gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID,
-                 gibbonCourse.gibbonCourseID,
+        GROUP BY gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID, 
+                 gibbonCourse.gibbonCourseID, 
                  gibbonCourseClass.gibbonCourseClassID
         ORDER BY gibbonInternalAssessmentColumn.completeDate DESC, gibbonCourse.nameShort, gibbonCourseClass.nameShort";
 
