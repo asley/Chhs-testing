@@ -20,7 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Domain\Students\StudentGateway;
-use Gibbon\Module\Reports\ArchiveFile;
+use Gibbon\Domain\User\UserGateway;
 use Gibbon\Module\Reports\ReportBuilder;
 use Gibbon\Module\Reports\Domain\ReportGateway;
 use Gibbon\Module\Reports\Domain\ReportArchiveGateway;
@@ -57,6 +57,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
     $reportGateway             = $container->get(ReportGateway::class);
     $reportArchiveEntryGateway = $container->get(ReportArchiveEntryGateway::class);
     $studentGateway            = $container->get(StudentGateway::class);
+    $userGateway               = $container->get(UserGateway::class);
 
     $report = $reportGateway->getByID($gibbonReportID);
 
@@ -74,8 +75,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
 
         $reportBuilder = $container->get(ReportBuilder::class);
         $archive       = $container->get(ReportArchiveGateway::class)->getByID($report['gibbonReportArchiveID']);
-        // $archiveFile = $container->get(ArchiveFile::class); // No longer used for file naming
-        
         $template = $reportBuilder->buildTemplate($report['gibbonReportTemplateID'], $status == 'Draft');
         $renderer = $container->get($template->getData('flags') == 1 ? MpdfRenderer::class : TcpdfRenderer::class);
 
@@ -87,51 +86,54 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
 
             $reports = $reportBuilder->buildReportSingle($template, $report, $ids);
 
-            if ($student = $studentGateway->getByID($identifier)) {
-                // Build a friendly file name using the student's actual name from the database.
-                // First try the 'name' field; if not available, fallback to preferredName (or firstName) and surname.
-                if (!empty($student['name'])) {
-                    $studentName = $student['name'];
-                } else {
-                    $firstName = !empty($student['preferredName']) ? $student['preferredName'] : ($student['firstName'] ?? '');
-                    $lastName  = $student['surname'] ?? ($student['lastName'] ?? '');
-                    $studentName = trim($firstName . ' ' . $lastName);
-                }
-                if (empty($studentName)) {
-                    $studentName = 'Student_' . $identifier;
-                }
-                // Replace spaces with underscores and remove unwanted characters
-                $studentNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $studentName));
-                // Create a safe report name for the filename
-                $reportNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $report['name']));
-                // Use the student's actual name and report name as the PDF file name
-                $path = $studentNameSafe . '_' . $reportNameSafe . '.pdf';
-                $fullPath = $session->get('absolutePath').$archive['path'].'/'.$path;
-                
-                // Render the report to the friendly file path
-                $renderer->render($template, $reports, $fullPath);
-
-                // Insert or update the archive entry with the friendly file name
-                $reportArchiveEntryGateway->insertAndUpdate([
-                    'reportIdentifier'      => $report['name'],
-                    'gibbonReportID'        => $gibbonReportID,
-                    'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
-                    'gibbonSchoolYearID'    => $student['gibbonSchoolYearID'],
-                    'gibbonYearGroupID'     => $student['gibbonYearGroupID'],
-                    'gibbonFormGroupID'     => $student['gibbonFormGroupID'],
-                    'gibbonPersonID'        => $student['gibbonPersonID'],
-                    'type'                  => 'Single',
-                    'status'                => $status,
-                    'filePath'              => $path,
-                ], [
-                    'status'            => $status,
-                    'timestampModified' => date('Y-m-d H:i:s'),
-                    'filePath'          => $path
-                ]);
-
-            } else {
+            // Get student enrolment data (contains IDs but not name)
+            $studentEnrolment = $studentGateway->getByID($identifier);
+            if (empty($studentEnrolment)) {
                 $partialFail = true;
+                continue;
             }
+
+            // Get the person record to retrieve the actual student name
+            $person = $userGateway->getByID($studentEnrolment['gibbonPersonID']);
+
+            // Build a friendly file name using the student's actual name from gibbonPerson table
+            $studentName = '';
+            if (!empty($person)) {
+                $firstName = !empty($person['preferredName']) ? $person['preferredName'] : ($person['firstName'] ?? '');
+                $lastName  = $person['surname'] ?? '';
+                $studentName = trim($lastName . '_' . $firstName);
+            }
+            if (empty($studentName)) {
+                $studentName = 'Student_' . $identifier;
+            }
+            // Replace spaces and remove unwanted characters
+            $studentNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $studentName));
+            // Create a safe report name for the filename
+            $reportNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $report['name']));
+            // Use the student's actual name and report name as the PDF file name
+            $path = $studentNameSafe . '_' . $reportNameSafe . '.pdf';
+            $fullPath = $session->get('absolutePath').$archive['path'].'/'.$path;
+
+            // Render the report to the friendly file path
+            $renderer->render($template, $reports, $fullPath);
+
+            // Insert or update the archive entry with the friendly file name
+            $reportArchiveEntryGateway->insertAndUpdate([
+                'reportIdentifier'      => $report['name'],
+                'gibbonReportID'        => $gibbonReportID,
+                'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
+                'gibbonSchoolYearID'    => $studentEnrolment['gibbonSchoolYearID'],
+                'gibbonYearGroupID'     => $studentEnrolment['gibbonYearGroupID'],
+                'gibbonFormGroupID'     => $studentEnrolment['gibbonFormGroupID'],
+                'gibbonPersonID'        => $studentEnrolment['gibbonPersonID'],
+                'type'                  => 'Single',
+                'status'                => $status,
+                'filePath'              => $path,
+            ], [
+                'status'            => $status,
+                'timestampModified' => date('Y-m-d H:i:s'),
+                'filePath'          => $path
+            ]);
         }
 
     // --------------------------------------
@@ -141,28 +143,30 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
         $archive = $container->get(ReportArchiveGateway::class)->getByID($report['gibbonReportArchiveID']);
 
         foreach ($identifiers as $identifier) {
-            if ($student = $studentGateway->getByID($identifier)) {
-                $entry = $reportArchiveEntryGateway->selectBy([
-                    'gibbonReportID'        => $gibbonReportID,
-                    'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
-                    'gibbonSchoolYearID'    => $student['gibbonSchoolYearID'],
-                    'gibbonYearGroupID'     => $student['gibbonYearGroupID'],
-                    'gibbonFormGroupID'     => $student['gibbonFormGroupID'],
-                    'gibbonPersonID'        => $student['gibbonPersonID'],
-                    'type'                  => 'Single',
-                ])->fetch();
-
-                if (!empty($entry)) {
-                    $path = $session->get('absolutePath').$archive['path'].'/'.$entry['filePath'];
-                    if (!empty($archive) && file_exists($path)) {
-                        unlink($path);
-                    }
-                    
-                    $deleted = $reportArchiveEntryGateway->delete($entry['gibbonReportArchiveEntryID']);
-                    $partialFail &= !$deleted;
-                }
-            } else {
+            $studentEnrolment = $studentGateway->getByID($identifier);
+            if (empty($studentEnrolment)) {
                 $partialFail = true;
+                continue;
+            }
+
+            $entry = $reportArchiveEntryGateway->selectBy([
+                'gibbonReportID'        => $gibbonReportID,
+                'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
+                'gibbonSchoolYearID'    => $studentEnrolment['gibbonSchoolYearID'],
+                'gibbonYearGroupID'     => $studentEnrolment['gibbonYearGroupID'],
+                'gibbonFormGroupID'     => $studentEnrolment['gibbonFormGroupID'],
+                'gibbonPersonID'        => $studentEnrolment['gibbonPersonID'],
+                'type'                  => 'Single',
+            ])->fetch();
+
+            if (!empty($entry)) {
+                $path = $session->get('absolutePath').$archive['path'].'/'.$entry['filePath'];
+                if (!empty($archive) && file_exists($path)) {
+                    unlink($path);
+                }
+
+                $deleted = $reportArchiveEntryGateway->delete($entry['gibbonReportArchiveEntryID']);
+                $partialFail &= !$deleted;
             }
         }
 
@@ -181,9 +185,6 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
             exit;
         }
 
-        // Get ArchiveFile instance for building file paths if needed
-        $archiveFile = $container->get(ArchiveFile::class);
-
         // Create a temporary ZIP file
         $zipFile = tempnam(sys_get_temp_dir(), 'reports_') . '.zip';
         $zip = new ZipArchive();
@@ -196,46 +197,62 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
 
         // Bulk download: Loop over each selected student and add their PDF(s) to the ZIP
         foreach ($identifiers as $identifier) {
-            if ($student = $studentGateway->getByID($identifier)) {
-                // Build the student's friendly file name as in the Generate branch
-                if (!empty($student['name'])) {
-                    $studentName = $student['name'];
-                } else {
-                    $firstName = !empty($student['preferredName']) ? $student['preferredName'] : ($student['firstName'] ?? '');
-                    $lastName  = $student['surname'] ?? ($student['lastName'] ?? '');
-                    $studentName = trim($firstName . ' ' . $lastName);
-                }
-                if (empty($studentName)) {
-                    $studentName = 'Student_' . $identifier;
-                }
-                $studentNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $studentName));
-
-                // Build the full file path using ArchiveFile's method for a single file
-                $path = $archiveFile->getSingleFilePath($gibbonReportID, $student['gibbonYearGroupID'], $identifier);
-                // Override the file name with the friendly name
-                $friendlyPath = $studentNameSafe . '.pdf';
-                $filePath = $session->get('absolutePath').$archive['path'].'/'.$friendlyPath;
-                
-                // If the file doesn't already exist with the friendly name, try to rename it if possible.
-                // Alternatively, if the file exists with the original name, you could copy it.
-                if (!file_exists($filePath)) {
-                    $originalPath = $session->get('absolutePath').$archive['path'].'/'.$path;
-                    if (file_exists($originalPath)) {
-                        // Rename or copy the file to the friendly name
-                        copy($originalPath, $filePath);
-                    } else {
-                        $partialFail = true;
-                        continue;
-                    }
-                }
-                
-                // Add the file to the ZIP using the friendly name
-                $zip->addFile($filePath, $studentNameSafe . '.pdf');
-            } else {
+            // Get student enrolment data (contains IDs but not name)
+            $studentEnrolment = $studentGateway->getByID($identifier);
+            if (empty($studentEnrolment)) {
                 $partialFail = true;
+                continue;
             }
+
+            // Get the person record to retrieve the actual student name
+            $person = $userGateway->getByID($studentEnrolment['gibbonPersonID']);
+
+            // Query the archive entry from the database using the specific gibbonReportID
+            // This ensures we get the correct file for the selected reporting cycle
+            $entry = $reportArchiveEntryGateway->selectBy([
+                'gibbonReportID'        => $gibbonReportID,
+                'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
+                'gibbonSchoolYearID'    => $studentEnrolment['gibbonSchoolYearID'],
+                'gibbonYearGroupID'     => $studentEnrolment['gibbonYearGroupID'],
+                'gibbonFormGroupID'     => $studentEnrolment['gibbonFormGroupID'],
+                'gibbonPersonID'        => $studentEnrolment['gibbonPersonID'],
+                'type'                  => 'Single',
+            ])->fetch();
+
+            if (empty($entry) || empty($entry['filePath'])) {
+                $partialFail = true;
+                continue;
+            }
+
+            // Use the file path stored in the database (already contains correct report/cycle)
+            $storedFilePath = $entry['filePath'];
+            $fullFilePath = $session->get('absolutePath').$archive['path'].'/'.$storedFilePath;
+
+            if (!file_exists($fullFilePath)) {
+                $partialFail = true;
+                continue;
+            }
+
+            // Build a friendly file name using student name from gibbonPerson table
+            $studentName = '';
+            if (!empty($person)) {
+                $firstName = !empty($person['preferredName']) ? $person['preferredName'] : ($person['firstName'] ?? '');
+                $lastName  = $person['surname'] ?? '';
+                $studentName = trim($lastName . ', ' . $firstName);
+            }
+            if (empty($studentName)) {
+                $studentName = 'Student_' . $identifier;
+            }
+            $studentNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace([' ', ','], ['_', ''], $studentName));
+
+            // Include report name in the zip file entry name for clarity
+            $reportNameSafe = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $report['name']));
+            $zipEntryName = $studentNameSafe . '_' . $reportNameSafe . '.pdf';
+
+            // Add the file to the ZIP using the friendly name
+            $zip->addFile($fullFilePath, $zipEntryName);
         }
-        
+
         $zip->close();
         
         // Check if ZIP is valid

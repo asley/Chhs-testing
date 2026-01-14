@@ -149,4 +149,60 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_s
 
 
     echo $form->getOutput();
+
+    // Add JavaScript to handle BulkDownload action using hidden iframe
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('bulkAction');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                var actionSelect = form.querySelector('select[name="action"]');
+                if (actionSelect && actionSelect.value === 'BulkDownload') {
+                    e.preventDefault(); // Prevent normal form submission
+                    e.stopPropagation(); // Stop event from triggering other handlers
+
+                    // Create hidden iframe for download
+                    var iframeName = 'downloadFrame_' + Date.now();
+                    var iframe = document.createElement('iframe');
+                    iframe.name = iframeName;
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+
+                    // Set form to submit to iframe
+                    form.setAttribute('target', iframeName);
+
+                    // Submit the form to the hidden iframe
+                    form.submit();
+
+                    // Reset form target
+                    setTimeout(function() {
+                        form.removeAttribute('target');
+                    }, 100);
+
+                    // Refresh page after download to clear loading state and show confirmation
+                    setTimeout(function() {
+                        // Add success message to URL and reload
+                        var currentUrl = window.location.href;
+                        var separator = currentUrl.indexOf('?') > -1 ? '&' : '?';
+                        // Remove any existing return parameter
+                        currentUrl = currentUrl.replace(/[&?]return=[^&]*/g, '');
+                        window.location.href = currentUrl + separator + 'return=success1';
+                    }, 1500); // Wait 1.5 seconds for download to start
+
+                    return false;
+                }
+                // For other actions (Generate, Delete), allow normal form submission
+            });
+        }
+    });
+    </script>
+    <?php
+
+    // Show download success message if redirected after bulk download
+    if (isset($_GET['return']) && $_GET['return'] === 'success1') {
+        echo '<div class="success" style="padding: 15px; margin: 15px 0; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; font-size: 14px;">';
+        echo '<strong>✓ Download Complete!</strong> Your ZIP file has been downloaded. Check your downloads folder.';
+        echo '</div>';
+    }
 }
