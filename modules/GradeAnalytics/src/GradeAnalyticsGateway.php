@@ -703,7 +703,8 @@ class GradeAnalyticsGateway extends QueryableGateway
             "se.gibbonSchoolYearID = :gibbonSchoolYearID",
             "c.gibbonSchoolYearID = :gibbonSchoolYearID",
             "me.attainmentValue IS NOT NULL",
-            "TRIM(me.attainmentValue) != ''"
+            "TRIM(me.attainmentValue) != ''",
+            "TRIM(me.attainmentValue) REGEXP '^[0-9]+(\\.[0-9]+)?%?$'"
         ];
 
         if (!empty($filters['formGroupID'])) {
@@ -789,17 +790,30 @@ class GradeAnalyticsGateway extends QueryableGateway
                 ];
             }
 
-            $studentData[$studentKey]['courses'][$row['courseName']] = $row['grade'];
-            $studentData[$studentKey]['grades'][] = $row['grade'];
+            $studentData[$studentKey]['courses'][$row['courseName']][] = $row['grade'];
         }
 
-        // Calculate averages and prepare final data
+        // Calculate per-course averages, then overall average from course averages
         foreach ($studentData as $student) {
-            if (!empty($student['grades'])) {
-                $average = array_sum($student['grades']) / \count($student['grades']);
-                $student['average'] = $average;
-                $broadsheet[] = $student;
+            if (empty($student['courses'])) {
+                continue;
             }
+
+            $courseAverages = [];
+            foreach ($student['courses'] as $courseName => $courseGrades) {
+                if (empty($courseGrades)) {
+                    continue;
+                }
+                $courseAverages[$courseName] = array_sum($courseGrades) / \count($courseGrades);
+            }
+
+            if (empty($courseAverages)) {
+                continue;
+            }
+
+            $student['courses'] = $courseAverages;
+            $student['average'] = array_sum($courseAverages) / \count($courseAverages);
+            $broadsheet[] = $student;
         }
 
         // Sort by average descending
