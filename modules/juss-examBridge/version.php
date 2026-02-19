@@ -4,8 +4,8 @@ Gibbon, Flexible & Open School System
 Copyright (C) 2010, Ross Parker
 */
 
-$moduleVersion = '0.1.0';
-$version = '0.1.0';
+$moduleVersion = '0.2.0';
+$version = '0.2.0';
 $releaseDate = '2026-02-19';
 $minimumGibbonVersion = 'v24.0.00';
 $maximumGibbonVersion = 'v31.0.00';

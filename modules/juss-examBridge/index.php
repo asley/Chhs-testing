@@ -31,6 +31,7 @@ if (isActionAccessible($guid, $connection2, '/modules/juss-examBridge/index.php'
     $tcexamBaseUrl = getJussExamBridgeSetting($settingGateway, 'tcexamBaseUrl');
     $bridgeKeyId = getJussExamBridgeSetting($settingGateway, 'bridgeKeyId');
     $bridgeSharedSecret = getJussExamBridgeSetting($settingGateway, 'bridgeSharedSecret');
+    $signatureMaxSkewSeconds = getJussExamBridgeSetting($settingGateway, 'signatureMaxSkewSeconds', '300');
     $enrollmentSyncEnabled = getJussExamBridgeSetting($settingGateway, 'enrollmentSyncEnabled', 'N');
     $gradeSyncEnabled = getJussExamBridgeSetting($settingGateway, 'gradeSyncEnabled', 'N');
     $dryRunEnabled = getJussExamBridgeSetting($settingGateway, 'dryRunEnabled', 'Y');
@@ -47,6 +48,7 @@ if (isActionAccessible($guid, $connection2, '/modules/juss-examBridge/index.php'
     echo '<tr><td><b>' . __('TCExam Base URL') . '</b></td><td>' . ($tcexamBaseUrl ?: __('Not configured')) . '</td></tr>';
     echo '<tr><td><b>' . __('Bridge Key ID') . '</b></td><td>' . ($bridgeKeyId ?: __('Not configured')) . '</td></tr>';
     echo '<tr><td><b>' . __('Bridge Shared Secret') . '</b></td><td>' . getJussExamBridgeMaskedSecret($bridgeSharedSecret) . '</td></tr>';
+    echo '<tr><td><b>' . __('Max Signature Skew (Seconds)') . '</b></td><td>' . (int) $signatureMaxSkewSeconds . '</td></tr>';
     echo '<tr><td><b>' . __('Enrollment Sync Enabled') . '</b></td><td>' . ($enrollmentSyncEnabled === 'Y' ? __('Yes') : __('No')) . '</td></tr>';
     echo '<tr><td><b>' . __('Grade Sync Enabled') . '</b></td><td>' . ($gradeSyncEnabled === 'Y' ? __('Yes') : __('No')) . '</td></tr>';
     echo '<tr><td><b>' . __('Dry Run Mode') . '</b></td><td>' . ($dryRunEnabled === 'Y' ? __('Yes') : __('No')) . '</td></tr>';

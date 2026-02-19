@@ -39,6 +39,7 @@ $settingsToUpdate = [
     'tcexamBaseUrl' => '',
     'bridgeKeyId' => '',
     'bridgeSharedSecret' => '',
+    'signatureMaxSkewSeconds' => 'required',
     'enrollmentSyncEnabled' => 'required',
     'gradeSyncEnabled' => 'required',
     'dryRunEnabled' => 'required',
@@ -51,6 +52,10 @@ foreach ($settingsToUpdate as $name => $property) {
         $URL .= '&return=error1';
         header("Location: {$URL}");
         exit;
+    }
+
+    if ($name === 'signatureMaxSkewSeconds') {
+        $value = max(30, min(3600, (int) $value));
     }
 
     $updated = $settingGateway->updateSettingByScope('juss-examBridge', $name, $value);

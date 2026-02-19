@@ -48,6 +48,11 @@ if (isActionAccessible($guid, $connection2, '/modules/juss-examBridge/settings.p
     $row->addLabel($setting['name'], __($setting['nameDisplay']))->description(__($setting['description']));
     $row->addPassword($setting['name'])->setValue($setting['value'])->maxLength(255);
 
+    $setting = $settingGateway->getSettingByScope('juss-examBridge', 'signatureMaxSkewSeconds', true);
+    $row = $form->addRow();
+    $row->addLabel($setting['name'], __($setting['nameDisplay']))->description(__($setting['description']));
+    $row->addNumber($setting['name'])->setValue($setting['value'])->minimum(30)->maximum(3600)->required();
+
     $form->addRow()->addHeading('Feature Flags', __('Feature Flags'));
 
     $setting = $settingGateway->getSettingByScope('juss-examBridge', 'enrollmentSyncEnabled', true);
