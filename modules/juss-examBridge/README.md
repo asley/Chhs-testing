@@ -9,6 +9,7 @@ Week 1 and Week 2 scaffold for TCExam integration in Gibbon.
 - Week 2 mapping and sync support tables.
 - HMAC signature verification utilities with timestamp skew + nonce replay protection.
 - Signed probe endpoint: `modules/juss-examBridge/api/authProbe.php`.
+- Week 3 roster endpoint: `modules/juss-examBridge/api/v1/classes.php`.
 
 ## Phase boundary
 Week 1 does not include:
@@ -39,3 +40,21 @@ Use `POST /modules/juss-examBridge/api/authProbe.php` with headers:
 Canonical request format:
 
 `METHOD + "\n" + PATH + "\n" + TIMESTAMP + "\n" + NONCE + "\n" + SHA256(BODY)`
+
+## Classes API (Week 3)
+Endpoint:
+
+- `GET /modules/juss-examBridge/api/v1/classes.php`
+
+Query params:
+
+- `schoolYearID` (optional, integer)
+- `classID` (optional, integer)
+- `updatedAfter` (optional, date/time string)
+- `page` (optional, default `1`)
+- `pageSize` (optional, default `50`, max `200`)
+
+Response:
+
+- Class records with course/class metadata and student participants.
+- Pagination object with `page`, `pageSize`, `total`, `totalPages`.
