@@ -58,3 +58,31 @@ Response:
 
 - Class records with course/class metadata and student participants.
 - Pagination object with `page`, `pageSize`, `total`, `totalPages`.
+
+### Quick Signed Test Script
+Script path:
+
+- `modules/juss-examBridge/scripts/test_signed_classes_request.sh`
+
+Run:
+
+```bash
+BASE_URL="http://localhost" \
+BRIDGE_KEY_ID="replace-with-bridgeKeyId" \
+BRIDGE_SHARED_SECRET="replace-with-bridgeSharedSecret" \
+./modules/juss-examBridge/scripts/test_signed_classes_request.sh
+```
+
+Optional filters:
+
+```bash
+BASE_URL="http://localhost" \
+BRIDGE_KEY_ID="replace-with-bridgeKeyId" \
+BRIDGE_SHARED_SECRET="replace-with-bridgeSharedSecret" \
+SCHOOL_YEAR_ID="027" \
+CLASS_ID="00001234" \
+UPDATED_AFTER="2026-02-01T00:00:00Z" \
+PAGE="1" \
+PAGE_SIZE="50" \
+./modules/juss-examBridge/scripts/test_signed_classes_request.sh
+```
