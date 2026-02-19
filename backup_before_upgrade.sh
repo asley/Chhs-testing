@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 # Configuration
 BACKUP_DIR="$HOME/gibbon_backups/$(date +%Y%m%d_%H%M%S)"
 GIBBON_DIR="/Applications/MAMP/htdocs/chhs-testing"
-DB_NAME="chhs-testing"
+DB_NAME="Chhs-testing"
 DB_USER="root"
 DB_PASS="root"
 DB_SOCKET="/Applications/MAMP/tmp/mysql/mysql.sock"
