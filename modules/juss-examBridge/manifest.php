@@ -22,7 +22,7 @@ $description = 'Integration bridge module for Gibbon and TCExam.';
 $entryURL = 'index.php';
 $type = 'Additional';
 $category = 'Assessment';
-$version = '0.2.0';
+$version = '0.5.1';
 $author = 'CHHS';
 $url = 'https://gibbonedu.org';
 
@@ -99,6 +99,7 @@ $moduleTables[] = "CREATE TABLE IF NOT EXISTS `gibbonJussExamBridgeNonce` (
 $gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='juss-examBridge', name='tcexamBaseUrl', nameDisplay='TCExam Base URL', description='Base URL for the TCExam API endpoint, eg https://tcexam.example.com', value='';";
 $gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='juss-examBridge', name='bridgeKeyId', nameDisplay='Bridge Key ID', description='Public key identifier for signed integration requests.', value='';";
 $gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='juss-examBridge', name='bridgeSharedSecret', nameDisplay='Bridge Shared Secret', description='Shared secret used for HMAC request verification.', value='';";
+$gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='juss-examBridge', name='bridgeServicePersonID', nameDisplay='Bridge Service Person ID', description='Person ID used as last editor for automated grade sync writes. Leave blank to fall back to System Administrator setting.', value='';";
 $gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='juss-examBridge', name='signatureMaxSkewSeconds', nameDisplay='Max Signature Skew (Seconds)', description='Maximum allowed difference between request timestamp and server time.', value='300';";
 $gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='juss-examBridge', name='enrollmentSyncEnabled', nameDisplay='Enrollment Sync Enabled', description='Enable class and enrollment sync from Gibbon to TCExam.', value='N';";
 $gibbonSetting[] = "INSERT INTO gibbonSetting SET scope='juss-examBridge', name='gradeSyncEnabled', nameDisplay='Grade Sync Enabled', description='Enable grade push and write-back integration.', value='N';";
@@ -118,6 +119,26 @@ $actionRows[] = [
     'defaultPermissionStudent' => 'N',
     'defaultPermissionParent' => 'N',
     'defaultPermissionSupport' => 'Y',
+    'categoryPermissionStaff' => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent' => 'N',
+    'categoryPermissionOther' => 'N',
+];
+
+$actionRows[] = [
+    'name' => 'Bridge Mappings',
+    'precedence' => '2',
+    'category' => 'Configuration',
+    'description' => 'Manage TCExam-to-Gibbon identity and assessment mappings.',
+    'URLList' => 'mappings.php,mapping_person.php,mapping_personProcess.php,mapping_class.php,mapping_classProcess.php,mapping_assessment.php,mapping_assessmentProcess.php',
+    'entryURL' => 'mappings.php',
+    'entrySidebar' => 'Y',
+    'menuShow' => 'Y',
+    'defaultPermissionAdmin' => 'Y',
+    'defaultPermissionTeacher' => 'N',
+    'defaultPermissionStudent' => 'N',
+    'defaultPermissionParent' => 'N',
+    'defaultPermissionSupport' => 'N',
     'categoryPermissionStaff' => 'Y',
     'categoryPermissionStudent' => 'N',
     'categoryPermissionParent' => 'N',

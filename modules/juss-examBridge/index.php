@@ -31,23 +31,25 @@ if (isActionAccessible($guid, $connection2, '/modules/juss-examBridge/index.php'
     $tcexamBaseUrl = getJussExamBridgeSetting($settingGateway, 'tcexamBaseUrl');
     $bridgeKeyId = getJussExamBridgeSetting($settingGateway, 'bridgeKeyId');
     $bridgeSharedSecret = getJussExamBridgeSetting($settingGateway, 'bridgeSharedSecret');
+    $bridgeServicePersonID = getJussExamBridgeSetting($settingGateway, 'bridgeServicePersonID');
     $signatureMaxSkewSeconds = getJussExamBridgeSetting($settingGateway, 'signatureMaxSkewSeconds', '300');
     $enrollmentSyncEnabled = getJussExamBridgeSetting($settingGateway, 'enrollmentSyncEnabled', 'N');
     $gradeSyncEnabled = getJussExamBridgeSetting($settingGateway, 'gradeSyncEnabled', 'N');
     $dryRunEnabled = getJussExamBridgeSetting($settingGateway, 'dryRunEnabled', 'Y');
 
     echo '<h2>';
-    echo __('Week 1 Foundation Status');
+    echo __('Integration Status');
     echo '</h2>';
 
     echo '<p>';
-    echo __('The module scaffold is installed. Enrollment and grade sync endpoints are not enabled in this phase.');
+    echo __('Signed classes, enrollments and grades upsert APIs are available. Queue/scheduler and TCExam-side jobs are pending.');
     echo '</p>';
 
     echo '<table class="smallIntBorder fullWidth colorOddEven">';
     echo '<tr><td><b>' . __('TCExam Base URL') . '</b></td><td>' . ($tcexamBaseUrl ?: __('Not configured')) . '</td></tr>';
     echo '<tr><td><b>' . __('Bridge Key ID') . '</b></td><td>' . ($bridgeKeyId ?: __('Not configured')) . '</td></tr>';
     echo '<tr><td><b>' . __('Bridge Shared Secret') . '</b></td><td>' . getJussExamBridgeMaskedSecret($bridgeSharedSecret) . '</td></tr>';
+    echo '<tr><td><b>' . __('Bridge Service Person ID') . '</b></td><td>' . ($bridgeServicePersonID ?: __('Auto (System Administrator)')) . '</td></tr>';
     echo '<tr><td><b>' . __('Max Signature Skew (Seconds)') . '</b></td><td>' . (int) $signatureMaxSkewSeconds . '</td></tr>';
     echo '<tr><td><b>' . __('Enrollment Sync Enabled') . '</b></td><td>' . ($enrollmentSyncEnabled === 'Y' ? __('Yes') : __('No')) . '</td></tr>';
     echo '<tr><td><b>' . __('Grade Sync Enabled') . '</b></td><td>' . ($gradeSyncEnabled === 'Y' ? __('Yes') : __('No')) . '</td></tr>';
@@ -57,6 +59,12 @@ if (isActionAccessible($guid, $connection2, '/modules/juss-examBridge/index.php'
     echo '<p style="margin-top: 12px;">';
     echo '<a href="' . $session->get('absoluteURL') . '/index.php?q=/modules/juss-examBridge/settings.php">';
     echo __('Open Bridge Settings');
+    echo '</a>';
+    echo '</p>';
+
+    echo '<p style="margin-top: 8px;">';
+    echo '<a href="' . $session->get('absoluteURL') . '/index.php?q=/modules/juss-examBridge/mappings.php">';
+    echo __('Open Bridge Mappings');
     echo '</a>';
     echo '</p>';
 }

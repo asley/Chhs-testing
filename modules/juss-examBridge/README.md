@@ -1,6 +1,6 @@
 # juss-examBridge
 
-Week 1 and Week 2 scaffold for TCExam integration in Gibbon.
+Week 1 to Week 5 scaffold for TCExam integration in Gibbon.
 
 ## Current capabilities
 - Module installation metadata and permissions.
@@ -10,13 +10,22 @@ Week 1 and Week 2 scaffold for TCExam integration in Gibbon.
 - HMAC signature verification utilities with timestamp skew + nonce replay protection.
 - Signed probe endpoint: `modules/juss-examBridge/api/authProbe.php`.
 - Week 3 roster endpoint: `modules/juss-examBridge/api/v1/classes.php`.
+- Week 4 enrollment endpoint: `modules/juss-examBridge/api/v1/enrollments.php`.
+- Week 5 grades upsert endpoint: `modules/juss-examBridge/api/v1/grades/upsert.php`.
+- Mapping admin UI for person/class/assessment mapping maintenance.
+
+## Integration docs
+- API contract: `modules/juss-examBridge/API_CONTRACT.md`
+- TCExam integration guide: `modules/juss-examBridge/TCEXAM_INTEGRATION_GUIDE.md`
+- OpenAPI spec: `modules/juss-examBridge/openapi.yaml`
+- Postman collection: `modules/juss-examBridge/postman_collection.json`
+- Smoke test evidence: `modules/juss-examBridge/SMOKE_TEST_EVIDENCE.md`
+- Setup checklist: `modules/juss-examBridge/SETUP_CHECKLIST.md`
 
 ## Phase boundary
 Week 1 does not include:
-- Roster sync endpoints
-- Grade upsert endpoints
 - Queue/scheduler jobs
-- Assessment write-back logic
+- Markbook write-back logic
 
 ## Settings
 Scope: `juss-examBridge`
@@ -25,6 +34,7 @@ Scope: `juss-examBridge`
 - `bridgeKeyId`
 - `bridgeSharedSecret`
 - `signatureMaxSkewSeconds`
+- `bridgeServicePersonID`
 - `enrollmentSyncEnabled`
 - `gradeSyncEnabled`
 - `dryRunEnabled`
@@ -57,12 +67,73 @@ Query params:
 Response:
 
 - Class records with course/class metadata and student participants.
+- Includes `classExternalId` for every class: mapped `externalCohortId` when available, otherwise stringified `classId`.
+- Includes `classExternalIdSource` (`mapped` or `fallback_classId`) and `mappingStatus` (`mapped` or `unmapped`) for mapping visibility.
+- Includes `externalClassCode` when class mapping exists.
 - Pagination object with `page`, `pageSize`, `total`, `totalPages`.
+
+## Enrollments API (Week 4)
+Endpoint:
+
+- `GET /modules/juss-examBridge/api/v1/enrollments.php`
+
+Query params:
+
+- `schoolYearID` (optional, integer)
+- `classID` (optional, integer)
+- `personID` (optional, integer)
+- `updatedAfter` (optional, date/time string)
+- `page` (optional, default `1`)
+- `pageSize` (optional, default `50`, max `200`)
+
+Response:
+
+- Enrollment records with class, course and student identity details.
+- Includes `classExternalId` for every enrollment: mapped `externalCohortId` when available, otherwise stringified `classId`.
+- Includes `classExternalIdSource` (`mapped` or `fallback_classId`) and `mappingStatus` (`mapped` or `unmapped`) for mapping visibility.
+- Includes `externalClassCode` when class mapping exists.
+- Pagination object with `page`, `pageSize`, `total`, `totalPages`.
+
+## Grades Upsert API (Week 5)
+Endpoint:
+
+- `POST /modules/juss-examBridge/api/v1/grades/upsert.php`
+
+Required JSON fields:
+
+- `idempotencyKey` (request-level, max 128 chars)
+- `sourceSystem`
+- `records[]` with:
+- `examId`
+- `classExternalId`
+- `studentExternalId`
+- `rawPoints`
+- `maxPoints`
+- `percentage` (or computed from raw/max if omitted)
+- `gradeStatus`
+- `gradedAt`
+
+Behavior:
+
+- Signed request verification.
+- Idempotency check against `gibbonJussExamBridgeSyncLog`.
+- Mapping checks for exam/class/student.
+- Internal Assessment upsert to `gibbonInternalAssessmentEntry`.
+- Dry-run support via `dryRunEnabled=Y`.
+- Uses `bridgeServicePersonID` (or System `organisationAdministrator`) for `gibbonPersonIDLastEdit`.
+- Per-record accepted/rejected result list.
+
+## Mapping Admin UI
+- `index.php?q=/modules/juss-examBridge/mappings.php`
+- `index.php?q=/modules/juss-examBridge/mapping_person.php`
+- `index.php?q=/modules/juss-examBridge/mapping_class.php`
+- `index.php?q=/modules/juss-examBridge/mapping_assessment.php`
 
 ### Quick Signed Test Script
 Script path:
 
 - `modules/juss-examBridge/scripts/test_signed_classes_request.sh`
+- `modules/juss-examBridge/scripts/test_signed_grades_upsert_request.sh`
 
 Run:
 
@@ -71,6 +142,42 @@ BASE_URL="http://localhost" \
 BRIDGE_KEY_ID="replace-with-bridgeKeyId" \
 BRIDGE_SHARED_SECRET="replace-with-bridgeSharedSecret" \
 ./modules/juss-examBridge/scripts/test_signed_classes_request.sh
+```
+
+Grades upsert smoke test (happy path):
+
+```bash
+BASE_URL="http://localhost" \
+BRIDGE_KEY_ID="replace-with-bridgeKeyId" \
+BRIDGE_SHARED_SECRET="replace-with-bridgeSharedSecret" \
+TEST_CASE="happy_path" \
+IDEMPOTENCY_KEY="grade-sync-$(date +%s)" \
+EXAM_ID="exam-001" \
+CLASS_EXTERNAL_ID="cohort-001" \
+STUDENT_EXTERNAL_ID="student-001" \
+./modules/juss-examBridge/scripts/test_signed_grades_upsert_request.sh
+```
+
+Grades upsert rejection smoke tests:
+
+```bash
+# List supported test cases
+TEST_CASE="list" ./modules/juss-examBridge/scripts/test_signed_grades_upsert_request.sh
+
+# Example rejection checks
+BASE_URL="http://localhost" \
+BRIDGE_KEY_ID="replace-with-bridgeKeyId" \
+BRIDGE_SHARED_SECRET="replace-with-bridgeSharedSecret" \
+TEST_CASE="missing_records" \
+IDEMPOTENCY_KEY="grade-sync-neg-$(date +%s)" \
+./modules/juss-examBridge/scripts/test_signed_grades_upsert_request.sh
+
+BASE_URL="http://localhost" \
+BRIDGE_KEY_ID="replace-with-bridgeKeyId" \
+BRIDGE_SHARED_SECRET="replace-with-bridgeSharedSecret" \
+TEST_CASE="invalid_percentage" \
+IDEMPOTENCY_KEY="grade-sync-neg2-$(date +%s)" \
+./modules/juss-examBridge/scripts/test_signed_grades_upsert_request.sh
 ```
 
 Optional filters:

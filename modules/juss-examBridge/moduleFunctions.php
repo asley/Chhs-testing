@@ -179,5 +179,86 @@ function outputJussExamBridgeJson($statusCode, array $payload)
 {
     http_response_code((int) $statusCode);
     header('Content-Type: application/json');
+    header('X-Bridge-Version: ' . getJussExamBridgeModuleVersion());
     echo json_encode($payload);
+}
+
+function getJussExamBridgeModuleVersion()
+{
+    static $resolvedVersion = null;
+
+    if ($resolvedVersion !== null) {
+        return $resolvedVersion;
+    }
+
+    $defaultVersion = 'unknown';
+    $versionFile = __DIR__ . '/version.php';
+
+    if (!is_file($versionFile)) {
+        $resolvedVersion = $defaultVersion;
+        return $resolvedVersion;
+    }
+
+    $moduleVersion = null;
+    $version = null;
+
+    require $versionFile;
+
+    if (is_string($moduleVersion) && $moduleVersion !== '') {
+        $resolvedVersion = $moduleVersion;
+        return $resolvedVersion;
+    }
+
+    if (is_string($version) && $version !== '') {
+        $resolvedVersion = $version;
+        return $resolvedVersion;
+    }
+
+    $resolvedVersion = $defaultVersion;
+    return $resolvedVersion;
+}
+
+function getJussExamBridgeServicePersonID($container, $connection2)
+{
+    /** @var SettingGateway $settingGateway */
+    $settingGateway = $container->get(SettingGateway::class);
+
+    $candidates = [];
+
+    $explicit = getJussExamBridgeSetting($settingGateway, 'bridgeServicePersonID');
+    if ($explicit !== '' && ctype_digit((string) $explicit)) {
+        $candidates[] = (int) $explicit;
+    }
+
+    $orgAdmin = $settingGateway->getSettingByScope('System', 'organisationAdministrator');
+    if ($orgAdmin !== false && $orgAdmin !== null && ctype_digit((string) $orgAdmin)) {
+        $candidates[] = (int) $orgAdmin;
+    }
+
+    $candidates[] = 1;
+
+    foreach ($candidates as $candidate) {
+        try {
+            $stmt = $connection2->prepare('SELECT gibbonPersonID FROM gibbonPerson WHERE gibbonPersonID = :gibbonPersonID LIMIT 1');
+            $stmt->execute(['gibbonPersonID' => $candidate]);
+            if ($stmt->fetch(PDO::FETCH_ASSOC)) {
+                return $candidate;
+            }
+        } catch (PDOException $e) {
+            continue;
+        }
+    }
+
+    try {
+        $fallbackStmt = $connection2->prepare("SELECT gibbonPersonID FROM gibbonPerson WHERE canLogin = 'Y' ORDER BY gibbonPersonID ASC LIMIT 1");
+        $fallbackStmt->execute();
+        $fallback = $fallbackStmt->fetch(PDO::FETCH_ASSOC);
+        if (!empty($fallback)) {
+            return (int) $fallback['gibbonPersonID'];
+        }
+    } catch (PDOException $e) {
+        return 1;
+    }
+
+    return 1;
 }

@@ -96,9 +96,12 @@ try {
             c.gibbonCourseID,
             c.gibbonSchoolYearID,
             c.name AS courseName,
-            c.nameShort AS courseCode
+            c.nameShort AS courseCode,
+            cm.externalCohortId,
+            cm.externalClassCode
         FROM gibbonCourseClass cc
         INNER JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
+        LEFT JOIN gibbonJussExamBridgeClassMap cm ON cm.gibbonCourseClassID = cc.gibbonCourseClassID
         LEFT JOIN gibbonCourseClassPerson ccpFilter ON ccpFilter.gibbonCourseClassID = cc.gibbonCourseClassID
         $whereSql
         GROUP BY cc.gibbonCourseClassID
@@ -198,8 +201,17 @@ if (!empty($classIds)) {
 $data = [];
 foreach ($classes as $classRow) {
     $courseClassID = (int) $classRow['gibbonCourseClassID'];
+    $hasMappedExternalId = $classRow['externalCohortId'] !== null && trim((string) $classRow['externalCohortId']) !== '';
+    $classExternalId = $hasMappedExternalId ? (string) $classRow['externalCohortId'] : (string) $courseClassID;
+    $classExternalIdSource = $hasMappedExternalId ? 'mapped' : 'fallback_classId';
+    $mappingStatus = $hasMappedExternalId ? 'mapped' : 'unmapped';
+
     $data[] = [
         'classId' => $courseClassID,
+        'classExternalId' => $classExternalId,
+        'classExternalIdSource' => $classExternalIdSource,
+        'mappingStatus' => $mappingStatus,
+        'externalClassCode' => $classRow['externalClassCode'] !== null ? (string) $classRow['externalClassCode'] : null,
         'schoolYearId' => (int) $classRow['gibbonSchoolYearID'],
         'course' => [
             'courseId' => (int) $classRow['gibbonCourseID'],

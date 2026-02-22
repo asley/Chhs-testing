@@ -88,3 +88,71 @@ WHERE NOT EXISTS (
     WHERE scope='juss-examBridge' AND name='signatureMaxSkewSeconds'
 );end
 ";
+
+$count++;
+$sql[$count][0] = '0.3.0';
+$sql[$count][1] = '-- Week 4 enrollment sync endpoint release (no schema changes).';
+
+$count++;
+$sql[$count][0] = '0.4.0';
+$sql[$count][1] = '-- Grade upsert API endpoint release with idempotency + sync logging (no schema changes).';
+
+$count++;
+$sql[$count][0] = '0.5.0';
+$sql[$count][1] = '-- Added mapping admin UI and service person ID setting (no schema changes).';
+
+$count++;
+$sql[$count][0] = '0.5.1';
+$sql[$count][1] = "
+INSERT INTO gibbonSetting (scope, name, nameDisplay, description, value)
+SELECT 'juss-examBridge', 'bridgeServicePersonID', 'Bridge Service Person ID', 'Person ID used as last editor for automated grade sync writes. Leave blank to fall back to System Administrator setting.', ''
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM gibbonSetting
+    WHERE scope='juss-examBridge' AND name='bridgeServicePersonID'
+);end
+
+INSERT INTO gibbonAction
+(gibbonModuleID, name, precedence, category, description, helpURL, URLList, entryURL, entrySidebar, menuShow, defaultPermissionAdmin, defaultPermissionTeacher, defaultPermissionStudent, defaultPermissionParent, defaultPermissionSupport, categoryPermissionStaff, categoryPermissionStudent, categoryPermissionParent, categoryPermissionOther)
+SELECT
+    m.gibbonModuleID,
+    'Bridge Mappings',
+    2,
+    'Configuration',
+    'Manage TCExam-to-Gibbon identity and assessment mappings.',
+    NULL,
+    'mappings.php,mapping_person.php,mapping_personProcess.php,mapping_class.php,mapping_classProcess.php,mapping_assessment.php,mapping_assessmentProcess.php',
+    'mappings.php',
+    'Y',
+    'Y',
+    'Y',
+    'N',
+    'N',
+    'N',
+    'N',
+    'Y',
+    'N',
+    'N',
+    'N'
+FROM gibbonModule m
+WHERE m.name='juss-examBridge'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM gibbonAction a
+      WHERE a.gibbonModuleID = m.gibbonModuleID
+        AND a.name = 'Bridge Mappings'
+  );end
+
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID)
+SELECT '001', a.gibbonActionID
+FROM gibbonAction a
+INNER JOIN gibbonModule m ON m.gibbonModuleID = a.gibbonModuleID
+WHERE m.name='juss-examBridge'
+  AND a.name='Bridge Mappings'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM gibbonPermission p
+      WHERE p.gibbonRoleID='001'
+        AND p.gibbonActionID=a.gibbonActionID
+  );end
+";

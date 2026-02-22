@@ -1,0 +1,1058 @@
+openapi: 3.0.3
+info:
+  title: juss-examBridge API
+  version: 0.5.1
+  description: |
+    Import-ready OpenAPI spec for TCExam integration with the Gibbon juss-examBridge module.
+
+    All endpoints require signed headers:
+    - X-Bridge-KeyId
+    - X-Bridge-Timestamp (UTC ISO-8601)
+    - X-Bridge-Nonce (unique per request)
+    - X-Bridge-Signature (hex HMAC-SHA256)
+
+    All responses include:
+    - X-Bridge-Version
+
+    Canonical string:
+    METHOD + "\n" + PATH + "\n" + TIMESTAMP + "\n" + NONCE + "\n" + SHA256(BODY)
+servers:
+  - url: http://localhost
+    description: Local example
+tags:
+  - name: Auth
+  - name: Roster
+  - name: Grades
+paths:
+  /modules/juss-examBridge/api/authProbe.php:
+    post:
+      tags:
+        - Auth
+      summary: Validate signed authentication
+      description: Verifies signature and nonce handling before integrating business endpoints.
+      security:
+        - BridgeKeyId: []
+          BridgeTimestamp: []
+          BridgeNonce: []
+          BridgeSignature: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example: {}
+      responses:
+        "200":
+          description: Signed request accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthProbeSuccess"
+              example:
+                ok: true
+                message: Signed request accepted.
+                serverTime: "2026-02-20T16:00:00Z"
+        "401":
+          $ref: "#/components/responses/Common401"
+        "405":
+          $ref: "#/components/responses/Common405"
+        "409":
+          $ref: "#/components/responses/Common409"
+        "503":
+          $ref: "#/components/responses/Common503"
+
+  /modules/juss-examBridge/api/v1/classes.php:
+    get:
+      tags:
+        - Roster
+      summary: List classes and participants
+      security:
+        - BridgeKeyId: []
+          BridgeTimestamp: []
+          BridgeNonce: []
+          BridgeSignature: []
+      parameters:
+        - $ref: "#/components/parameters/SchoolYearID"
+        - $ref: "#/components/parameters/ClassID"
+        - $ref: "#/components/parameters/UpdatedAfter"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated class data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassesResponse"
+              example:
+                ok: true
+                filters:
+                  schoolYearID: 27
+                  classID: null
+                  updatedAfter: "2026-02-01"
+                pagination:
+                  page: 1
+                  pageSize: 50
+                  total: 1
+                  totalPages: 1
+                data:
+                  - classId: 5001
+                    classExternalId: cohort-001
+                    classExternalIdSource: mapped
+                    mappingStatus: mapped
+                    externalClassCode: MATH-10A
+                    schoolYearId: 27
+                    course:
+                      courseId: 7001
+                      name: Mathematics
+                      code: MATH-10
+                    class:
+                      name: 10A
+                      code: 10A
+                      reportable: "Y"
+                      attendance: "Y"
+                      enrolmentMin: 0
+                      enrolmentMax: 40
+                    participants:
+                      - personId: 3001
+                        classRole: Student
+                        reportable: "Y"
+                        dateEnrolled: "2026-01-01"
+                        dateUnenrolled: null
+                        personStatus: Full
+                        name:
+                          firstName: Student
+                          surname: One
+                          preferredName: Stu
+                        identity:
+                          email: student@example.com
+                          studentId: S-3001
+                          username: student1
+                          canLogin: "Y"
+        "400":
+          description: Invalid filter parameter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommonError"
+              examples:
+                invalidUpdatedAfter:
+                  value:
+                    ok: false
+                    error: invalid_updated_after
+        "401":
+          $ref: "#/components/responses/Common401"
+        "405":
+          $ref: "#/components/responses/Common405"
+        "409":
+          $ref: "#/components/responses/Common409"
+        "500":
+          description: Server query failure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommonError"
+              examples:
+                queryFailed:
+                  value:
+                    ok: false
+                    error: query_failed
+                participantQueryFailed:
+                  value:
+                    ok: false
+                    error: participant_query_failed
+        "503":
+          $ref: "#/components/responses/Common503"
+
+  /modules/juss-examBridge/api/v1/enrollments.php:
+    get:
+      tags:
+        - Roster
+      summary: List enrollments
+      security:
+        - BridgeKeyId: []
+          BridgeTimestamp: []
+          BridgeNonce: []
+          BridgeSignature: []
+      parameters:
+        - $ref: "#/components/parameters/SchoolYearID"
+        - $ref: "#/components/parameters/ClassID"
+        - $ref: "#/components/parameters/PersonID"
+        - $ref: "#/components/parameters/UpdatedAfter"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated enrollment data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrollmentsResponse"
+              example:
+                ok: true
+                filters:
+                  schoolYearID: 27
+                  classID: 5001
+                  personID: null
+                  updatedAfter: "2026-02-01"
+                pagination:
+                  page: 1
+                  pageSize: 50
+                  total: 1
+                  totalPages: 1
+                data:
+                  - classId: 5001
+                    classExternalId: cohort-001
+                    classExternalIdSource: mapped
+                    mappingStatus: mapped
+                    externalClassCode: MATH-10A
+                    schoolYearId: 27
+                    course:
+                      courseId: 7001
+                      name: Mathematics
+                      code: MATH-10
+                    class:
+                      name: 10A
+                      code: 10A
+                    person:
+                      personId: 3001
+                      status: Full
+                      name:
+                        firstName: Student
+                        surname: One
+                        preferredName: Stu
+                      identity:
+                        studentId: S-3001
+                        email: student@example.com
+                        username: student1
+                        canLogin: "Y"
+                    enrollment:
+                      role: Student
+                      reportable: "Y"
+                      dateEnrolled: "2026-01-01"
+                      dateUnenrolled: null
+        "400":
+          description: Invalid filter parameter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommonError"
+              examples:
+                invalidUpdatedAfter:
+                  value:
+                    ok: false
+                    error: invalid_updated_after
+        "401":
+          $ref: "#/components/responses/Common401"
+        "405":
+          $ref: "#/components/responses/Common405"
+        "409":
+          $ref: "#/components/responses/Common409"
+        "500":
+          description: Server query failure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommonError"
+              examples:
+                queryFailed:
+                  value:
+                    ok: false
+                    error: query_failed
+        "503":
+          $ref: "#/components/responses/Common503"
+
+  /modules/juss-examBridge/api/v1/grades/upsert.php:
+    post:
+      tags:
+        - Grades
+      summary: Upsert grade records (idempotent)
+      security:
+        - BridgeKeyId: []
+          BridgeTimestamp: []
+          BridgeNonce: []
+          BridgeSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GradesUpsertRequest"
+            example:
+              idempotencyKey: grade-sync-20260220-0001
+              sourceSystem: tcexam
+              records:
+                - examId: exam-001
+                  classExternalId: cohort-001
+                  studentExternalId: student-001
+                  rawPoints: 42
+                  maxPoints: 50
+                  percentage: 84
+                  gradeStatus: final
+                  gradedAt: "2026-02-20T12:00:00Z"
+                  externalEmail: optional@student.com
+                  studentNumber: optional-student-id
+      responses:
+        "200":
+          description: Success, mixed result, or idempotent replay.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/GradesUpsertResponse"
+                  - $ref: "#/components/schemas/GradesIdempotentReplayResponse"
+              examples:
+                acceptedDryRun:
+                  value:
+                    ok: true
+                    idempotencyKey: grade-sync-20260220-0001
+                    sourceSystem: tcexam
+                    dryRun: true
+                    summary:
+                      total: 1
+                      accepted: 1
+                      rejected: 0
+                    results:
+                      - index: 1
+                        status: accepted
+                        mode: dry_run
+                        gibbonPersonID: 3001
+                        gibbonInternalAssessmentColumnID: 1001
+                        attainmentValue: "84.00"
+                idempotentReplay:
+                  value:
+                    ok: true
+                    idempotentReplay: true
+                    idempotencyKey: grade-sync-20260220-0001
+                    status: accepted
+                    message: Duplicate request with identical payload accepted as no-op.
+        "400":
+          description: Contract validation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommonError"
+              examples:
+                invalidJson:
+                  value:
+                    ok: false
+                    error: invalid_json
+                invalidIdempotencyKey:
+                  value:
+                    ok: false
+                    error: invalid_idempotency_key
+                missingSourceSystem:
+                  value:
+                    ok: false
+                    error: missing_source_system
+                missingRecords:
+                  value:
+                    ok: false
+                    error: missing_records
+        "401":
+          $ref: "#/components/responses/Common401"
+        "403":
+          description: Grade sync is disabled.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommonError"
+              examples:
+                disabled:
+                  value:
+                    ok: false
+                    error: grade_sync_disabled
+        "405":
+          $ref: "#/components/responses/Common405"
+        "409":
+          description: Idempotency conflict or all records rejected due to mapping conflicts.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CommonError"
+                  - $ref: "#/components/schemas/GradesUpsertResponse"
+              examples:
+                idempotencyConflict:
+                  value:
+                    ok: false
+                    error: idempotency_conflict
+                mappingConflictAllRejected:
+                  value:
+                    ok: false
+                    idempotencyKey: grade-sync-20260220-0002
+                    sourceSystem: tcexam
+                    dryRun: true
+                    summary:
+                      total: 1
+                      accepted: 0
+                      rejected: 1
+                    results:
+                      - index: 1
+                        status: rejected
+                        code: unmapped_student
+                        message: No person mapping found for studentExternalId.
+        "500":
+          description: Sync log persistence failure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommonError"
+              examples:
+                syncLogQueryFailed:
+                  value:
+                    ok: false
+                    error: sync_log_query_failed
+                syncLogInsertFailed:
+                  value:
+                    ok: false
+                    error: sync_log_insert_failed
+                syncLogUpdateFailed:
+                  value:
+                    ok: false
+                    error: sync_log_update_failed
+        "503":
+          $ref: "#/components/responses/Common503"
+
+components:
+  securitySchemes:
+    BridgeKeyId:
+      type: apiKey
+      in: header
+      name: X-Bridge-KeyId
+      description: Key ID configured in Gibbon setting `bridgeKeyId`.
+    BridgeTimestamp:
+      type: apiKey
+      in: header
+      name: X-Bridge-Timestamp
+      description: UTC ISO-8601 timestamp (for example 2026-02-20T12:30:00Z).
+    BridgeNonce:
+      type: apiKey
+      in: header
+      name: X-Bridge-Nonce
+      description: Unique random value per request.
+    BridgeSignature:
+      type: apiKey
+      in: header
+      name: X-Bridge-Signature
+      description: Hex HMAC-SHA256 of canonical request string.
+
+  parameters:
+    SchoolYearID:
+      name: schoolYearID
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+    ClassID:
+      name: classID
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+    PersonID:
+      name: personID
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+    UpdatedAfter:
+      name: updatedAfter
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Date/time string parseable by server.
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+
+  responses:
+    Common401:
+      description: Signed authentication validation error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CommonError"
+          examples:
+            missingHeaders:
+              value:
+                ok: false
+                error: missing_headers
+            invalidKeyId:
+              value:
+                ok: false
+                error: invalid_key_id
+            invalidTimestamp:
+              value:
+                ok: false
+                error: invalid_timestamp
+            timestampSkew:
+              value:
+                ok: false
+                error: timestamp_skew
+            invalidSignature:
+              value:
+                ok: false
+                error: invalid_signature
+            pathMismatch:
+              value:
+                ok: false
+                error: path_mismatch
+    Common405:
+      description: HTTP method not allowed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CommonError"
+          examples:
+            methodNotAllowed:
+              value:
+                ok: false
+                error: method_not_allowed
+    Common409:
+      description: Conflict (nonce replay).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CommonError"
+          examples:
+            nonceReplay:
+              value:
+                ok: false
+                error: nonce_replay
+    Common503:
+      description: Bridge auth is not configured.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CommonError"
+          examples:
+            notConfigured:
+              value:
+                ok: false
+                error: bridge_not_configured
+
+  schemas:
+    CommonError:
+      type: object
+      required:
+        - ok
+        - error
+      properties:
+        ok:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+
+    AuthProbeSuccess:
+      type: object
+      required:
+        - ok
+        - message
+        - serverTime
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        message:
+          type: string
+        serverTime:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      required:
+        - page
+        - pageSize
+        - total
+        - totalPages
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    ClassesResponse:
+      type: object
+      required:
+        - ok
+        - filters
+        - pagination
+        - data
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        filters:
+          type: object
+          required:
+            - schoolYearID
+            - classID
+            - updatedAfter
+          properties:
+            schoolYearID:
+              type: integer
+              nullable: true
+            classID:
+              type: integer
+              nullable: true
+            updatedAfter:
+              type: string
+              nullable: true
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassRecord"
+
+    ClassRecord:
+      type: object
+      required:
+        - classId
+        - schoolYearId
+        - course
+        - class
+        - participants
+      properties:
+        classId:
+          type: integer
+        classExternalId:
+          type: string
+          description: External cohort identifier from Bridge Class Mapping (externalCohortId), or stringified classId when mapping is missing.
+        classExternalIdSource:
+          type: string
+          enum: [mapped, fallback_classId]
+          description: Indicates whether classExternalId came from mapping or fallback.
+        mappingStatus:
+          type: string
+          enum: [mapped, unmapped]
+          description: Mapping state for the class in Bridge Class Mapping.
+        externalClassCode:
+          type: string
+          nullable: true
+          description: Optional external class code from Bridge Class Mapping (externalClassCode).
+        schoolYearId:
+          type: integer
+        course:
+          type: object
+          required:
+            - courseId
+            - name
+            - code
+          properties:
+            courseId:
+              type: integer
+            name:
+              type: string
+            code:
+              type: string
+              nullable: true
+        class:
+          type: object
+          required:
+            - name
+            - code
+            - reportable
+            - attendance
+            - enrolmentMin
+            - enrolmentMax
+          properties:
+            name:
+              type: string
+            code:
+              type: string
+              nullable: true
+            reportable:
+              type: string
+            attendance:
+              type: string
+            enrolmentMin:
+              type: integer
+              nullable: true
+            enrolmentMax:
+              type: integer
+              nullable: true
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassParticipant"
+
+    ClassParticipant:
+      type: object
+      required:
+        - personId
+        - classRole
+        - reportable
+        - dateEnrolled
+        - dateUnenrolled
+        - personStatus
+        - name
+        - identity
+      properties:
+        personId:
+          type: integer
+        classRole:
+          type: string
+        reportable:
+          type: string
+        dateEnrolled:
+          type: string
+          nullable: true
+        dateUnenrolled:
+          type: string
+          nullable: true
+        personStatus:
+          type: string
+        name:
+          $ref: "#/components/schemas/PersonName"
+        identity:
+          $ref: "#/components/schemas/PersonIdentity"
+
+    EnrollmentsResponse:
+      type: object
+      required:
+        - ok
+        - filters
+        - pagination
+        - data
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        filters:
+          type: object
+          required:
+            - schoolYearID
+            - classID
+            - personID
+            - updatedAfter
+          properties:
+            schoolYearID:
+              type: integer
+              nullable: true
+            classID:
+              type: integer
+              nullable: true
+            personID:
+              type: integer
+              nullable: true
+            updatedAfter:
+              type: string
+              nullable: true
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/EnrollmentRecord"
+
+    EnrollmentRecord:
+      type: object
+      required:
+        - classId
+        - schoolYearId
+        - course
+        - class
+        - person
+        - enrollment
+      properties:
+        classId:
+          type: integer
+        classExternalId:
+          type: string
+          description: External cohort identifier from Bridge Class Mapping (externalCohortId), or stringified classId when mapping is missing.
+        classExternalIdSource:
+          type: string
+          enum: [mapped, fallback_classId]
+          description: Indicates whether classExternalId came from mapping or fallback.
+        mappingStatus:
+          type: string
+          enum: [mapped, unmapped]
+          description: Mapping state for the class in Bridge Class Mapping.
+        externalClassCode:
+          type: string
+          nullable: true
+          description: Optional external class code from Bridge Class Mapping (externalClassCode).
+        schoolYearId:
+          type: integer
+        course:
+          type: object
+          required:
+            - courseId
+            - name
+            - code
+          properties:
+            courseId:
+              type: integer
+            name:
+              type: string
+            code:
+              type: string
+              nullable: true
+        class:
+          type: object
+          required:
+            - name
+            - code
+          properties:
+            name:
+              type: string
+            code:
+              type: string
+              nullable: true
+        person:
+          type: object
+          required:
+            - personId
+            - status
+            - name
+            - identity
+          properties:
+            personId:
+              type: integer
+            status:
+              type: string
+            name:
+              $ref: "#/components/schemas/PersonName"
+            identity:
+              $ref: "#/components/schemas/PersonIdentity"
+        enrollment:
+          type: object
+          required:
+            - role
+            - reportable
+            - dateEnrolled
+            - dateUnenrolled
+          properties:
+            role:
+              type: string
+            reportable:
+              type: string
+            dateEnrolled:
+              type: string
+              nullable: true
+            dateUnenrolled:
+              type: string
+              nullable: true
+
+    PersonName:
+      type: object
+      required:
+        - firstName
+        - surname
+        - preferredName
+      properties:
+        firstName:
+          type: string
+        surname:
+          type: string
+        preferredName:
+          type: string
+          nullable: true
+
+    PersonIdentity:
+      type: object
+      required:
+        - studentId
+        - email
+        - username
+        - canLogin
+      properties:
+        studentId:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        canLogin:
+          type: string
+
+    GradesUpsertRequest:
+      type: object
+      required:
+        - idempotencyKey
+        - sourceSystem
+        - records
+      properties:
+        idempotencyKey:
+          type: string
+          maxLength: 128
+        sourceSystem:
+          type: string
+        records:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/GradeRecord"
+
+    GradeRecord:
+      type: object
+      required:
+        - examId
+        - classExternalId
+        - studentExternalId
+        - rawPoints
+        - maxPoints
+        - gradeStatus
+        - gradedAt
+      properties:
+        examId:
+          type: string
+        classExternalId:
+          type: string
+        studentExternalId:
+          type: string
+        rawPoints:
+          type: number
+        maxPoints:
+          type: number
+        percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          nullable: true
+        gradeStatus:
+          type: string
+        gradedAt:
+          type: string
+          format: date-time
+        externalEmail:
+          type: string
+        studentNumber:
+          type: string
+
+    GradesUpsertResponse:
+      type: object
+      required:
+        - ok
+        - idempotencyKey
+        - sourceSystem
+        - dryRun
+        - summary
+        - results
+      properties:
+        ok:
+          type: boolean
+        idempotencyKey:
+          type: string
+        sourceSystem:
+          type: string
+        dryRun:
+          type: boolean
+        summary:
+          type: object
+          required:
+            - total
+            - accepted
+            - rejected
+          properties:
+            total:
+              type: integer
+            accepted:
+              type: integer
+            rejected:
+              type: integer
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/GradeResult"
+
+    GradeResult:
+      type: object
+      required:
+        - index
+        - status
+      properties:
+        index:
+          type: integer
+        status:
+          type: string
+          enum:
+            - accepted
+            - rejected
+        code:
+          type: string
+          description: Rejection code when status is rejected.
+          enum:
+            - invalid_record
+            - missing_required_fields
+            - invalid_score_fields
+            - invalid_graded_at
+            - invalid_percentage
+            - unmapped_exam
+            - unsupported_sync_mode
+            - unmapped_class
+            - assessment_class_mismatch
+            - unmapped_student
+            - student_not_enrolled
+            - write_failed
+        message:
+          type: string
+        mode:
+          type: string
+          enum:
+            - dry_run
+            - write
+        action:
+          type: string
+          enum:
+            - inserted
+            - updated
+        gibbonPersonID:
+          type: integer
+        gibbonInternalAssessmentColumnID:
+          type: integer
+        attainmentValue:
+          type: string
+
+    GradesIdempotentReplayResponse:
+      type: object
+      required:
+        - ok
+        - idempotentReplay
+        - idempotencyKey
+        - status
+        - message
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        idempotentReplay:
+          type: boolean
+          enum: [true]
+        idempotencyKey:
+          type: string
+        status:
+          type: string
+        message:
+          type: string

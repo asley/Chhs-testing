@@ -39,10 +39,54 @@ $settingsToUpdate = [
     'tcexamBaseUrl' => '',
     'bridgeKeyId' => '',
     'bridgeSharedSecret' => '',
+    'bridgeServicePersonID' => '',
     'signatureMaxSkewSeconds' => 'required',
     'enrollmentSyncEnabled' => 'required',
     'gradeSyncEnabled' => 'required',
     'dryRunEnabled' => 'required',
+];
+
+$settingDefinitions = [
+    'tcexamBaseUrl' => [
+        'nameDisplay' => 'TCExam Base URL',
+        'description' => 'Base URL for the TCExam API endpoint, eg https://tcexam.example.com',
+        'default' => '',
+    ],
+    'bridgeKeyId' => [
+        'nameDisplay' => 'Bridge Key ID',
+        'description' => 'Public key identifier for signed integration requests.',
+        'default' => '',
+    ],
+    'bridgeSharedSecret' => [
+        'nameDisplay' => 'Bridge Shared Secret',
+        'description' => 'Shared secret used for HMAC request verification.',
+        'default' => '',
+    ],
+    'bridgeServicePersonID' => [
+        'nameDisplay' => 'Bridge Service Person ID',
+        'description' => 'Person ID used as last editor for automated grade sync writes. Leave blank to fall back to System Administrator setting.',
+        'default' => '',
+    ],
+    'signatureMaxSkewSeconds' => [
+        'nameDisplay' => 'Max Signature Skew (Seconds)',
+        'description' => 'Maximum allowed difference between request timestamp and server time.',
+        'default' => '300',
+    ],
+    'enrollmentSyncEnabled' => [
+        'nameDisplay' => 'Enrollment Sync Enabled',
+        'description' => 'Enable class and enrollment sync from Gibbon to TCExam.',
+        'default' => 'N',
+    ],
+    'gradeSyncEnabled' => [
+        'nameDisplay' => 'Grade Sync Enabled',
+        'description' => 'Enable grade push and write-back integration.',
+        'default' => 'N',
+    ],
+    'dryRunEnabled' => [
+        'nameDisplay' => 'Dry Run Mode',
+        'description' => 'Validate sync operations without writing final assessment data.',
+        'default' => 'Y',
+    ],
 ];
 
 foreach ($settingsToUpdate as $name => $property) {
@@ -56,6 +100,35 @@ foreach ($settingsToUpdate as $name => $property) {
 
     if ($name === 'signatureMaxSkewSeconds') {
         $value = max(30, min(3600, (int) $value));
+    }
+
+    if ($name === 'bridgeServicePersonID') {
+        $value = trim((string) $value);
+        if ($value !== '' && !ctype_digit($value)) {
+            $URL .= '&return=error1';
+            header("Location: {$URL}");
+            exit;
+        }
+    }
+
+    if ($settingGateway->getSettingByScope('juss-examBridge', $name, true) === false) {
+        $definition = $settingDefinitions[$name] ?? ['nameDisplay' => $name, 'description' => '', 'default' => ''];
+
+        try {
+            $insert = $connection2->prepare("
+                INSERT INTO gibbonSetting (scope, name, nameDisplay, description, value)
+                VALUES (:scope, :name, :nameDisplay, :description, :value)
+            ");
+            $insert->execute([
+                'scope' => 'juss-examBridge',
+                'name' => $name,
+                'nameDisplay' => $definition['nameDisplay'],
+                'description' => $definition['description'],
+                'value' => $definition['default'],
+            ]);
+        } catch (PDOException $e) {
+            $partialFail = true;
+        }
     }
 
     $updated = $settingGateway->updateSettingByScope('juss-examBridge', $name, $value);

@@ -45,8 +45,18 @@ TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 NONCE="$(openssl rand -hex 16)"
 BODY=""
 BODY_HASH="$(printf "%s" "${BODY}" | openssl dgst -sha256 | awk '{print $2}')"
+BASE_PATH="$(printf "%s" "${BASE_URL}" | sed -E 's#^[a-zA-Z]+://[^/]+##')"
+if [[ -z "${BASE_PATH}" ]]; then
+  BASE_PATH="/"
+fi
+
+CANONICAL_PATH="${ENDPOINT_PATH}"
+if [[ "${BASE_PATH}" != "/" && "${ENDPOINT_PATH}" != "${BASE_PATH}"* ]]; then
+  CANONICAL_PATH="${BASE_PATH}${ENDPOINT_PATH}"
+fi
+
 CANONICAL="GET
-${ENDPOINT_PATH}
+${CANONICAL_PATH}
 ${TIMESTAMP}
 ${NONCE}
 ${BODY_HASH}"
