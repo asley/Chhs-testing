@@ -129,10 +129,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
         'Director'
     ];
     $isRestricted = false;
+    $roleNameSafe = is_string($roleName) ? $roleName : '';
     if ($roleCategory === 'Staff') {
         $isRestricted = true;
         foreach ($unrestrictedRoles as $role) {
-            if (stripos($roleName, $role) !== false) {
+            if ($roleNameSafe !== '' && stripos($roleNameSafe, $role) !== false) {
                 $isRestricted = false;
                 break;
             }
