@@ -23,6 +23,12 @@ use Gibbon\Domain\System\SettingGateway;
 
 global $gibbon, $guid, $connection2;
 
+// Prevent deprecation noise from breaking session/header behavior during test bootstrap.
+if (getenv('TEST_ENV') === 'codeception') {
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+    ini_set('display_errors', '0');
+}
+
 // Prevent installer redirect
 if (!file_exists(__DIR__ . '/../config.php')) {
     $_SERVER['PHP_SELF'] = 'installer/install.php';

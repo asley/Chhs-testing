@@ -1021,7 +1021,7 @@ table.smallIntBorder td.noPadding {
 
 /* connector not needed before the first step */
 .multiPartForm .step:first-child:after {
-    content: none; 
+    content: none;
 }
 /* active step */
 .multiPartForm .step.active:before,
