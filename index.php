@@ -477,10 +477,14 @@ if ($isLoggedIn && !$upgrade) {
             foreach ($items as &$item) {
                 $urlList = array_map('trim', explode(',', $item['URLList']));
                 $item['active'] = in_array($session->get('action'), $urlList);
-                $item['url'] = (string) Url::fromModuleRoute(
-                    $item['moduleName'],
-                    preg_replace('/\.php$/i', '', $item['entryURL'])
-                );
+                if (preg_match('/^https?:\/\//i', $item['entryURL'])) {
+                    $item['url'] = $item['entryURL'];
+                } else {
+                    $item['url'] = (string) Url::fromModuleRoute(
+                        $item['moduleName'],
+                        preg_replace('/\.php$/i', '', $item['entryURL'])
+                    );
+                }
                 $menuItemActive = $item['active'] ? $item['actionName'] : $menuItemActive;
             }
         }
@@ -507,7 +511,11 @@ if ($isLoggedIn && !$upgrade) {
                 $entryURL = preg_replace('/\.php$/i', '', $entryURL);
 
                 $item['active'] = $session->get('menuModuleName') == $item['name'];
-                $item['url'] =  (string) Url::fromModuleRoute($item['name'], $entryURL);
+                if (preg_match('/^https?:\/\//i', $entryURL)) {
+                    $item['url'] = $entryURL;
+                } else {
+                    $item['url'] =  (string) Url::fromModuleRoute($item['name'], $entryURL);
+                }
             }
         }
 
