@@ -502,9 +502,12 @@ if ($isLoggedIn && !$upgrade) {
 
         foreach ($menuMainItems as $category => &$items) {
             foreach ($items as &$item) {
-                $entryURL = ($item['entryURL'] == 'index.php' || isActionAccessible($guid, $connection2, '/modules/'.$item['name'].'/'.$item['entryURL']))
-                    ? $item['entryURL']
-                    : $item['alternateEntryURL'];
+                $entryURL = $item['entryURL'];
+                if (!preg_match('/^https?:\/\//i', $entryURL)) {
+                    $entryURL = ($item['entryURL'] == 'index.php' || isActionAccessible($guid, $connection2, '/modules/'.$item['name'].'/'.$item['entryURL']))
+                        ? $item['entryURL']
+                        : $item['alternateEntryURL'];
+                }
 
                 // Note: only for backward compatibility. Should remove .php
                 // from the gibbonAction table.
