@@ -1,0 +1,288 @@
+{
+  "info": {
+    "name": "juss-examBridge API",
+    "description": "Postman collection for signed TCExam <-> Gibbon juss-examBridge integration endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost"
+    },
+    {
+      "key": "bridgeKeyId",
+      "value": "replace-with-bridgeKeyId"
+    },
+    {
+      "key": "bridgeSharedSecret",
+      "value": "replace-with-bridgeSharedSecret"
+    },
+    {
+      "key": "schoolYearID",
+      "value": "27"
+    },
+    {
+      "key": "classID",
+      "value": "5001"
+    },
+    {
+      "key": "personID",
+      "value": "3001"
+    },
+    {
+      "key": "updatedAfter",
+      "value": "2026-02-01"
+    },
+    {
+      "key": "idempotencyKey",
+      "value": "grade-sync-20260220-0001"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const keyId = pm.collectionVariables.get('bridgeKeyId');",
+          "const sharedSecret = pm.collectionVariables.get('bridgeSharedSecret');",
+          "if (!keyId || !sharedSecret) {",
+          "  throw new Error('Set bridgeKeyId and bridgeSharedSecret collection variables before sending requests.');",
+          "}",
+          "const timestamp = new Date().toISOString();",
+          "const nonce = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);",
+          "let path = pm.request.url.getPath();",
+          "if (!path.startsWith('/')) {",
+          "  path = '/' + path;",
+          "}",
+          "const method = pm.request.method.toUpperCase();",
+          "let body = '';",
+          "if (pm.request.body && pm.request.body.mode === 'raw') {",
+          "  body = pm.variables.replaceIn(pm.request.body.raw || '');",
+          "}",
+          "const bodyHash = CryptoJS.SHA256(body).toString(CryptoJS.enc.Hex);",
+          "const canonical = [method, path, timestamp, nonce, bodyHash].join('\\n');",
+          "const signature = CryptoJS.HmacSHA256(canonical, sharedSecret).toString(CryptoJS.enc.Hex);",
+          "pm.variables.set('bridgeTimestamp', timestamp);",
+          "pm.variables.set('bridgeNonce', nonce);",
+          "pm.variables.set('bridgeSignature', signature);"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth Probe",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Bridge-KeyId",
+            "value": "{{bridgeKeyId}}"
+          },
+          {
+            "key": "X-Bridge-Timestamp",
+            "value": "{{bridgeTimestamp}}"
+          },
+          {
+            "key": "X-Bridge-Nonce",
+            "value": "{{bridgeNonce}}"
+          },
+          {
+            "key": "X-Bridge-Signature",
+            "value": "{{bridgeSignature}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/modules/juss-examBridge/api/authProbe.php",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "modules",
+            "juss-examBridge",
+            "api",
+            "authProbe.php"
+          ]
+        },
+        "description": "Checks signing configuration and nonce/timestamp validation."
+      }
+    },
+    {
+      "name": "Classes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Bridge-KeyId",
+            "value": "{{bridgeKeyId}}"
+          },
+          {
+            "key": "X-Bridge-Timestamp",
+            "value": "{{bridgeTimestamp}}"
+          },
+          {
+            "key": "X-Bridge-Nonce",
+            "value": "{{bridgeNonce}}"
+          },
+          {
+            "key": "X-Bridge-Signature",
+            "value": "{{bridgeSignature}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/modules/juss-examBridge/api/v1/classes.php?schoolYearID={{schoolYearID}}&classID={{classID}}&updatedAfter={{updatedAfter}}&page=1&pageSize=50",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "modules",
+            "juss-examBridge",
+            "api",
+            "v1",
+            "classes.php"
+          ],
+          "query": [
+            {
+              "key": "schoolYearID",
+              "value": "{{schoolYearID}}"
+            },
+            {
+              "key": "classID",
+              "value": "{{classID}}"
+            },
+            {
+              "key": "updatedAfter",
+              "value": "{{updatedAfter}}"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Enrollments",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Bridge-KeyId",
+            "value": "{{bridgeKeyId}}"
+          },
+          {
+            "key": "X-Bridge-Timestamp",
+            "value": "{{bridgeTimestamp}}"
+          },
+          {
+            "key": "X-Bridge-Nonce",
+            "value": "{{bridgeNonce}}"
+          },
+          {
+            "key": "X-Bridge-Signature",
+            "value": "{{bridgeSignature}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/modules/juss-examBridge/api/v1/enrollments.php?schoolYearID={{schoolYearID}}&classID={{classID}}&personID={{personID}}&updatedAfter={{updatedAfter}}&page=1&pageSize=50",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "modules",
+            "juss-examBridge",
+            "api",
+            "v1",
+            "enrollments.php"
+          ],
+          "query": [
+            {
+              "key": "schoolYearID",
+              "value": "{{schoolYearID}}"
+            },
+            {
+              "key": "classID",
+              "value": "{{classID}}"
+            },
+            {
+              "key": "personID",
+              "value": "{{personID}}"
+            },
+            {
+              "key": "updatedAfter",
+              "value": "{{updatedAfter}}"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Grades Upsert",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Bridge-KeyId",
+            "value": "{{bridgeKeyId}}"
+          },
+          {
+            "key": "X-Bridge-Timestamp",
+            "value": "{{bridgeTimestamp}}"
+          },
+          {
+            "key": "X-Bridge-Nonce",
+            "value": "{{bridgeNonce}}"
+          },
+          {
+            "key": "X-Bridge-Signature",
+            "value": "{{bridgeSignature}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idempotencyKey\": \"{{idempotencyKey}}\",\n  \"sourceSystem\": \"tcexam\",\n  \"records\": [\n    {\n      \"examId\": \"exam-001\",\n      \"classExternalId\": \"cohort-001\",\n      \"studentExternalId\": \"student-001\",\n      \"rawPoints\": 42,\n      \"maxPoints\": 50,\n      \"percentage\": 84,\n      \"gradeStatus\": \"final\",\n      \"gradedAt\": \"2026-02-20T12:00:00Z\",\n      \"externalEmail\": \"optional@student.com\",\n      \"studentNumber\": \"optional-student-id\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/modules/juss-examBridge/api/v1/grades/upsert.php",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "modules",
+            "juss-examBridge",
+            "api",
+            "v1",
+            "grades",
+            "upsert.php"
+          ]
+        }
+      }
+    }
+  ]
+}

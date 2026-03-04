@@ -19,6 +19,32 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 ?>
+<?php
+$baseUrl = '';
+
+if (!empty($session) && method_exists($session, 'has') && $session->has('absoluteURL')) {
+    $baseUrl = rtrim((string) $session->get('absoluteURL'), '/');
+} elseif (!empty($absoluteURL)) {
+    $baseUrl = rtrim((string) $absoluteURL, '/');
+} else {
+    $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '') ?: '';
+    $baseDir = realpath(__DIR__) ?: __DIR__;
+
+    if (!empty($documentRoot) && strpos($baseDir, $documentRoot) === 0) {
+        $basePath = substr($baseDir, strlen($documentRoot));
+    } else {
+        $basePath = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
+    }
+
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $baseUrl = rtrim($scheme.'://'.$host.'/'.trim((string) $basePath, '/'), '/');
+}
+
+$assetUrl = static function (string $path) use ($baseUrl): string {
+    return $baseUrl.'/'.ltrim($path, '/');
+};
+?>
 
 <!DOCTYPE html>
 <html lang="">
@@ -31,11 +57,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
         <meta name="author" content="Ross Parker, International College Hong Kong"/>
         <meta name="robots" content="noindex"/>
         <meta name="Referrer‐Policy" value="no‐referrer | same‐origin"/>
-        <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico"/>
+        <link rel="shortcut icon" type="image/x-icon" href="<?php echo $assetUrl('favicon.ico'); ?>"/>
 
-        <link rel="stylesheet" href="./themes/Default/css/main.css" type="text/css" media="all">
-        <link rel="stylesheet" href="./resources/assets/css/core.min.css" type="text/css" media="all">
-        <link rel="stylesheet" href="./resources/assets/css/theme.min.css" type="text/css" media="all">
+        <link rel="stylesheet" href="<?php echo $assetUrl('themes/Default/css/main.css'); ?>" type="text/css" media="all">
+        <link rel="stylesheet" href="<?php echo $assetUrl('resources/assets/css/core.min.css'); ?>" type="text/css" media="all">
+        <link rel="stylesheet" href="<?php echo $assetUrl('resources/assets/css/theme.min.css'); ?>" type="text/css" media="all">
     </head>
 
     <body class="h-screen flex flex-col font-sans body-gradient-purple m-0 p-0" style="background: linear-gradient(to left top, #402568 2%, #935ee1 65%, #a871ec) no-repeat fixed;">
@@ -43,8 +69,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
         <div class="px-4 sm:px-6 lg:px-12 pb-24">
             <div id="header" class="relative flex justify-between items-center">
 
-                <a id="header-logo" class="block my-4 max-w-xs sm:max-w-full leading-none" href="<?php echo (!empty($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . dirname($_SERVER['PHP_SELF'] ?? ''); ?>">
-                    <img class="block max-w-full h-20 mt-4 mb-4" alt="DEMO Logo" src="./themes/Default/img/logo.png" style="max-height:100px;">
+                <a id="header-logo" class="block my-4 max-w-xs sm:max-w-full leading-none" href="<?php echo $baseUrl; ?>">
+                    <img class="block max-w-full h-20 mt-4 mb-4" alt="DEMO Logo" src="<?php echo $assetUrl('themes/Default/img/logo.png'); ?>" style="max-height:100px;">
                 </a>
 
                 <div class="flex-grow flex items-center justify-end text-right text-sm text-purple-200">               
