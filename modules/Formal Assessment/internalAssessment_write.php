@@ -126,7 +126,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                 //Count number of columns
 
                     $data = array('gibbonCourseClassID' => $gibbonCourseClassID);
-                    $sql = 'SELECT * FROM gibbonInternalAssessmentColumn WHERE gibbonCourseClassID=:gibbonCourseClassID ORDER BY complete, completeDate DESC';
+                    // Admins (all) see everything; teachers only see unlocked columns
+                    if ($highestAction == 'Write Internal Assessments_all') {
+                        $sql = 'SELECT * FROM gibbonInternalAssessmentColumn WHERE gibbonCourseClassID=:gibbonCourseClassID ORDER BY complete, completeDate DESC';
+                    } else {
+                        $sql = "SELECT * FROM gibbonInternalAssessmentColumn WHERE gibbonCourseClassID=:gibbonCourseClassID AND (locked IS NULL OR locked='N') ORDER BY complete, completeDate DESC";
+                    }
                     $result = $connection2->prepare($sql);
                     $result->execute($data);
                 $columns = $result->rowCount();

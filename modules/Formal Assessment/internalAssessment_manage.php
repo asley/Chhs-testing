@@ -128,6 +128,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                 echo '</th>';
                 echo '</tr>';
 
+                $isAdmin = isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internalAssessment_manage_edit.php');
+
                 $count = 0;
                 $rowNum = 'odd';
                 while ($row = $result->fetch()) {
@@ -137,10 +139,17 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                         $rowNum = 'odd';
                     }
 
+                    $isLocked = ($row['locked'] ?? 'N') === 'Y';
+                    $rowStyle = $isLocked ? " style='opacity: 0.5;'" : '';
+
                     //COLOR ROW BY STATUS!
-                    echo "<tr class=$rowNum>";
+                    echo "<tr class=$rowNum$rowStyle>";
                     echo '<td>';
-                    echo '<b>'.$row['name'].'</b><br/>';
+                    echo '<b>'.$row['name'].'</b>';
+                    if ($isLocked) {
+                        echo " <span style='color:#cc0000; font-size:80%;'>(".__('Locked').")</span>";
+                    }
+                    echo '<br/>';
                     echo "<span style='font-size: 85%; font-style: italic'>".$row['type'].'</span>';
                     echo '</td>';
                     echo '<td>';
@@ -149,9 +158,18 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                     }
                     echo '</td>';
                     echo '<td>';
-                    echo "<a href='".$session->get('absoluteURL').'/index.php?q=/modules/'.$session->get('module')."/internalAssessment_manage_edit.php&gibbonCourseClassID=$gibbonCourseClassID&gibbonInternalAssessmentColumnID=".$row['gibbonInternalAssessmentColumnID']."'><img title='".__('Edit')."' src='./themes/".$session->get('gibbonThemeName')."/img/config.png'/></a> ";
-                    echo "<a class='thickbox' href='".$session->get('absoluteURL').'/fullscreen.php?q=/modules/'.$session->get('module')."/internalAssessment_manage_delete.php&gibbonCourseClassID=$gibbonCourseClassID&gibbonInternalAssessmentColumnID=".$row['gibbonInternalAssessmentColumnID']."&width=650&height=135'><img title='".__('Delete')."' src='./themes/".$session->get('gibbonThemeName')."/img/garbage.png'/></a> ";
-                    echo "<a href='".$session->get('absoluteURL').'/index.php?q=/modules/'.$session->get('module')."/internalAssessment_write_data.php&gibbonCourseClassID=$gibbonCourseClassID&gibbonInternalAssessmentColumnID=".$row['gibbonInternalAssessmentColumnID']."'><img title='".__('Enter Data')."' src='./themes/".$session->get('gibbonThemeName')."/img/markbook.png'/></a> ";
+                    if ($isAdmin) {
+                        echo "<a href='".$session->get('absoluteURL').'/index.php?q=/modules/'.$session->get('module')."/internalAssessment_manage_edit.php&gibbonCourseClassID=$gibbonCourseClassID&gibbonInternalAssessmentColumnID=".$row['gibbonInternalAssessmentColumnID']."'><img title='".__('Edit')."' src='./themes/".$session->get('gibbonThemeName')."/img/config.png'/></a> ";
+                        echo "<a class='thickbox' href='".$session->get('absoluteURL').'/fullscreen.php?q=/modules/'.$session->get('module')."/internalAssessment_manage_delete.php&gibbonCourseClassID=$gibbonCourseClassID&gibbonInternalAssessmentColumnID=".$row['gibbonInternalAssessmentColumnID']."&width=650&height=135'><img title='".__('Delete')."' src='./themes/".$session->get('gibbonThemeName')."/img/garbage.png'/></a> ";
+                        if ($isLocked) {
+                            echo "<a href='".$session->get('absoluteURL').'/modules/'.$session->get('module')."/internalAssessment_manage_lockProcess.php?gibbonCourseClassID=$gibbonCourseClassID&gibbonInternalAssessmentColumnID=".$row['gibbonInternalAssessmentColumnID']."&action=unlock&address=".$session->get('address')."'><img title='".__('Unlock - click to make visible to teachers')."' src='./themes/".$session->get('gibbonThemeName')."/img/iconTick.png'/></a> ";
+                        } else {
+                            echo "<a href='".$session->get('absoluteURL').'/modules/'.$session->get('module')."/internalAssessment_manage_lockProcess.php?gibbonCourseClassID=$gibbonCourseClassID&gibbonInternalAssessmentColumnID=".$row['gibbonInternalAssessmentColumnID']."&action=lock&address=".$session->get('address')."'><img title='".__('Lock - click to hide from teachers')."' src='./themes/".$session->get('gibbonThemeName')."/img/key.png'/></a> ";
+                        }
+                    }
+                    if (!$isLocked) {
+                        echo "<a href='".$session->get('absoluteURL').'/index.php?q=/modules/'.$session->get('module')."/internalAssessment_write_data.php&gibbonCourseClassID=$gibbonCourseClassID&gibbonInternalAssessmentColumnID=".$row['gibbonInternalAssessmentColumnID']."'><img title='".__('Enter Data')."' src='./themes/".$session->get('gibbonThemeName')."/img/markbook.png'/></a> ";
+                    }
                     echo '</td>';
                     echo '</tr>';
 

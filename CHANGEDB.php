@@ -1048,5 +1048,6 @@ UPDATE `gibbonAction` SET name='View Calendar' WHERE name='View Calendar_all' AN
 UPDATE `gibbonFormField` SET `fieldGroup`='Miscellaneous' WHERE `fieldGroup`='AdmissionsFields' AND `gibbonFormField`.`fieldName` = 'howDidYouHear';end
 UPDATE `gibbonFormField` SET `fieldGroup`='MiscellaneousFields' WHERE `fieldGroup`='Miscellaneous' AND `gibbonFormField`.`fieldName` = 'howDidYouHear';end
 ALTER TABLE `gibbonCalendarEventType` CHANGE `color` `color` VARCHAR(7) NULL, CHANGE `sequenceNumber` `sequenceNumber` INT(3) NOT NULL DEFAULT 0;end
+ALTER TABLE `gibbonInternalAssessmentColumn` ADD COLUMN `locked` ENUM('Y','N') NOT NULL DEFAULT 'N' AFTER `viewableParents`;end
 
 ";
