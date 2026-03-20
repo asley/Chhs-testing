@@ -25,7 +25,6 @@ use Gibbon\Data\Validator;
 require_once '../../gibbon.php';
 
 $_POST = $container->get(Validator::class)->sanitize($_POST);
-include '../../config.php';
 
 //Module includes
 include './moduleFunctions.php';

@@ -33,17 +33,30 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
     exit;
 }
 
-if (empty($gibbonInternalAssessmentColumnID) || empty($gibbonCourseClassID) || !in_array($action, ['lock', 'unlock'])) {
+if (empty($gibbonInternalAssessmentColumnID) || empty($gibbonCourseClassID) || !in_array($action, ['lock', 'unlock', 'lockAll', 'unlockAll'])) {
     $URL .= '&return=error1';
     header("Location: {$URL}");
     exit;
 }
 
-$locked = ($action === 'lock') ? 'Y' : 'N';
+$locked = in_array($action, ['lock', 'lockAll']) ? 'Y' : 'N';
 
 try {
-    $data = ['locked' => $locked, 'gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID, 'gibbonCourseClassID' => $gibbonCourseClassID];
-    $sql = 'UPDATE gibbonInternalAssessmentColumn SET locked=:locked WHERE gibbonInternalAssessmentColumnID=:gibbonInternalAssessmentColumnID AND gibbonCourseClassID=:gibbonCourseClassID';
+    if ($action === 'lockAll' || $action === 'unlockAll') {
+        // Lock/unlock all columns with the same name across all classes
+        $columnName = $_GET['columnName'] ?? '';
+        if (empty($columnName)) {
+            $URL .= '&return=error1';
+            header("Location: {$URL}");
+            exit;
+        }
+        $data = ['locked' => $locked, 'name' => $columnName];
+        $sql = 'UPDATE gibbonInternalAssessmentColumn SET locked=:locked WHERE name=:name';
+    } else {
+        // Lock/unlock single column in this class only
+        $data = ['locked' => $locked, 'gibbonInternalAssessmentColumnID' => $gibbonInternalAssessmentColumnID, 'gibbonCourseClassID' => $gibbonCourseClassID];
+        $sql = 'UPDATE gibbonInternalAssessmentColumn SET locked=:locked WHERE gibbonInternalAssessmentColumnID=:gibbonInternalAssessmentColumnID AND gibbonCourseClassID=:gibbonCourseClassID';
+    }
     $result = $connection2->prepare($sql);
     $result->execute($data);
 } catch (PDOException $e) {
