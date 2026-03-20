@@ -165,7 +165,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                         $limit = intval($x * $columnsPerPage);
 
                             $data = array('gibbonCourseClassID' => $gibbonCourseClassID);
-                            $sql = 'SELECT * FROM gibbonInternalAssessmentColumn WHERE gibbonCourseClassID=:gibbonCourseClassID ORDER BY complete, completeDate DESC LIMIT '.$limit.', '.$columnsPerPage;
+                            if ($highestAction == 'Write Internal Assessments_all') {
+                                $sql = 'SELECT * FROM gibbonInternalAssessmentColumn WHERE gibbonCourseClassID=:gibbonCourseClassID ORDER BY complete, completeDate DESC LIMIT '.$limit.', '.$columnsPerPage;
+                            } else {
+                                $sql = "SELECT * FROM gibbonInternalAssessmentColumn WHERE gibbonCourseClassID=:gibbonCourseClassID AND (locked IS NULL OR locked='N') ORDER BY complete, completeDate DESC LIMIT ".$limit.', '.$columnsPerPage;
+                            }
                             $result = $connection2->prepare($sql);
                             $result->execute($data);
 
