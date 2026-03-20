@@ -61,6 +61,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
             } else {
                 $row = $result->fetch();
 
+                // Block non-admin teachers from saving to locked columns
+                $highestAction = getHighestGroupedAction($guid, $_GET['address'], $connection2);
+                if (($row['locked'] ?? 'N') === 'Y' && $highestAction !== 'Write Internal Assessments_all') {
+                    $URL .= '&return=error0';
+                    header("Location: {$URL}");
+                    exit();
+                }
+
                 $name = $row['name'];
                 $count = $_POST['count'] ?? '';
                 $partialFail = false;

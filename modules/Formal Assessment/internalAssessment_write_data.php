@@ -104,6 +104,12 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                     $class = $result->fetch();
                     $values = $result2->fetch();
 
+                    // Block non-admin teachers from accessing locked columns
+                    if (($values['locked'] ?? 'N') === 'Y' && $highestAction !== 'Write Internal Assessments_all') {
+                        $page->addError(__('You do not have access to this action.'));
+                        return;
+                    }
+
                     $page->breadcrumbs
                         ->add(__('Write {courseClass} Internal Assessments', ['courseClass' => $class['course'].'.'.$class['class']]), 'internalAssessment_write.php', ['gibbonCourseClassID' => $gibbonCourseClassID])
                         ->add(__('Enter Internal Assessment Results'));
