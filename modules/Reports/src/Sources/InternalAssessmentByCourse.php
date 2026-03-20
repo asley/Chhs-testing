@@ -147,12 +147,14 @@ class InternalAssessmentByCourse extends DataSource
             ON gibbonInternalAssessmentEntry.gibbonPersonIDStudent = gibbonStudentEnrolment.gibbonPersonID
         JOIN gibbonInternalAssessmentColumn 
             ON gibbonInternalAssessmentEntry.gibbonInternalAssessmentColumnID = gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID 
-        JOIN gibbonCourseClassPerson 
-            ON gibbonInternalAssessmentColumn.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID 
-        JOIN gibbonCourseClass 
-            ON gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID 
-        JOIN gibbonCourse 
-            ON gibbonCourseClass.gibbonCourseID = gibbonCourse.gibbonCourseID 
+        JOIN gibbonCourseClass
+            ON gibbonInternalAssessmentColumn.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID
+        JOIN gibbonCourse
+            ON gibbonCourseClass.gibbonCourseID = gibbonCourse.gibbonCourseID
+        JOIN gibbonCourseClassPerson
+            ON gibbonCourseClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID
+            AND gibbonCourseClassPerson.gibbonPersonID = gibbonStudentEnrolment.gibbonPersonID
+            AND gibbonCourseClassPerson.role = 'Student'
 
         WHERE gibbonReport.gibbonReportID = :gibbonReportID
         AND gibbonStudentEnrolment.gibbonStudentEnrolmentID = :gibbonStudentEnrolmentID
