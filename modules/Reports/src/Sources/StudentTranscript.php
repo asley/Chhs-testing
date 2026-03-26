@@ -136,8 +136,10 @@ class StudentTranscript extends DataSource
             return [];
         }
         
-        // Get course grades using Internal Assessment data
-        $gradeSql = "SELECT 
+        // Get course grades using Internal Assessment data.
+        // Branch 1: Terms that have an Exam — use only Exam grades (existing behaviour).
+        // Branch 2: Terms with NO Exam — fall back to averaging non-Exam (marksheet) grades.
+        $gradeSql = "SELECT
                         sy.name as schoolYearName,
                         yg.name as yearGroupName,
                         syt.name as termName,
@@ -147,6 +149,9 @@ class StudentTranscript extends DataSource
                         c.nameShort as courseCode,
                         cc.name as className,
                         1.0 as creditHours,
+                        sy.sequenceNumber as schoolYearSequence,
+                        syt.sequenceNumber as termSequence,
+                        c.orderBy as courseOrder,
                         AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) as avgPercentage,
                         CASE
                             WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 90 THEN 'A+'
@@ -213,14 +218,111 @@ class StudentTranscript extends DataSource
                     cc.gibbonCourseClassID,
                     cc.name
                 HAVING COUNT(iae.gibbonInternalAssessmentEntryID) > 0
-                ORDER BY sy.sequenceNumber ASC, syt.sequenceNumber ASC, c.orderBy ASC, c.nameShort ASC";
+
+                UNION ALL
+
+                -- Branch 2: terms with no completed Exam — use non-Exam (marksheet) grades instead
+                SELECT
+                        sy.name as schoolYearName,
+                        yg.name as yearGroupName,
+                        syt.name as termName,
+                        syt.firstDay,
+                        syt.lastDay,
+                        c.name as courseName,
+                        c.nameShort as courseCode,
+                        cc.name as className,
+                        1.0 as creditHours,
+                        sy.sequenceNumber as schoolYearSequence,
+                        syt.sequenceNumber as termSequence,
+                        c.orderBy as courseOrder,
+                        AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) as avgPercentage,
+                        CASE
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 90 THEN 'A+'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 85 THEN 'A'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 80 THEN 'A-'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 75 THEN 'B+'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 70 THEN 'B'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 65 THEN 'B-'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 60 THEN 'C+'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 55 THEN 'C'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 50 THEN 'C-'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 45 THEN 'D'
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) IS NULL THEN NULL
+                            ELSE 'F'
+                        END as finalGrade,
+                        CASE
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 90 THEN 4.00
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 85 THEN 4.00
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 80 THEN 3.70
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 75 THEN 3.30
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 70 THEN 3.00
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 65 THEN 2.70
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 60 THEN 2.30
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 55 THEN 2.00
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 50 THEN 1.70
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) >= 45 THEN 1.00
+                            WHEN AVG(CAST(iae.attainmentValue AS DECIMAL(5,2))) IS NULL THEN NULL
+                            ELSE 0.00
+                        END as gpaPoints,
+                        GROUP_CONCAT(DISTINCT CONCAT(p.preferredName, ' ', p.surname) ORDER BY p.surname, p.preferredName SEPARATOR ', ') as teacherName
+                FROM gibbonStudentEnrolment se
+                JOIN gibbonSchoolYear sy ON sy.gibbonSchoolYearID = se.gibbonSchoolYearID
+                JOIN gibbonYearGroup yg ON yg.gibbonYearGroupID = se.gibbonYearGroupID
+                JOIN gibbonSchoolYearTerm syt ON syt.gibbonSchoolYearID = sy.gibbonSchoolYearID
+                JOIN gibbonInternalAssessmentEntry iae ON iae.gibbonPersonIDStudent = se.gibbonPersonID
+                JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonInternalAssessmentColumnID = iae.gibbonInternalAssessmentColumnID
+                JOIN gibbonCourseClassPerson ccp ON ccp.gibbonCourseClassID = iac.gibbonCourseClassID
+                    AND ccp.gibbonPersonID = se.gibbonPersonID AND ccp.role = 'Student'
+                JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+                JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID AND c.gibbonSchoolYearID = sy.gibbonSchoolYearID
+                LEFT JOIN gibbonCourseClassPerson tccp ON tccp.gibbonCourseClassID = cc.gibbonCourseClassID
+                    AND tccp.role = 'Teacher'
+                LEFT JOIN gibbonPerson p ON p.gibbonPersonID = tccp.gibbonPersonID
+                WHERE se.gibbonPersonID = (
+                    SELECT gibbonPersonID
+                    FROM gibbonStudentEnrolment
+                    WHERE gibbonStudentEnrolmentID = :gibbonStudentEnrolmentID2
+                )
+                AND iac.complete = 'Y'
+                AND iac.completeDate <= :today2
+                AND iac.completeDate BETWEEN syt.firstDay AND syt.lastDay
+                AND iac.type != 'Exam'
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM gibbonInternalAssessmentEntry iae2
+                    JOIN gibbonInternalAssessmentColumn iac2
+                        ON iac2.gibbonInternalAssessmentColumnID = iae2.gibbonInternalAssessmentColumnID
+                    WHERE iae2.gibbonPersonIDStudent = se.gibbonPersonID
+                      AND iac2.gibbonCourseClassID = iac.gibbonCourseClassID
+                      AND iac2.complete = 'Y'
+                      AND iac2.type = 'Exam'
+                      AND iac2.completeDate BETWEEN syt.firstDay AND syt.lastDay
+                )
+                GROUP BY
+                    sy.gibbonSchoolYearID,
+                    sy.name,
+                    yg.name,
+                    syt.gibbonSchoolYearTermID,
+                    syt.name,
+                    syt.firstDay,
+                    syt.lastDay,
+                    c.gibbonCourseID,
+                    c.name,
+                    c.nameShort,
+                    cc.gibbonCourseClassID,
+                    cc.name
+                HAVING COUNT(iae.gibbonInternalAssessmentEntryID) > 0
+
+                ORDER BY schoolYearSequence ASC, termSequence ASC, courseOrder ASC, courseCode ASC";
 
         // Execute grades query with error handling
         try {
-            // Pass both parameters needed for this query
+            // Pass parameters for both UNION branches (PDO requires unique named params per occurrence)
             $gradeParams = array(
-                'gibbonStudentEnrolmentID' => $data['gibbonStudentEnrolmentID'],
-                'today' => $data['today']
+                'gibbonStudentEnrolmentID'  => $data['gibbonStudentEnrolmentID'],
+                'today'                     => $data['today'],
+                'gibbonStudentEnrolmentID2' => $data['gibbonStudentEnrolmentID'],
+                'today2'                    => $data['today']
             );
             $result = $this->db()->select($gradeSql, $gradeParams);
             if (!$result) {
