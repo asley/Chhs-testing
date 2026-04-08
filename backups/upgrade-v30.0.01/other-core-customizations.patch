@@ -1,0 +1,4384 @@
+diff --git a/functions.php b/functions.php
+index 5dd6c38a4..edae7ef34 100755
+--- a/functions.php
++++ b/functions.php
+@@ -791,3 +791,56 @@ function returnProcess($guid, $return, $editLink = null, $customReturns = null)
+     $page->return->setEditLink($editLink ?? '');
+     $page->return->addReturns($customReturns ?? []);
+ }
++
++/**
++ * Get the maximum upload size based on PHP configuration.
++ * Returns the smaller of post_max_size and upload_max_filesize.
++ *
++ * @param bool $asString If true, returns formatted string. If false, returns numeric value.
++ * @return string|int Formatted string like "Uploads: 8MB max" or numeric value
++ */
++function getMaxUpload($asString = false)
++{
++    $post = substr(ini_get('post_max_size'), 0, (strlen(ini_get('post_max_size')) - 1));
++    $file = substr(ini_get('upload_max_filesize'), 0, (strlen(ini_get('upload_max_filesize')) - 1));
++    $label = ($post < $file) ? $post : $file;
++
++    if ($asString) {
++        return sprintf(__('Uploads: %sMB max'), $label);
++    }
++
++    return $label;
++}
++
++/**
++ * Get the role category (Staff, Student, Parent, Other) for a given role ID.
++ *
++ * This is a backward compatibility function for v30.
++ * In v30+, use: $container->get(RoleGateway::class)->getRoleCategory($gibbonRoleID)
++ *
++ * @param string $gibbonRoleID The role ID to lookup
++ * @param PDO $connection2 Database connection (for compatibility, not used)
++ * @return string Role category (Staff, Student, Parent, Other)
++ */
++function getRoleCategory($gibbonRoleID, $connection2 = null)
++{
++    global $container;
++
++    if (empty($gibbonRoleID)) {
++        return '';
++    }
++
++    try {
++        $roleGateway = $container->get(\Gibbon\Domain\User\RoleGateway::class);
++        return $roleGateway->getRoleCategory($gibbonRoleID);
++    } catch (\Exception $e) {
++        // Fallback: direct database query if container not available
++        if ($connection2) {
++            $sql = 'SELECT category FROM gibbonRole WHERE gibbonRoleID=:gibbonRoleID';
++            $result = $connection2->prepare($sql);
++            $result->execute(['gibbonRoleID' => $gibbonRoleID]);
++            return $result->fetchColumn();
++        }
++        return '';
++    }
++}
+diff --git a/modules/Calendar/calendar_eventTypes_manage.php b/modules/Calendar/calendar_eventTypes_manage.php
+new file mode 100644
+index 000000000..465e76a3f
+--- /dev/null
++++ b/modules/Calendar/calendar_eventTypes_manage.php
+@@ -0,0 +1,66 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Services\Format;
++use Gibbon\Tables\DataTable;
++use Gibbon\Domain\Calendar\CalendarEventTypeGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_eventTypes_manage.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $page->breadcrumbs
++        ->add(__('Manage Calendars'), 'calendar_manage.php')
++        ->add(__('Event Types'));
++
++    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
++    
++    $calendarEventTypeGateway = $container->get(CalendarEventTypeGateway::class);
++
++    $criteria = $calendarEventTypeGateway->newQueryCriteria()
++        ->sortBy('sequenceNumber')
++        ->fromPOST();
++
++    $eventTypes = $calendarEventTypeGateway->queryEventTypes($criteria);
++
++    // DATA TABLE
++    $table = DataTable::createPaginated('eventTypes', $criteria);
++    $table->setTitle(__('Event Types'));
++
++    $table->addHeaderAction('add', __('Add'))
++        ->setURL('/modules/Calendar/calendar_eventTypes_manage_addEdit.php')
++        ->displayLabel();
++        
++    $table->addColumn('type', __('Type'));
++    
++    $table->addActionColumn()
++        ->addParam('gibbonCalendarEventTypeID')
++        ->format(function ($row, $actions) {
++            $actions->addAction('edit', __('Edit'))
++                ->setURL('/modules/Calendar/calendar_eventTypes_manage_addEdit.php');
++
++            $actions->addAction('delete', __('Delete'))
++                ->setURL('/modules/Calendar/calendar_eventTypes_manage_delete.php');
++        });
++
++    echo $table->render($eventTypes);
++}
+diff --git a/modules/Calendar/calendar_eventTypes_manage_addEdit.php b/modules/Calendar/calendar_eventTypes_manage_addEdit.php
+new file mode 100644
+index 000000000..4f0e35744
+--- /dev/null
++++ b/modules/Calendar/calendar_eventTypes_manage_addEdit.php
+@@ -0,0 +1,73 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Form;
++use Gibbon\Forms\DatabaseFormFactory;
++use Gibbon\Domain\Calendar\CalendarEventTypeGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_eventTypes_manage_addEdit.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $gibbonCalendarEventTypeID = $_GET['gibbonCalendarEventTypeID'] ?? '';
++    $action = !empty($gibbonCalendarEventTypeID) ? 'edit' : 'add';
++
++    $page->breadcrumbs
++        ->add(__('Manage Calendars'), 'calendar_manage.php')
++        ->add(__('Event Types'), 'calendar_eventTypes_manage.php')
++        ->add($action == 'edit' ? __('Edit Event Type') : __('Add Event Type'));
++    
++    if (empty($gibbonCalendarEventTypeID) && isset($_GET['editID'])) {
++        $page->return->setEditLink($session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_eventTypes_manage_addEdit.php&gibbonCalendarEventTypeID='.$_GET['editID']);
++    }
++
++    $calendarEventTypeGateway = $container->get(CalendarEventTypeGateway::class);
++    $values = $calendarEventTypeGateway->getByID($gibbonCalendarEventTypeID);
++
++    if (!empty($gibbonCalendarEventTypeID) && empty($values)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    // FORM
++    $form = Form::create('calendarEventTypes', $session->get('absoluteURL').'/modules/Calendar/calendar_eventTypes_manage_addEditProcess.php');
++    $form->setFactory(DatabaseFormFactory::create($pdo));
++    $form->addMeta()->addDefaultContent($action);
++    $form->enableQuickSave($action == 'edit');
++
++    $form->addHiddenValue('address', $session->get('address'));
++    $form->addHiddenValue('gibbonCalendarEventTypeID', $gibbonCalendarEventTypeID);
++
++    // EVENT TYPE
++    $form->addRow()->addHeading(__('Event Types'));
++
++    $row = $form->addRow();
++        $row->addLabel('type', __('Type'));
++        $row->addTextField('type')->required()->maxLength(60);
++                
++    $row = $form->addRow();
++        $row->addSubmit();
++
++    $form->loadAllValuesFrom($values);
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_eventTypes_manage_addEditProcess.php b/modules/Calendar/calendar_eventTypes_manage_addEditProcess.php
+new file mode 100755
+index 000000000..21d060ee3
+--- /dev/null
++++ b/modules/Calendar/calendar_eventTypes_manage_addEditProcess.php
+@@ -0,0 +1,79 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Domain\Calendar\CalendarEventTypeGateway;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST);
++
++$gibbonCalendarEventTypeID = $_REQUEST['gibbonCalendarEventTypeID'] ?? null;
++
++$URL = $session->get('absoluteURL')."/index.php?q=/modules/Calendar/calendar_eventTypes_manage_addEdit.php&gibbonCalendarEventTypeID=$gibbonCalendarEventTypeID";
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_eventTypes_manage_addEdit.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} else {
++    // Proceed!
++    $partialFail = false;
++
++    $calendarEventTypeGateway = $container->get(CalendarEventTypeGateway::class);
++
++    // Update the type
++    $data = [
++        'type'               => $_POST['type'] ?? '',
++        'color'              => '',
++    ];
++
++    // Validate the required values are present
++    if (empty($data['type'])) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++        exit;
++    }
++
++     // Validate that this record is unique
++    if (!$calendarEventTypeGateway->unique($data, ['type'], $gibbonCalendarEventTypeID)) {
++        $URL .= '&return=error7';
++        header("Location: {$URL}");
++        exit;
++    }
++
++     // Create the record
++    if (!empty($gibbonCalendarEventTypeID)) {
++        $calendarEventTypeGateway->update($gibbonCalendarEventTypeID, $data);
++    } else {
++        $gibbonCalendarEventTypeID = $calendarEventTypeGateway->insert($data);
++    }
++
++    if (empty($gibbonCalendarEventTypeID)) {
++        $URL .= "&return=error2";
++        header("Location: {$URL}");
++        exit;
++    }
++
++     $URL .= $partialFail
++        ? "&return=warning1"
++        : "&return=success0&editID=$gibbonCalendarEventTypeID";
++
++    header("Location: {$URL}");
++}
+diff --git a/modules/Calendar/calendar_eventTypes_manage_delete.php b/modules/Calendar/calendar_eventTypes_manage_delete.php
+new file mode 100644
+index 000000000..670a6d214
+--- /dev/null
++++ b/modules/Calendar/calendar_eventTypes_manage_delete.php
+@@ -0,0 +1,46 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Prefab\DeleteForm;
++use Gibbon\Domain\Calendar\CalendarEventTypeGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_eventTypes_manage.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $gibbonCalendarEventTypeID = $_GET['gibbonCalendarEventTypeID'] ?? '';
++
++    if (empty($gibbonCalendarEventTypeID)) {
++        $page->addError(__('You have not specified one or more required parameters.'));
++        return;
++    }
++
++    $values = $container->get(CalendarEventTypeGateway::class)->getByID($gibbonCalendarEventTypeID);
++
++    if (empty($values)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    $form = DeleteForm::createForm($session->get('absoluteURL').'/modules/Calendar/calendar_eventTypes_manage_deleteProcess.php', true, false);
++    $form->addRow()->addConfirmSubmit();
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_eventTypes_manage_deleteProcess.php b/modules/Calendar/calendar_eventTypes_manage_deleteProcess.php
+new file mode 100644
+index 000000000..ced092339
+--- /dev/null
++++ b/modules/Calendar/calendar_eventTypes_manage_deleteProcess.php
+@@ -0,0 +1,59 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Domain\Calendar\CalendarEventTypeGateway;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST);
++
++$gibbonCalendarEventTypeID = $_POST['gibbonCalendarEventTypeID'] ?? '';
++
++$URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_eventTypes_manage.php';
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_eventTypes_manage.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} elseif (empty($gibbonCalendarEventTypeID)) {
++    $URL .= '&return=error1';
++    header("Location: {$URL}");
++    exit;
++  } else {
++    // Proceed!
++    $calendarEventTypeGateway = $container->get(CalendarEventTypeGateway::class);
++
++    // Validate the database relationships exist
++    $values = $calendarEventTypeGateway->getByID($gibbonCalendarEventTypeID);
++
++    if (empty($values)) {
++        $URL .= '&return=error2';
++        header("Location: {$URL}");
++        exit;
++    }
++
++    $deleted = $calendarEventTypeGateway->delete($gibbonCalendarEventTypeID);
++
++    $URL .= !$deleted
++        ? '&return=error2'
++        : '&return=success0';
++
++    header("Location: {$URL}");
++}
+diff --git a/modules/Calendar/calendar_event_add.php b/modules/Calendar/calendar_event_add.php
+new file mode 100644
+index 000000000..406b1f365
+--- /dev/null
++++ b/modules/Calendar/calendar_event_add.php
+@@ -0,0 +1,188 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Form;
++use Gibbon\Forms\DatabaseFormFactory;
++use Gibbon\Domain\Calendar\CalendarGateway;
++use Gibbon\Domain\Calendar\CalendarEventTypeGateway;
++use Gibbon\Support\Facades\Access;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_add.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $page->breadcrumbs
++        ->add(__('Manage Events'), 'calendar_event_manage.php')
++        ->add(__('Add Event'));
++
++    if (isset($_GET['editID'])) {
++        $page->return->setEditLink($session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_edit.php&gibbonCalendarEventID='.$_GET['editID']);
++    }
++
++    $calendarGateway = $container->get(CalendarGateway::class);
++    $calendarEventTypeGateway = $container->get(CalendarEventTypeGateway::class);
++
++    // Get values from post, coming from FullCalendar
++    $source = $_GET['source'] ?? '';
++    $date = $_GET['date'] ?? '';
++    $allDay = $_GET['allDay'] ?? '';
++
++    $dateStart = $date;
++    $dateEnd = $date;
++
++    // From FullCalendar date selection
++    if (!empty($_GET['start']) && !empty($_GET['end'])) {
++        $dateStart = date('Y-m-d', strtotime($_GET['start']));
++        $dateEnd = date('Y-m-d', strtotime($_GET['end'])-86400);
++    }
++    
++    // Get Calendars of the current school year
++    $gibbonPersonIDEditor = Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all') ? null : $session->get('gibbonPersonID');
++    $calendars = $calendarGateway->selectEditableCalendarsByPerson($session->get('gibbonSchoolYearID'), $gibbonPersonIDEditor)->fetchKeyPair();
++
++    if (empty($calendars)) {
++        $page->addError(__('You do not have access to this action.'));
++        return;
++    }
++
++    // FORM
++    $form = Form::create('event', $session->get('absoluteURL').'/modules/Calendar/calendar_event_addProcess.php');
++    $form->setFactory(DatabaseFormFactory::create($pdo));
++
++    $form->addHiddenValue('address', $session->get('address'));
++    $form->addHiddenValue('source', $source);
++
++    if ($source == 'ajax') $form->removeMeta();
++
++    $form->addSection('Basic Information', __('Basic Information'));
++
++    $row = $form->addRow();
++        $row->addLabel('gibbonCalendarID', __('Calendar'));
++        $row->addSelect('gibbonCalendarID')
++            ->fromArray($calendars)
++            ->placeholder()
++            ->required();
++
++    // Get all event types
++    $types = $calendarEventTypeGateway->selectAllEventTypes()->fetchKeyPair();
++    $row = $form->addRow();
++        $row->addLabel('gibbonCalendarEventTypeID', __('Event Type'));
++        $row->addSelect('gibbonCalendarEventTypeID')
++            ->fromArray($types)
++            ->placeholder()
++            ->required();
++
++    $row = $form->addRow();
++        $row->addLabel('name', __('Event Name'));
++        $row->addTextField('name')->required()->maxLength(120);
++
++    $statusList = [
++        'Confirmed' => __('Confirmed'),
++        'Tentative' => __('Tentative'),
++    ];
++
++    $row = $form->addRow();
++        $row->addLabel('status', __('Event Status'));
++        $row->addSelect('status')
++            ->fromArray($statusList)
++            ->required();
++
++    // Event Dates
++    $form->addSection('Event Details', __('Event Details'));
++
++    $row = $form->addRow();
++        $row->addLabel('dateStart', __('Date'));
++
++        $row->addDate('dateStart')->chainedTo('dateEnd')->required()->setValue($dateStart);
++        $row->addDate('dateEnd')->chainedFrom('dateStart')->setValue($dateEnd);
++
++        $row->addCheckbox('allDay')
++            ->description(__('All Day'))
++            ->setOuterClass('w-min')
++            ->inline()
++            ->setValue('Y')
++            ->checked('Y');
++
++    $form->toggleVisibilityByClass('timeOptions')->onCheckbox('allDay')->whenNot('Y');
++
++    $row = $form->addRow()->addClass('timeOptions');
++        $row->addLabel('time', __('Time'));
++        $row->addTime('timeStart')
++            ->required();
++        $row->addTime('timeEnd')
++            ->chainedTo('timeStart')
++            ->required();
++
++    // Description
++    $form->addSection('Description', __('Description'))->closed();
++
++    $form->addRow()->addEditor('description', $guid)->setRows(5);
++
++
++    // Event Location
++    $form->addSection('Location', __('Location'))->closed();
++
++    $row = $form->addRow();
++        $row->addLabel('locationType', __('Location Type'));
++        $row->addSelect('locationType')->fromArray(['Internal' => __('Internal'), 'External' => __('External')])->placeholder();
++
++    $form->toggleVisibilityByClass('internal')->onSelect('locationType')->when('Internal');
++
++    $row = $form->addRow()->addClass('internal');
++        $row->addLabel('location', __('Location'));
++        $row->addSelectSpace('gibbonSpaceID');
++
++    $form->toggleVisibilityByClass('external')->onSelect('locationType')->when('External');
++
++    $row = $form->addRow()->addClass('external');
++        $row->addLabel('locationDetail', __('Location Details'));
++        $row->addTextField('locationDetail');
++
++    $row = $form->addRow()->addClass('external');
++        $row->addLabel('locationURL', __('Location URL'));
++        $row->addUrl('locationURL')->maxLength(255);
++
++    // STAFF
++    $form->addSection('Staff', __('Staff'))->closed();
++
++    $gibbonPersonID = $session->get('gibbonPersonID');
++    $row = $form->addRow();
++        $row->addLabel('gibbonPersonIDOrganiser', __('Organiser'));
++        $row->addSelectStaff('gibbonPersonIDOrganiser')->placeholder()->required()->selected($gibbonPersonID);
++
++
++    $row = $form->addRow();
++        $row->addLabel('staff', __('Add Staff'));
++        $row->addSelectUsers('staff', $session->get('gibbonSchoolYearID'), ['includeStaff' => true])->selectMultiple();
++
++    $row = $form->addRow();
++        $row->addLabel('role', 'Role');
++        $row->addSelect('role')
++            ->fromArray([
++                'Organiser' => __('Organiser'),
++                'Coach'     => __('Coach'),
++                'Assistant' => __('Assistant'),
++                'Other'     => __('Other'), 
++            ]);
++
++    $form->addSection($source == 'ajax' ? 'ajax' : 'submit')->addSubmit();
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_event_addProcess.php b/modules/Calendar/calendar_event_addProcess.php
+new file mode 100644
+index 000000000..fcb1f2132
+--- /dev/null
++++ b/modules/Calendar/calendar_event_addProcess.php
+@@ -0,0 +1,137 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Support\Facades\Access;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Domain\Calendar\CalendarGateway;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST, ['description' => 'HTML']);
++
++$source = $_POST['source'] ?? '';
++
++$URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_add.php';
++$URLSuccess = $source == 'ajax'
++    ? $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_view.php'
++    : $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_add.php';
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_add.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} else {
++    // Proceed!
++    $partialFail = false;
++
++    $calendarGateway = $container->get(CalendarGateway::class);
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++
++    $gibbonPersonIDOrganiser = $_POST['gibbonPersonIDOrganiser'] ?? '';
++
++    $data = [
++        'gibbonCalendarID'        => $_POST['gibbonCalendarID'] ?? '',
++        'gibbonCalendarEventTypeID' => $_POST['gibbonCalendarEventTypeID'] ?? '',
++        'name'                    => $_POST['name'] ?? '',
++        'description'             => $_POST['description'] ?? '',
++        'status'                  => $_POST['status'] ?? 'Tentative',
++        'dateStart'               => $_POST['dateStart'] ?? '',
++        'dateEnd'                 => $_POST['dateEnd'] ?? $_POST['dateStart'] ?? '',
++        'allDay'                  => !empty($_POST['allDay']) ? $_POST['allDay'] : 'N',
++        'timeStart'               => $_POST['timeStart'] ?? null,
++        'timeEnd'                 => $_POST['timeEnd'] ?? null,   
++        'locationType'            => $_POST['locationType'] ?? 'External',
++        'locationDetail'          => $_POST['locationDetail'] ?? '',
++        'locationURL'             => $_POST['locationURL'] ?? '',
++        'gibbonSpaceID'           => $_POST['gibbonSpaceID'] ?? null,
++        'gibbonPersonIDOrganiser' => $gibbonPersonIDOrganiser,
++        'timestampCreated'        => date('Y-m-d H:i:s'),
++        'gibbonPersonIDCreated'   => $session->get('gibbonPersonID') ?? '',
++        'timestampModified'       => date('Y-m-d H:i:s'),
++        'gibbonPersonIDModified'  => $session->get('gibbonPersonID') ?? '',
++    ];
++    
++    // Validate the required values are present
++    if (empty($data['name']) || empty($data['dateStart']) || empty($data['dateEnd'])) {
++        header("Location: {$URL}&return=error1");
++        exit;
++    }
++
++    // Get Calendars of the current school year
++    $gibbonPersonIDEditor = Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all') ? null : $session->get('gibbonPersonID');
++    $calendars = $calendarGateway->selectEditableCalendarsByPerson($session->get('gibbonSchoolYearID'), $gibbonPersonIDEditor)->fetchKeyPair();
++
++    if (empty($calendars) || empty($calendars[$data['gibbonCalendarID']])) {
++        header("Location: {$URL}&return=error0");
++        exit;
++    }
++
++    // Create the record
++    $gibbonCalendarEventID = $calendarEventGateway->insert($data);
++
++    if (!$gibbonCalendarEventID) {
++        header("Location: {$URL}&return=error2");
++        exit;
++    }
++
++    // Scan through staff
++    $staff = $_POST['staff'] ?? [];
++    $role = $_POST['role'] ?? 'Other';
++
++    if (!is_array($staff)) {
++        $staff = [strval($staff)];
++    }
++
++    foreach ($staff as $staffPersonID) {
++        $personData = [
++            'gibbonCalendarEventID'  => $gibbonCalendarEventID,
++            'gibbonPersonID'         => $staffPersonID,
++            'role'                   => $role,
++            'gibbonPersonIDCreated'  => $session->get('gibbonPersonID') ?? '',
++            'timestampCreated'       => date('Y-m-d H:i:s'),
++            'gibbonPersonIDModified' => $session->get('gibbonPersonID') ?? '',
++            'timestampModified'      => date('Y-m-d H:i:s'),
++        ];
++
++        $gibbonCalendarEventPersonID = $calendarEventPersonGateway->insert($personData);
++        $partialFail &= !$gibbonCalendarEventPersonID;
++    }
++
++    // Add the organiser to the particapants list
++    $organiserData = [
++            'gibbonCalendarEventID'  => $gibbonCalendarEventID,
++            'gibbonPersonID'         => $gibbonPersonIDOrganiser,
++            'role'                   => 'Organiser',
++            'gibbonPersonIDCreated'  => $session->get('gibbonPersonID') ?? '',
++            'timestampCreated'       => date('Y-m-d H:i:s'),
++            'gibbonPersonIDModified' => $session->get('gibbonPersonID') ?? '',
++            'timestampModified'      => date('Y-m-d H:i:s'),
++        ];
++
++    $gibbonCalendarEventPersonID = $calendarEventPersonGateway->insert($organiserData);
++    $partialFail &= !$gibbonCalendarEventPersonID;
++
++    $URLSuccess .= $partialFail
++        ? "&return=warning1"
++        : "&return=success0&editID=$gibbonCalendarEventID";
++    header("Location: {$URLSuccess}");
++}
+diff --git a/modules/Calendar/calendar_event_delete.php b/modules/Calendar/calendar_event_delete.php
+new file mode 100644
+index 000000000..144992908
+--- /dev/null
++++ b/modules/Calendar/calendar_event_delete.php
+@@ -0,0 +1,47 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Services\Format;
++use Gibbon\Forms\Prefab\DeleteForm;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_delete.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++   $gibbonCalendarEventID = $_GET['gibbonCalendarEventID'] ?? '';
++
++    if (empty($gibbonCalendarEventID)) {
++        $page->addError(__('You have not specified one or more required parameters.'));
++        return;
++    }
++
++    $values = $container->get(CalendarEventGateway::class)->getByID($gibbonCalendarEventID);
++
++    if (empty($values)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    $form = DeleteForm::createForm($session->get('absoluteURL').'/modules/Calendar/calendar_event_deleteProcess.php', true, false);
++    $form->addRow()->addConfirmSubmit();
++
++    echo $form->getOutput();
++}
+\ No newline at end of file
+diff --git a/modules/Calendar/calendar_event_deleteProcess.php b/modules/Calendar/calendar_event_deleteProcess.php
+new file mode 100644
+index 000000000..cda3fed45
+--- /dev/null
++++ b/modules/Calendar/calendar_event_deleteProcess.php
+@@ -0,0 +1,68 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Support\Facades\Access;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST);
++
++$gibbonCalendarEventID = $_POST['gibbonCalendarEventID'] ?? '';
++
++$URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_manage.php';
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_delete.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} elseif (empty($gibbonCalendarEventID)) {
++    $URL .= '&return=error1';
++    header("Location: {$URL}");
++    exit;
++  } else {
++    // Proceed!
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++
++    // Validate the database relationships exist
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($event)) {
++        header("Location: {$URL}&return=error2");
++        exit;
++    } 
++
++    // Check for access to edit this event
++    if ($event['editor'] != 'Y' && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        header("Location: {$URL}&return=error0");
++        exit;
++    } 
++
++    $deleted = $calendarEventGateway->delete($gibbonCalendarEventID);
++
++    $calendarEventPersonGateway->deleteWhere(['gibbonCalendarEventID' => $gibbonCalendarEventID]);
++
++    $URL .= !$deleted
++        ? '&return=error2'
++        : '&return=success0';
++
++    header("Location: {$URL}");
++}
+diff --git a/modules/Calendar/calendar_event_edit.php b/modules/Calendar/calendar_event_edit.php
+new file mode 100644
+index 000000000..23b9ce407
+--- /dev/null
++++ b/modules/Calendar/calendar_event_edit.php
+@@ -0,0 +1,237 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Form;
++use Gibbon\Services\Format;
++use Gibbon\Forms\DatabaseFormFactory;
++use Gibbon\Domain\Calendar\CalendarGateway;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventTypeGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Support\Facades\Access;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_edit.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++     $page->breadcrumbs
++        ->add(__('Manage Events'), 'calendar_event_manage.php')
++        ->add(__('Edit Event'));
++
++    $gibbonCalendarEventID = $_GET['gibbonCalendarEventID'] ?? '';   
++
++    if (empty($gibbonCalendarEventID) && isset($_GET['editID'])) {
++        $page->return->setEditLink($session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_edit.php&gibbonCalendarEventID='.$_GET['editID']);
++    }
++    
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++    $calendarGateway = $container->get(CalendarGateway::class);
++    $calendarEventTypeGateway = $container->get(CalendarEventTypeGateway::class);
++
++    // Get event details
++    $values = $calendarEventGateway->getByID($gibbonCalendarEventID);
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($values) || empty($event)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    // Check for access to edit this event
++    if ($event['editor'] != 'Y' && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        $page->addError(__('The selected record does not exist, or you do not have access to it.'));
++        return;
++    }
++
++    // EDIT FORM
++    $form = Form::create('editEvent', $session->get('absoluteURL').'/modules/Calendar/calendar_event_editProcess.php');
++    $form->setFactory(DatabaseFormFactory::create($pdo));
++
++    $form->addHiddenValue('address', $session->get('address'));
++    $form->addHiddenValue('gibbonCalendarEventID', $gibbonCalendarEventID);
++
++    $form->addHeaderAction('view', __('View Event'))
++        ->setURL('/modules/Calendar/calendar_event_view.php')
++        ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++        ->displayLabel();
++
++    $form->addHeaderAction('participants', __('Edit Participants'))
++        ->setURL('/modules/Calendar/calendar_event_participants.php')
++        ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++        ->setIcon('users')
++        ->displayLabel();
++
++    $form->addHeaderAction('notify', __('Notify Staff'))
++        ->setURL('/modules/Calendar/calendar_event_notify.php')
++        ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++        ->setIcon('notify')
++        ->displayLabel();
++
++        $form->addSection('Basic Information', __('Basic Information'));
++
++    // Get Calendars of the current school year
++    $gibbonPersonIDEditor = Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all') ? null : $session->get('gibbonPersonID');
++    $calendars = $calendarGateway->selectEditableCalendarsByPerson($session->get('gibbonSchoolYearID'), $gibbonPersonIDEditor)->fetchKeyPair();
++    
++    if (!empty($calendars)) {
++        $row = $form->addRow();
++            $row->addLabel('gibbonCalendarID', __('Calendar'));
++            $row->addSelect('gibbonCalendarID')
++                ->fromArray($calendars)
++                ->placeholder()
++                ->required();
++    } else {
++        $row = $form->addRow();
++            $row->addLabel('calendarName', __('Calendar'));
++            $row->addTextField('calendarName')->readOnly()->setValue($event['calendarName']);
++            $form->addHiddenValue('gibbonCalendarID', $values['gibbonCalendarID']);
++    }
++
++    // Get all event types
++    $types = $calendarEventTypeGateway->selectAllEventTypes()->fetchKeyPair();
++    $row = $form->addRow();
++        $row->addLabel('gibbonCalendarEventTypeID', __('Event Type'));
++        $row->addSelect('gibbonCalendarEventTypeID')
++            ->fromArray($types)
++            ->placeholder()
++            ->required();
++
++
++    $row = $form->addRow();
++        $row->addLabel('name', __('Event Name'));
++        $row->addTextField('name')->required()->maxLength(120);
++
++    // Status can be changed to cancelled while editing
++    $statusList = [
++        'Confirmed' => __('Confirmed'),
++        'Tentative' => __('Tentative'),
++        'Cancelled' => __('Cancelled'),
++    ];
++
++    $row = $form->addRow();
++        $row->addLabel('status', __('Event Status'));
++        $row->addSelect('status')
++            ->fromArray($statusList)
++            ->required();
++
++    // Event Dates
++    $form->addSection('Event Details', __('Event Details'));
++
++    $date = $_GET['date'] ?? '';
++    $row = $form->addRow();
++        $row->addLabel('dateStart', __('Date'));
++
++        $row->addDate('dateStart')->chainedTo('dateEnd')->required()->setValue($date);
++        $row->addDate('dateEnd')->chainedFrom('dateStart')->setValue($date);
++
++        $row->addCheckbox('allDay')
++            ->description(__('All Day'))
++            ->setOuterClass('w-min')
++            ->inline()
++            ->setValue('Y')
++            ->checked('Y');
++
++    $form->toggleVisibilityByClass('timeOptions')->onCheckbox('allDay')->whenNot('Y');
++
++    $row = $form->addRow()->addClass('timeOptions');
++        $row->addLabel('time', __('Time'));
++        $row->addTime('timeStart')
++            ->required();
++        $row->addTime('timeEnd')
++            ->chainedTo('timeStart')
++            ->required();
++
++    // Description
++    $form->addSection('Description', __('Description'))->closed(empty($values['description']));
++
++    $form->addRow()->addEditor('description', $guid)->setRows(5);
++
++    
++    // Event Location
++    $form->addSection('Location', __('Location'))->closed(empty($values['gibbonSpaceID']) && empty($values['locationDetail']));
++
++    $row = $form->addRow();
++        $row->addLabel('locationType', __('Location Type'));
++        $row->addSelect('locationType')->fromArray(['Internal' => __('Internal'), 'External' => __('External')])->placeholder();
++
++    $form->toggleVisibilityByClass('internal')->onSelect('locationType')->when('Internal');
++
++    $row = $form->addRow()->addClass('internal');
++        $row->addLabel('location', __('Location'));
++        $row->addSelectSpace('gibbonSpaceID');
++
++    $form->toggleVisibilityByClass('external')->onSelect('locationType')->when('External');
++
++    $row = $form->addRow()->addClass('external');
++        $row->addLabel('locationDetail', __('Location Details'));
++        $row->addTextField('locationDetail');
++
++    $row = $form->addRow()->addClass('external');
++        $row->addLabel('locationURL', __('Location URL'));
++        $row->addUrl('locationURL')->maxLength(255);
++
++
++    // CURRENT STAFF TABLE
++
++    $staffList = $calendarEventPersonGateway->selectEventStaff($gibbonCalendarEventID)->toDataSet();
++
++    $form->addSection('Staff', __('Staff'))->closed(count($staffList) <= 1);
++
++    $staffTable = $form->addRow()->addDataTable('staffTable');
++    $staffTable->setDescription(Format::bold(__('Current Staff')));
++
++    $staffTable->addColumn('name', __('Name'))
++        ->format(Format::using('name', ['', 'preferredName', 'surname', 'Staff', false, true]));
++
++    $staffTable->addColumn('role', __('Role'))
++        ->format(function($staff) {
++            return __($staff['role']);
++        });
++
++    $staffTable->addActionColumn()
++                ->addParam('gibbonCalendarEventPersonID')
++                ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++                ->format(function ($staff, $actions) {
++                    $actions->addAction('delete', __('Delete'))
++                            ->setURL('/modules/Calendar/calendar_event_editStaff_delete.php');
++                });
++
++    $staffTable->withData($staffList);
++
++    $row = $form->addRow();
++        $row->addLabel('staff', __('New Staff'));
++        $row->addSelectUsers('staff', $session->get('gibbonSchoolYearID'), ['includeStaff' => true])->selectMultiple();
++
++    $row = $form->addRow();
++        $row->addLabel('role', 'Role');
++        $row->addSelect('role')
++            ->fromArray([
++                'Organiser' => __('Organiser'),
++                'Coach'     => __('Coach'),
++                'Assistant' => __('Assistant'),
++                'Other'     => __('Other'), 
++            ]);
++
++    $form->addSection('submit')->addSubmit();
++
++    $form->loadAllValuesFrom($values);
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_event_editProcess.php b/modules/Calendar/calendar_event_editProcess.php
+new file mode 100755
+index 000000000..370adacd4
+--- /dev/null
++++ b/modules/Calendar/calendar_event_editProcess.php
+@@ -0,0 +1,143 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Support\Facades\Access;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST, ['description' => 'HTML']);
++
++$gibbonCalendarEventID = $_POST['gibbonCalendarEventID'] ?? '';
++
++$URL = $session->get('absoluteURL')."/index.php?q=/modules/Calendar/calendar_event_edit.php&gibbonCalendarEventID=$gibbonCalendarEventID";
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_edit.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} else {
++    // Proceed!
++    $partialFail = false;
++
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++
++    // Get event details
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($event)) {
++        header("Location: {$URL}&return=error2");
++        exit;
++    } 
++
++    // Check for access to edit this event
++    if ($event['editor'] != 'Y' && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        header("Location: {$URL}&return=error0");
++        exit;
++    } 
++
++    if (empty($_POST['dateStart']) || empty($_POST['dateEnd'])) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++    }
++
++    $dateStart = new DateTime(trim($_POST['dateStart'], '"'));
++    $dateEnd = new DateTime(trim($_POST['dateEnd'], '"'));
++
++    if (empty($dateStart) || empty($dateEnd)) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++    }
++    
++    $data = [
++        'gibbonCalendarID'          => $_POST['gibbonCalendarID'] ?? '',
++        'gibbonCalendarEventTypeID' => $_POST['gibbonCalendarEventTypeID'] ?? '',
++        'name'                      => $_POST['name'] ?? '',
++        'description'               => $_POST['description'] ?? '',
++        'status'                    => $_POST['status'] ?? 'Tentative',
++        'dateStart'                 => $dateStart->format('Y-m-d'),
++        'dateEnd'                   => $dateEnd->format('Y-m-d'),
++        'allDay'                    => !empty($_POST['allDay']) ? $_POST['allDay'] : 'N',
++        'timeStart'                 => $_POST['timeStart'] ?? null,
++        'timeEnd'                   => $_POST['timeEnd'] ?? null,
++        'locationType'              => $_POST['locationType'] ?? 'External',
++        'locationDetail'            => $_POST['locationDetail'] ?? '',
++        'locationURL'               => $_POST['locationURL'] ?? '',
++        'gibbonSpaceID'             => !empty($_POST['gibbonSpaceID']) ? $_POST['gibbonSpaceID'] : null,
++        'timestampModified'         => date('Y-m-d H:i:s'),
++        'gibbonPersonIDModified'    => $session->get('gibbonPersonID') ?? '',
++    ];
++    
++    // Validate the required values are present
++    if (empty($data['name']) || empty($data['gibbonCalendarID']) || empty($data['gibbonCalendarEventTypeID']) || empty($data['locationType']) || empty($data['dateStart']) || empty($data['dateEnd'])) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++    }
++
++    // Update the record
++    if (!$calendarEventGateway->update($gibbonCalendarEventID, $data)) {
++        $URL .= '&return=error2';
++        header("Location: {$URL}");
++    }
++
++     $organiser = $calendarEventPersonGateway->selectBy(['gibbonCalendarEventID' => $gibbonCalendarEventID, 'role' => 'Organiser', 'gibbonPersonID' => $gibbonPersonIDOrganiser])->fetch();
++
++     if (empty($organiser)) {
++         $organiserData = [
++            'gibbonCalendarEventID' => $gibbonCalendarEventID,
++            'gibbonPersonID'   => $gibbonPersonIDOrganiser,
++            'role'    => 'Organiser',
++            'gibbonPersonIDModified' => $session->get('gibbonPersonID') ?? '',
++            'timestampModified' => date('Y-m-d H:i:s'),
++            'timestampCreated'        => date('Y-m-d H:i:s'),
++            'gibbonPersonIDCreated'   => $session->get('gibbonPersonID') ?? '',
++        ];
++
++        $inserted = $calendarEventPersonGateway->insertAndUpdate($organiserData, $organiserData);
++     }
++
++    $staff = $_POST['staff'] ?? [];
++    $role = $_POST['role'] ?? 'Other';
++
++    if (!is_array($staff)) {
++        $staff = [strval($staff)];
++    }
++
++    foreach ($staff as $staffPersonID) {
++        $personData = [
++            'gibbonCalendarEventID' => $gibbonCalendarEventID,
++            'gibbonPersonID'   => $staffPersonID,
++            'role'    => $role,
++            'gibbonPersonIDModified' => $session->get('gibbonPersonID') ?? '',
++            'timestampModified' => date('Y-m-d H:i:s'),
++            'timestampCreated'        => date('Y-m-d H:i:s'),
++            'gibbonPersonIDCreated'   => $session->get('gibbonPersonID') ?? '',
++        ];
++
++        $inserted = $calendarEventPersonGateway->insertAndUpdate($personData, $personData);
++        $partialFail &= !$inserted;
++    }
++    
++    $URL .= $partialFail
++        ? "&return=warning1"
++        : "&return=success0&editID=$gibbonCalendarEventID";
++    header("Location: {$URL}");    
++}
+diff --git a/modules/Calendar/calendar_event_editStaff_delete.php b/modules/Calendar/calendar_event_editStaff_delete.php
+new file mode 100644
+index 000000000..efa13b12b
+--- /dev/null
++++ b/modules/Calendar/calendar_event_editStaff_delete.php
+@@ -0,0 +1,47 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Prefab\DeleteForm;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_edit.php') == false) {
++    //Acess denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    $gibbonCalendarEventID = $_GET['gibbonCalendarEventID'] ?? '';
++    $gibbonCalendarEventPersonID = $_GET['gibbonCalendarEventPersonID'] ?? '';
++
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++    
++    if (!$calendarEventGateway->exists($gibbonCalendarEventID) || !$calendarEventPersonGateway->exists($gibbonCalendarEventPersonID)) {
++        $page->addError(__('You have not specified one or more required parameters.'));
++    } else {
++        $form = DeleteForm::createForm($session->get('absoluteURL') . '/modules/' . $session->get('module') . "/calendar_event_editStaff_deleteProcess.php");
++        $form->addHiddenValue('address', $session->get('address'));
++        $form->addHiddenValue('gibbonCalendarEventID', $gibbonCalendarEventID);
++        $form->addHiddenValue('gibbonCalendarEventPersonID', $gibbonCalendarEventPersonID);
++        
++        echo $form->getOutput();
++    }
++}
++?>
+\ No newline at end of file
+diff --git a/modules/Calendar/calendar_event_editStaff_deleteProcess.php b/modules/Calendar/calendar_event_editStaff_deleteProcess.php
+new file mode 100644
+index 000000000..9ea4b04da
+--- /dev/null
++++ b/modules/Calendar/calendar_event_editStaff_deleteProcess.php
+@@ -0,0 +1,67 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Support\Facades\Access;
++
++include '../../gibbon.php';
++
++$gibbonCalendarEventID = $_POST['gibbonCalendarEventID'] ?? '';
++$gibbonCalendarEventPersonID = $_POST['gibbonCalendarEventPersonID'] ?? '';
++
++$URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . "/calendar_event_edit.php&gibbonCalendarEventID=$gibbonCalendarEventID";
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_edit.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++} else {
++    // Proceed!
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++       
++    // Validate the database relationships exist
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($event)) {
++        header("Location: {$URL}&return=error2");
++        exit;
++    } 
++
++    // Check for access to edit this event
++    if ($event['editor'] != 'Y' && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        header("Location: {$URL}&return=error0");
++        exit;
++    } 
++
++    if (!$calendarEventPersonGateway->exists($gibbonCalendarEventPersonID)) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++    } else {
++        if (!$calendarEventPersonGateway->delete($gibbonCalendarEventPersonID)) {
++            $URL .= '&return=error2';
++            header("Location: {$URL}");
++            exit();
++        }
++
++        $URL .= '&return=success0';
++        header("Location: {$URL}");
++    }
++}
+diff --git a/modules/Calendar/calendar_event_manage.php b/modules/Calendar/calendar_event_manage.php
+new file mode 100644
+index 000000000..087f6cd43
+--- /dev/null
++++ b/modules/Calendar/calendar_event_manage.php
+@@ -0,0 +1,181 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Form;
++use Gibbon\Services\Format;
++use Gibbon\Tables\DataTable;
++use Gibbon\Forms\Prefab\BulkActionForm;
++use Gibbon\Domain\Calendar\CalendarGateway;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\UI\Timetable\Palette;
++use Gibbon\Support\Facades\Access;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_manage.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $page->breadcrumbs->add(__('Manage Events'));
++
++    $search = $_REQUEST['search'] ?? '';
++
++    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
++    $page->navigator->addSchoolYearNavigation($gibbonSchoolYearID);
++
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarGateway = $container->get(CalendarGateway::class);
++    $palette = $container->get(Palette::class);
++
++    $criteria = $calendarEventGateway->newQueryCriteria()
++        ->searchBy($calendarEventGateway->getSearchableColumns(), $search)
++        ->sortBy(['dateStart', 'timeStart'])
++        ->fromPOST();
++
++    // SEARCH
++    $form = Form::create('filters', $session->get('absoluteURL').'/index.php', 'get');
++    $form->setClass('noIntBorder w-full');
++
++    $form->addHiddenValue('q', '/modules/Calendar/calendar_event_manage.php');
++
++    $row = $form->addRow();
++        $row->addLabel('search', __('Search For'))->description(__m('Event name, type, description, organiser, calendar name'));
++        $row->addTextField('search')->setValue($criteria->getSearchText())->maxLength(30);
++
++    $row = $form->addRow();
++        $row->addFooter();
++        $row->addSearchSubmit($session, __('Clear Filters'), ['view', 'sidebar']);
++
++    echo $form->getOutput();
++
++    // Query units
++    $canManageAllEvents = Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all');
++    $gibbonPersonIDEditor = $canManageAllEvents ? null : $session->get('gibbonPersonID');
++
++    $events = $calendarEventGateway->queryEvents($criteria, $gibbonPersonIDEditor);
++    $calendars = $calendarGateway->selectEditableCalendarsByPerson($session->get('gibbonSchoolYearID'), $gibbonPersonIDEditor)->fetchKeyPair();
++
++    // FORM
++    $form = BulkActionForm::create('bulkAction', $session->get('absoluteURL').'/modules/'.$session->get('module').'/calendar_event_manageProcessBulk.php');
++
++    $bulkActions = [
++        'Duplicate' => __('Duplicate'),
++        'DuplicateParticipants' => __('Duplicate With Participants'),
++    ];
++
++    $col = $form->createBulkActionColumn($bulkActions);
++    $col->addSubmit(__('Go'));
++
++    // DATA TABLE
++    $table = $form->addRow()->addDataTable('events', $criteria)->withData($events);
++
++    $table->setTitle($canManageAllEvents ? __('All Events') : __('My Events'));
++
++    if (!empty($calendars)) {
++        $table->addHeaderAction('add', __('Add'))
++            ->setURL('/modules/Calendar/calendar_event_add.php')
++            ->displayLabel();
++    }
++
++    $table->modifyRows(function($values, $row) {
++        if ($values['status'] == 'Tentative') $row->addClass('message');
++        if ($values['status'] == 'Cancelled') $row->addClass('dull');
++        return $row;
++    });
++
++    $table->addMetaData('filterOptions', [
++        'status:confirmed' => __('Status').': '.__('Confirmed'),
++        'status:tentative'  => __('Status').': '.__('Tentative'),
++        'status:cancelled'  => __('Status').': '.__('Cancelled'),
++    ]);
++
++    $table->addMetaData('bulkActions', $col);
++
++    // COLUMNS
++    $table->addColumn('eventName', __('Event'))
++        ->context('primary')
++        ->format(function ($values) use ($palette) {
++            $contrast = $palette->getHexContrastColor($values['color']);
++            $border = $palette->adjustHexColor($values['color'], -0.1);
++            $text = $contrast == 'white'
++                ? $palette->adjustHexColor($values['color'], 0.7)
++                : $palette->adjustHexColor($values['color'], -0.7);
++
++            $style = "background-color: {$values['color']}; border-color: {$border}; color: {$text} !important;";
++
++            return "<span class='inline-block rounded py-1 px-2 text-xs font-medium font-sans border' style='{$style}' title='{$values['calendarName']}'>{$values['eventName']}</span>";
++        })
++        ->formatDetails(function ($values) {
++            return $values['status'] != 'Confirmed'
++                ? Format::small($values['status'])
++                : '';
++        });
++
++    $table->addColumn('dateStart', __('When'))
++        ->format(function ($values) {
++            return Format::dateRangeReadable($values['dateStart'], $values['dateEnd']);
++        })
++        ->formatDetails(function ($values) {
++            return $values['allDay'] != 'Y'
++                ? Format::small(Format::timeRange($values['timeStart'], $values['timeEnd']))
++                : Format::small(__('All Day'));
++        });
++
++    $table->addColumn('locationType', __('Location'))
++        ->format(function($values)  {
++            if ($values['locationType'] == 'Internal') {
++                return $values['space'] ?? ''; 
++            }
++
++            return !empty($values['locationURL'])
++                ? Format::link($values['locationURL'], $values['locationDetail'])
++                : $values['locationDetail'] ?? '';
++        });
++
++    $table->addColumn('participants', __('Participants'));
++
++    $table->addColumn('organiser', __('Organiser'))
++        ->format(Format::using('nameLinked', ['gibbonPersonIDOrganiser', 'title', 'preferredName', 'surname', 'Staff', false, true]))
++        ->sortable('surname');
++
++     // ACTIONS
++    $table->addActionColumn()
++        ->addParam('gibbonCalendarEventID')
++        ->format(function ($values, $actions) use ($canManageAllEvents) {
++            $actions->addAction('view', __('View'))
++                ->setURL('/modules/Calendar/calendar_event_view.php');
++
++            if ($values['editor'] == 'Y' || $canManageAllEvents) {
++                $actions->addAction('edit', __('Edit'))
++                    ->setURL('/modules/Calendar/calendar_event_edit.php');
++            
++                $actions->addAction('participants', __('Participants'))
++                    ->setURL('/modules/Calendar/calendar_event_participants.php')
++                    ->setIcon('users');
++
++                $actions->addAction('delete', __('Delete'))
++                    ->setURL('/modules/Calendar/calendar_event_delete.php');
++            }
++        });
++
++    $table->addCheckboxColumn('gibbonCalendarEventID');
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_event_manageProcessBulk.php b/modules/Calendar/calendar_event_manageProcessBulk.php
+new file mode 100644
+index 000000000..fa9fff849
+--- /dev/null
++++ b/modules/Calendar/calendar_event_manageProcessBulk.php
+@@ -0,0 +1,94 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Support\Facades\Access;
++
++include '../../gibbon.php';
++
++$action = $_POST['action'] ?? '';
++
++
++$URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_manage.php';
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_manage.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++} else {
++    $events = $_POST['gibbonCalendarEventID'] ?? [];
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++
++    // Proceed!
++    if (count($events) < 1) {
++        $URL .= '&return=error3';
++        header("Location: {$URL}");
++    } else {
++        $partialFail = false;
++
++        $canManageAllEvents = Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all');
++
++        if ($action == 'Duplicate' || $action == 'DuplicateParticipants') {
++            foreach ($events AS $gibbonCalendarEventID) { // For every event to be duplicated
++                // Check existence of event and fetch details
++                $calendarEvent = $calendarEventGateway->getByID($gibbonCalendarEventID);
++                if (empty($calendarEvent)) {
++                    $partialFail = true;
++                    continue;
++                }
++
++                // Check for access to edit this event
++                $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++                if ($event['editor'] != 'Y' && !$canManageAllEvents) {
++                    $partialFail = true;
++                    continue;
++                }
++
++                $name = $calendarEvent['name'];
++                $name .= ' (Copy)';
++
++                // Write the duplicate to the database
++                $data = ['gibbonCalendarID' => $calendarEvent['gibbonCalendarID'], 'gibbonCalendarEventTypeID' => $calendarEvent['gibbonCalendarEventTypeID'], 'name' => $name, 'description' => $calendarEvent['description'], 'status' => $calendarEvent['status'], 'allDay' => $calendarEvent['allDay'], 'dateStart' => $calendarEvent['dateStart'], 'dateEnd' => $calendarEvent['dateEnd'], 'timeStart' => $calendarEvent['timeStart'], 'timeEnd' => $calendarEvent['timeEnd'], 'locationType' => $calendarEvent['locationType'], 'locationDetail' => $calendarEvent['locationDetail'], 'locationURL' => $calendarEvent['locationURL'], 'gibbonSpaceID' => $calendarEvent['gibbonSpaceID'], 'foreignTable' => $calendarEvent['foreignTable'], 'foreignTableID' => $calendarEvent['foreignTableID'], 'timestampCreated' => date('Y-m-d H:i:s'), 'timestampModified' => date('Y-m-d H:i:s'), 'gibbonPersonIDCreated' => $session->get('gibbonPersonID'), 'gibbonPersonIDModified' => $session->get('gibbonPersonID'), 'gibbonPersonIDOrganiser' => $calendarEvent['gibbonPersonIDOrganiser']];
++
++                $inserted = $calendarEventGateway->insert($data);
++                // $gibbonCalendarEventID = str_pad($connection2->lastInsertID(), 8, '0', STR_PAD_LEFT);
++
++                if ($action == 'DuplicateParticipants') {
++                    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++                    $participants = $calendarEventPersonGateway->selectBy(['gibbonCalendarEventID' => $gibbonCalendarEventID]);
++                    
++                    while ($participant = $participants->fetch()) {
++                        $data = ['gibbonCalendarEventID' => $inserted, 'gibbonPersonID' => $participant['gibbonPersonID'], 'role' => $participant['role'], 'timestampCreated' => date('Y-m-d H:i:s'), 'timestampModified' => date('Y-m-d H:i:s'), 'gibbonPersonIDCreated' => $session->get('gibbonPersonID'), 'gibbonPersonIDModified' => $session->get('gibbonPersonID')];
++                        $insertedParticipant = $calendarEventPersonGateway->insert($data);
++                    }
++                }
++            }
++        }
++    
++        if ($partialFail == true) {
++            $URL .= '&return=warning1';
++            header("Location: {$URL}");
++        } else {
++            $URL .= '&return=success0';
++            header("Location: {$URL}");
++        }
++    }
++}
+diff --git a/modules/Calendar/calendar_event_notify.php b/modules/Calendar/calendar_event_notify.php
+new file mode 100644
+index 000000000..0bf872abc
+--- /dev/null
++++ b/modules/Calendar/calendar_event_notify.php
+@@ -0,0 +1,121 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Form;
++use Gibbon\Forms\DatabaseFormFactory;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Services\Format;
++use Gibbon\Support\Facades\Access;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_edit.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $page->breadcrumbs
++        ->add(__('Manage Events'), 'calendar_event_manage.php')
++        ->add(__('Notify Staff'));
++
++    $page->return->addReturns(['error3' => __('This event does not have any attendees.')]);
++
++    $gibbonCalendarEventID = $_GET['gibbonCalendarEventID'] ?? '';
++
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++
++    // Get event details
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($gibbonCalendarEventID) || empty($event)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    // Check for access to edit this event
++    $canEditEvent = $event['editor'] == 'Y' && Access::allows('Calendar', 'calendar_event_edit');
++    if (!$canEditEvent && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        $page->addError(__('The selected record does not exist, or you do not have access to it.'));
++        return;
++    }
++
++    // Get all student participants
++    $criteria = $calendarEventPersonGateway->newQueryCriteria()
++        ->sortBy(['surname', 'preferredName', 'category'])
++        ->fromPOST();
++    $students = $calendarEventPersonGateway->queryEventAttendees($criteria, $gibbonCalendarEventID)->toArray();
++
++    if (empty($students)) {
++        $page->addError(__('This event does not have any attendees.'));
++        return;
++    }
++
++    $form = Form::create('eventNotification', $session->get('absoluteURL').'/modules/Calendar/calendar_event_notifyProcess.php');
++    $form->setFactory(DatabaseFormFactory::create($pdo));
++
++    $form->addHiddenValue('address', $session->get('address'));
++    $form->addHiddenValue('gibbonCalendarEventID', $gibbonCalendarEventID);
++
++    // NOTES
++    $form->addRow()->addHeading('Message Details', __('Message Details'));
++
++    $subject = $event['name'] . ($event['allDay'] != 'Y' ? ', ' .Format::dateRangeReadable($event['dateStart'], $event['dateEnd']) : '');
++    $col = $form->addRow()->addColumn();
++        $col->addLabel('subject', __('Subject'));
++        $col->addTextField('subject')->maxLength(120)->setValue($subject);
++
++    $col = $form->addRow()->addColumn();
++        $col->addLabel('notes', __('Notes'))->description(__('Optional notes that will be shared with email recipients.'));
++        $col->addEditor('notes', $guid)->setRows(5);
++
++    // NOTIFICATIONS
++    $form->addRow()->addHeading('Notifications', __('Notifications'));
++
++    $form->toggleVisibilityByClass('notifyGroups')->onCheckbox('allStaff')->whenNot('Y');
++    
++    $row = $form->addRow();
++        $row->addLabel('notify', __('Automatically Notify'));
++        $row->addCheckbox('allStaff')
++            ->description(__('All Staff'))
++            ->setValue('Y');
++
++    $row = $form->addRow();
++        $row->addCheckbox('notifyGroups')->fromArray([
++            'participants' => __('Staff').' '.__('Participants'),
++            'HOY'          => __('Head of Year'),
++            'tutors'       => __('Form Tutors'),
++            'teachers'     => __('Class Teachers'),
++            'INAssistant'  => __('Educational Assistants'),
++        ])->checkAll()->addClass('notifyGroups');
++
++    $row = $form->addRow();
++        $row->addLabel('notificationList', __('Notify Additional People'))->addClass('notifyGroups');
++        $row->addFinder('notificationList')
++            ->addClass('notifyGroups')
++            ->fromAjax($session->get('absoluteURL').'/modules/Staff/staff_searchAjax.php')
++            ->setParameter('resultsLimit', 10)
++            ->resultsFormatter('function(item){ return "<li class=\'\'><div class=\'inline-block bg-cover w-12 h-12 ml-2 rounded-full bg-gray-200 border border-gray-400 bg-no-repeat\' style=\'background-image: url(" + item.image + ");\'></div><div class=\'inline-block px-4 truncate\'>" + item.name + "<br/><span class=\'inline-block opacity-75 truncate text-xxs\'>" + item.jobTitle + "</span></div></li>"; }');
++
++    $row = $form->addRow();
++        $row->addFooter();
++        $row->addSubmit();
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_event_notifyProcess.php b/modules/Calendar/calendar_event_notifyProcess.php
+new file mode 100644
+index 000000000..5439a8c47
+--- /dev/null
++++ b/modules/Calendar/calendar_event_notifyProcess.php
+@@ -0,0 +1,75 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Module\Calendar\CalendarEventNotificationProcess;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST, ['notes' => 'HTML']);
++$gibbonCalendarEventID = $_POST['gibbonCalendarEventID'] ?? '';
++$URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_view.php&gibbonCalendarEventID='.$gibbonCalendarEventID;
++
++if (empty($gibbonCalendarEventID)) {
++    $URL .= '&return=error1';
++    header("Location: {$URL}");
++    exit;
++}
++
++$criteria = $container->get(CalendarEventPersonGateway::class)->newQueryCriteria()
++            ->sortBy(['surname', 'preferredName', 'category'])
++            ->fromPOST();
++$students = $container->get(CalendarEventPersonGateway::class)->queryEventAttendees($criteria, $gibbonCalendarEventID)->toArray();
++if (empty($students)) {
++    $URL .= '&return=error1';
++    header("Location: {$URL}");
++    exit;
++}
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_edit.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} else {
++    // Proceed!
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++
++    $subject = $_POST['subject'] ?? '';
++    $notes = $_POST['notes'] ?? '';
++    $notifyGroups = $_POST['notifyGroups'] ?? [];
++    $allStaff = $_POST['allStaff'] ?? 'N';
++    $notificationList = isset($_POST['notificationList']) ? explode(',', $_POST['notificationList']) : [];
++    $gibbonPersonIDSender = $session->get('gibbonPersonID') ?? '';
++    $gibbonSchoolYearID = $session->get('gibbonSchoolYearID') ?? '';
++    $organisationEmail = $session->get('organisationEmail') ?? '';
++
++    $process = $container->get(CalendarEventNotificationProcess::class);
++    $success = $process->startNotifyStaff($gibbonCalendarEventID, $subject, $notes, $notifyGroups, $allStaff, $notificationList, $gibbonPersonIDSender, $gibbonSchoolYearID, $organisationEmail);
++
++    $URL .= !$success
++        ? "&return=warning1"
++        : "&return=success0";
++
++    header("Location: {$URL}");
++}
+diff --git a/modules/Calendar/calendar_event_participants.php b/modules/Calendar/calendar_event_participants.php
+new file mode 100644
+index 000000000..a9acf833c
+--- /dev/null
++++ b/modules/Calendar/calendar_event_participants.php
+@@ -0,0 +1,240 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Http\Url;
++use Gibbon\Services\Format;
++use Gibbon\Tables\DataTable;
++use Gibbon\Support\Facades\Access;
++use Gibbon\Forms\Prefab\BulkActionForm;
++use Gibbon\Domain\Calendar\CalendarGateway;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventTypeGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Domain\Attendance\AttendanceLogPersonGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_participants.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $gibbonCalendarEventID = $_GET['gibbonCalendarEventID'] ?? '';
++
++    $calendarGateway = $container->get(CalendarGateway::class);
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++    $calendarEventTypeGateway = $container->get(CalendarEventTypeGateway::class);
++    $attendanceLogGateway = $container->get(AttendanceLogPersonGateway::class);
++
++    $page->breadcrumbs
++        ->add(__('Manage Event'), 'calendar_event_manage.php')
++        ->add(__('Edit Participants'));
++
++    // Check required parameters
++    if (empty($gibbonCalendarEventID)) {
++        $page->addError(__('You have not specified one or more required parameters.'));
++        return;
++    }
++
++    // Get event details
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($event)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    // Check for access to edit this event
++    $canEditEvent = $event['editor'] == 'Y' && Access::allows('Calendar', 'calendar_event_edit');
++    if (!$canEditEvent && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        $page->addError(__('The selected record does not exist, or you do not have access to it.'));
++        return;
++    }
++    
++    // FORM
++    $table = DataTable::createDetails('viewEvent');
++
++    $table->addHeaderAction('view', __('View Event'))
++        ->setURL('/modules/Calendar/calendar_event_view.php')
++        ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++        ->displayLabel();
++
++    if (Access::allows('Calendar', 'calendar_event_edit') && $canEditEvent) {
++        $table->addHeaderAction('edit', __('Edit Event'))
++            ->setURL('/modules/Calendar/calendar_event_edit.php')
++            ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++            ->displayLabel();
++    }
++
++    if (Access::allows('Calendar', 'calendar_event_edit') && $canEditEvent) {
++        $table->addHeaderAction('notify', __('Notify Staff'))
++            ->setURL('/modules/Calendar/calendar_event_notify.php')
++            ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++            ->setIcon('notify')
++            ->displayLabel();
++    }
++    $table->addColumn('name', __('Event Name'))->addClass('col-span-2');
++
++    $table->addColumn('status', __('Event Status'));
++
++    $table->addColumn('dateStart', __('Date'))->format(Format::using('dateRange', ['dateStart', 'dateEnd']));
++
++    $table->addColumn('allDay', __('When'))
++        ->format(function($values) {
++            if ($values['allDay'] == 'N') return Format::timeRange($values['timeStart'], $values['timeEnd']);
++            return __('All Day');
++        });
++
++    if (!empty($event['locationType'])) {
++        $table->addColumn('location', __('Location'))->format(function($values)  {
++            if ($values['locationType'] == 'Internal') {
++                return $values['space']; 
++            }
++
++            return !empty($values['locationURL'])
++                ? Format::link($values['locationURL'], $values['locationDetail'])
++                : $values['locationDetail'];
++        });
++    }
++
++    echo $table->render([$event]);
++
++    // QUERY
++    $criteria = $calendarEventPersonGateway->newQueryCriteria()
++        ->sortBy(['roleCategory', 'surname', 'preferredName'])
++        ->fromPOST();
++
++    $participants = $calendarEventPersonGateway->queryEventAttendees($criteria, $gibbonCalendarEventID);
++
++    // Query all attendance logs for future absence records on the event date and time
++    $futureAbsences = $event['allDay'] == 'Y'
++        ? $attendanceLogGateway->selectFutureAttendanceLogsByDate($event['dateStart'], $event['dateEnd'])->fetchGroupedUnique()
++        : $attendanceLogGateway->selectFutureAttendanceLogsByDateAndTime($event['dateStart'], $event['dateEnd'], $event['timeStart'], $event['timeEnd'])->fetchGroupedUnique();
++
++    $futureAbsenceStudents = array_reduce($participants->toArray(), function ($group, $item) {
++        if ($item['roleCategory'] == 'Student') $group[] = $item['gibbonPersonID'];
++        return $group;
++    }, []);
++
++    // Find conflicts with any other events
++    $conflicts = $calendarEventPersonGateway->selectEventParticipantConflicts($gibbonCalendarEventID)->fetchGroupedUnique();
++
++    // BULK ACTION FORM
++    $form = BulkActionForm::create('bulkAction', $session->get('absoluteURL').'/modules/Calendar/calendar_event_participantsProcessBulk.php');
++    $form->addHiddenValue('gibbonCalendarEventID', $gibbonCalendarEventID);
++
++    $col = $form->createBulkActionColumn([
++        'Delete' => __('Delete'),
++    ]);
++    $col->addSubmit(__('Go'));
++
++    // DATA TABLE FOR PARTICIPANTS
++    $table = $form->addRow()->addDataTable('participants', $criteria)->withData($participants);
++    $table->setTitle(__('Participants'));
++
++    $table->addMetaData('bulkActions', $col);
++
++    if (Access::allows('Attendance', 'attendance_take_adHoc') && $canEditEvent) {
++        $table->addHeaderAction('setFutureAbsence', __('Set Future Absence'))
++            ->setURL('/modules/Attendance/attendance_future_byPerson.php')
++            ->addParams([
++                'scope'              => 'multiple',
++                'target'             => 'Select',
++                'absenceType'        => $event['allDay'] == 'Y' ? 'full' : 'partial',
++                'date'               => $event['dateStart'],
++                'dateStart'          => $event['dateStart'],
++                'dateEnd'            => $event['dateEnd'],
++                'timeStart'          => $event['timeStart'],
++                'timeEnd'            => $event['timeEnd'],
++                'gibbonPersonIDList' => implode(',', $futureAbsenceStudents),
++            ])
++            ->setIcon('user-plus')
++            ->setAttribute('target', '_blank')
++            ->displayLabel();
++    }
++
++    $table->addHeaderAction('add', __('Add Participants'))
++        ->setURL('/modules/Calendar/calendar_event_participants_add.php')
++        ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++        ->displayLabel();
++
++    $table->addColumn('image_240', __('Photo'))
++        ->context('primary')
++        ->width('7%')
++        ->notSortable()
++        ->format(Format::using('userPhoto', ['image_240', 'xs']));
++
++    $table->addColumn('name', __('Name'))
++        ->description(__('Role'))
++        ->sortable(['surname', 'preferredName'])
++        ->format(Format::using('nameLinked', ['gibbonPersonID', '', 'preferredName', 'surname', 'roleCategory', true, true]))
++        ->formatDetails(function ($values) {
++            return Format::small($values['roleCategory']);
++        });
++
++    $table->addColumn('formGroup', __('Form Group'));
++
++    $table->addColumn('role', __('Event Role'))
++        ->description(__('Added On'))
++        ->format(function ($values) {
++            $status = $values['role'] != 'Attendee' ? 'message' : 'dull';
++            return Format::tag(__($values['role']), $status);
++        })
++        ->formatDetails(function ($values) {
++            return Format::small(Format::dateTime($values['timestampCreated']));
++        });
++
++    $table->addColumn('futureAbsenceStatus', __('Future Absence'))
++        ->notSortable()
++        ->format(function ($values) use ($futureAbsences) {
++            if ($values['roleCategory'] != 'Student') return '';
++            if (isset($futureAbsences[$values['gibbonPersonID']]) && !empty($futureAbsences[$values['gibbonPersonID']])) {
++                $absenceType = $futureAbsences[$values['gibbonPersonID']]['type'] ?? '';
++                $absenceReason = $futureAbsences[$values['gibbonPersonID']]['reason'] ?? '';
++                $absenceComment = $futureAbsences[$values['gibbonPersonID']]['comment'] ?? '';
++                return Format::tag(__($absenceType), 'success', !empty($absenceComment) ? $absenceReason.': '.$absenceComment : $absenceReason  );
++            }
++            return Format::tag(__('N/A'), 'dull');
++        });
++
++    if (!empty($conflicts)) {
++        $table->addColumn('conflict', __('Status'))
++            ->format(function ($values) use ($conflicts) {
++                if (empty($conflicts[$values['gibbonPersonID']])) return '';
++
++                $conflict = $conflicts[$values['gibbonPersonID']];
++                $url = Url::fromModuleRoute('Calendar', 'calendar_event_view')->withQueryParams(['gibbonCalendarEventID' => $conflict['gibbonCalendarEventID']]);
++                return Format::link($url, Format::tag(__('Conflict'), 'warning', $conflict['event']));
++            });
++    }
++
++    // ACTIONS
++    $table->addActionColumn()
++        ->addParam('gibbonCalendarEventPersonID')
++        ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++        ->addParam('gibbonPersonID')
++        ->format(function ($event, $actions) {
++            $actions->addAction('delete', __('Delete'))
++                    ->setURL('/modules/Calendar/calendar_event_participants_delete.php');
++        });
++
++    $table->addCheckboxColumn('gibbonCalendarEventPersonID');
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_event_participantsProcessBulk.php b/modules/Calendar/calendar_event_participantsProcessBulk.php
+new file mode 100644
+index 000000000..d2ec26307
+--- /dev/null
++++ b/modules/Calendar/calendar_event_participantsProcessBulk.php
+@@ -0,0 +1,90 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Services\Format;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Support\Facades\Access;
++
++include '../../gibbon.php';
++
++$action = $_POST['action'] ?? '';
++$gibbonCalendarEventID = $_POST['gibbonCalendarEventID'] ?? '';
++
++$URL = $session->get('absoluteURL')."/index.php?q=/modules/Calendar/calendar_event_participants.php&gibbonCalendarEventID=$gibbonCalendarEventID";
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_participants.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++} else {
++    // Proceed!
++
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++
++    $attendees = $_POST['gibbonCalendarEventPersonID'] ?? [];
++
++    if (empty($action) || ($action != 'Delete')) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++        exit;
++    }
++    
++    // Check if person specified
++    if (empty($attendees)) {
++        $URL .= '&return=error3';
++        header("Location: {$URL}");
++        exit;
++    } 
++
++    // Get event details
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($event)) {
++        header("Location: {$URL}&return=error2");
++        exit;
++    } 
++
++    // Check for access to edit this event
++    if ($event['editor'] != 'Y' && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        header("Location: {$URL}&return=error0");
++        exit;
++    } 
++
++    $partialFail = false;
++    
++    foreach ($attendees AS $gibbonCalendarEventPersonID) {
++        $eventAttendee = $calendarEventPersonGateway->getByID($gibbonCalendarEventPersonID);
++       
++        if (empty($eventAttendee)) {
++            $partialFail = true;
++            continue;
++        }
++
++        if ($action == 'Delete') {
++            $calendarEventPersonGateway->delete($gibbonCalendarEventPersonID);
++        }
++    }
++
++    $URL .= $partialFail
++        ? '&return=warning1'
++        : '&return=success0';
++    header("Location: {$URL}");
++}
+diff --git a/modules/Calendar/calendar_event_participants_add.php b/modules/Calendar/calendar_event_participants_add.php
+new file mode 100644
+index 000000000..e291a77bc
+--- /dev/null
++++ b/modules/Calendar/calendar_event_participants_add.php
+@@ -0,0 +1,122 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Form;
++use Gibbon\Services\Format;
++use Gibbon\Forms\DatabaseFormFactory;
++use Gibbon\Domain\Messenger\GroupGateway;
++use Gibbon\Domain\Students\StudentGateway;
++use Gibbon\Domain\Activities\ActivityGateway;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Support\Facades\Access;
++
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_participants.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $gibbonCalendarEventID = (isset($_GET['gibbonCalendarEventID'])) ? $_GET['gibbonCalendarEventID'] : null;
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++
++    $urlParams = ['gibbonCalendarEventID' => $_GET['gibbonCalendarEventID']];
++
++    $page->breadcrumbs
++        ->add(__('Manage Activities'), 'calendar_event_manage.php')
++        ->add(__('Edit Participants'), 'calendar_event_participants.php',  $urlParams)
++        ->add(__('Add Participants'));
++
++    if (empty($gibbonCalendarEventID)) {
++        $page->addError(__('You have not specified one or more required parameters.'));
++        return;
++    }
++
++    // Get event details
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($gibbonCalendarEventID) || empty($event)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    // Check for access to edit this event
++    $canEditEvent = $event['editor'] == 'Y' && Access::allows('Calendar', 'calendar_event_edit');
++    if (!$canEditEvent && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        $page->addError(__('The selected record does not exist, or you do not have access to it.'));
++        return;
++    }
++
++    $form = Form::create('studentEnrolment', $session->get('absoluteURL').'/modules/'.$session->get('module')."/calendar_event_participants_addProcess.php?gibbonCalendarEventID=".$gibbonCalendarEventID);
++    $form->setFactory(DatabaseFormFactory::create($pdo));
++    $form->addHiddenValue('address', $session->get('address'));
++    
++    $form->setTitle(__('Choose Participant'));
++
++    $targetOptions = [
++        'Messenger'    => __('Messenger Group'),
++        'Activity' => __('Activity Enrolment'),
++        'Class'   => __('Class Enrolment'),
++        'Individual'   => __('Select Manually'),
++    ];
++
++    $row = $form->addRow();
++        $row->addLabel('target', __('Target'));
++        $row->addSelect('target')->fromArray($targetOptions)->required()->placeholder();
++
++    $form->toggleVisibilityByClass('targetActivity')->onSelect('target')->when('Activity');
++    $form->toggleVisibilityByClass('targetMessenger')->onSelect('target')->when('Messenger');
++    $form->toggleVisibilityByClass('targetClass')->onSelect('target')->when('Class');
++    $form->toggleVisibilityByClass('targetSelect')->onSelect('target')->when('Individual');
++
++    // Activity
++    $activities = $container->get(ActivityGateway::class)->selectActivitiesBySchoolYear($session->get('gibbonSchoolYearID'))->fetchKeyPair();
++    $row = $form->addRow()->addClass('targetActivity');
++        $row->addLabel('gibbonActivityID', __('Activity'));
++        $row->addSelect('gibbonActivityID')->fromArray($activities)->required()->placeholder();
++
++    // Messenger Groups
++    $groups = $container->get(GroupGateway::class)->selectGroupsBySchoolYear($session->get('gibbonSchoolYearID'))->fetchKeyPair();
++    $row = $form->addRow()->addClass('targetMessenger');
++        $row->addLabel('gibbonGroupID', __('Messenger Group'));
++        $row->addSelect('gibbonGroupID')->fromArray($groups)->required()->placeholder();
++
++    // Class Enrolments
++    $row = $form->addRow()->addClass('targetClass');
++        $row->addLabel('gibbonCourseClassID', __('Class'));
++        $row->addSelectClass('gibbonCourseClassID', $session->get('gibbonSchoolYearID'), $session->get('gibbonPersonID'))
++        ->required()
++        ->placeholder();
++
++    // Select Attendees
++    $row = $form->addRow()->addClass('targetSelect');
++        $col = $row->addColumn();
++            $col->addLabel('participants', __('Attendees'));
++            $col->addSelectUsers('participants', $session->get('gibbonSchoolYearID'), ['includeStudents' => true, 'useMultiSelect' => true])
++                ->required()
++                ->mergeGroupings();
++
++    $row = $form->addRow();
++        $row->addFooter();
++        $row->addSubmit();
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_event_participants_addProcess.php b/modules/Calendar/calendar_event_participants_addProcess.php
+new file mode 100644
+index 000000000..4edd1fe08
+--- /dev/null
++++ b/modules/Calendar/calendar_event_participants_addProcess.php
+@@ -0,0 +1,142 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Comms\NotificationEvent;
++use Gibbon\Domain\Messenger\GroupGateway;
++use Gibbon\Domain\Activities\ActivityGateway;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Domain\Timetable\CourseClassGateway;
++use Gibbon\Support\Facades\Access;
++
++include '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST);
++
++$gibbonCalendarEventID = $_GET['gibbonCalendarEventID'] ?? '';
++$URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_participants.php&gibbonCalendarEventID='.$gibbonCalendarEventID;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_participants.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++} else {
++    // Proceed
++    $target = $_POST['target'] ?? '';
++    $gibbonActivityID = $_POST['gibbonActivityID'] ?? '';
++    $gibbonGroupID = $_POST['gibbonGroupID'] ?? '';
++    $gibbonCourseClassID = $_POST['gibbonCourseClassID'] ?? '';
++    $gibbonPersonIDList = $_POST['participants'] ?? [];
++    $foreignTable = '';
++    
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++    
++    // Get event details
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($event)) {
++        header("Location: {$URL}&return=error2");
++        exit;
++    } 
++
++    // Check for access to edit this event
++    if ($event['editor'] != 'Y' && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        header("Location: {$URL}&return=error0");
++        exit;
++    } 
++
++    // Check if required values are specified
++    if (empty($target)) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++        exit;
++    }
++
++    switch ($target) {
++        case 'Activity':
++            if ($container->get(ActivityGateway::class)->exists($gibbonActivityID)) {
++                $foreignTable = 'gibbonActivity';
++                $targetID = $gibbonActivityID;
++            }
++            break;
++        case 'Messenger':
++            if ($container->get(GroupGateway::class)->getByID($gibbonGroupID)) {
++                $targetID = $gibbonGroupID;
++                $foreignTable = 'gibbonGroup';
++            };
++            break;
++        case 'Class':
++            if ($container->get(CourseClassGateway::class)->getByID($gibbonCourseClassID)) {
++                $targetID = $gibbonCourseClassID;
++                $foreignTable = 'gibbonCourseClass';
++            };
++            break;
++        case 'Individual':
++            $targetID = $gibbonPersonIDList;
++            break;
++    }
++
++    if (empty($targetID)) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++        exit;
++    }
++
++    // Get all the participants from the selected target
++    $participants = $calendarEventPersonGateway->selectTargetParticipants($session->get('gibbonSchoolYearID'), $target, $targetID)->fetchAll();
++    
++    $gibbonPersonIDs = array_column($participants, 'gibbonPersonID');
++    
++    if (empty($gibbonPersonIDs)) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++        exit;
++    }
++
++    $partialFail = false;
++
++    foreach ($gibbonPersonIDs as $gibbonPersonID) {
++        $data = [
++            'gibbonCalendarEventID' => $gibbonCalendarEventID,
++            'gibbonPersonID'        => $gibbonPersonID,
++            'role'                  => 'Attendee',
++            'timestampCreated'      => date('Y-m-d H:i:s'),
++            'timestampModified'     => date('Y-m-d H:i:s'),
++            'gibbonPersonIDCreated'   => $session->get('gibbonPersonID'),
++            'gibbonPersonIDModified'   => $session->get('gibbonPersonID'),            
++        ];
++
++        $inserted = $calendarEventPersonGateway->insertAndUpdate($data, $data);
++        $partialFail &= !$inserted;
++    }
++
++    if (!($target == 'Individual')) {
++        $calendarEventGateway = $container->get(CalendarEventGateway::class);
++        $data = ['foreignTable' => $foreignTable, 'foreignTableID' => $targetID];
++        $partialFail &= !$calendarEventGateway->update($gibbonCalendarEventID, $data);
++    }
++
++    $URL .= $partialFail
++        ? '&return=warning1'
++        : '&return=success0';
++
++    header("Location: {$URL}");
++}
+diff --git a/modules/Calendar/calendar_event_participants_delete.php b/modules/Calendar/calendar_event_participants_delete.php
+new file mode 100644
+index 000000000..ea0017b06
+--- /dev/null
++++ b/modules/Calendar/calendar_event_participants_delete.php
+@@ -0,0 +1,72 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Prefab\DeleteForm;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Support\Facades\Access;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_participants_delete.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++
++    // Check if gibbonCalendarEventID and gibbonPersonID specified
++    $gibbonPersonID = $_GET['gibbonPersonID'] ?? '';
++    $gibbonCalendarEventID = $_GET['gibbonCalendarEventID'] ?? '';
++    $gibbonCalendarEventPersonID = $_GET['gibbonCalendarEventPersonID'] ?? '';
++    if ($gibbonCalendarEventPersonID == '' or $gibbonCalendarEventID == '' or $gibbonPersonID == '') {
++        $page->addError(__('You have not specified one or more required parameters.'));
++    } else {
++        // Let's go!
++        $participant = $container->get(CalendarEventPersonGateway::class)->getByID($gibbonCalendarEventPersonID);
++
++        // Get event details
++        $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++        if (empty($gibbonCalendarEventID) || empty($event)) {
++            $page->addError(__('The specified record cannot be found.'));
++            return;
++        }
++
++        // Check for access to edit this event
++        $canEditEvent = $event['editor'] == 'Y' && Access::allows('Calendar', 'calendar_event_edit');
++        if (!$canEditEvent && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++            $page->addError(__('The selected record does not exist, or you do not have access to it.'));
++            return;
++        }
++        
++        if (empty($participant)) {
++            $page->addError(__('The specified record cannot be found.'));
++            return;
++        }
++        
++        $form = DeleteForm::createForm($session->get('absoluteURL').'/modules/Calendar/calendar_event_participants_deleteProcess.php', false, false);
++        $form->addHiddenValue('gibbonCalendarEventPersonID', $gibbonCalendarEventPersonID);
++        $form->addHiddenValue('gibbonPersonID', $gibbonPersonID);
++        $form->addHiddenValue('gibbonCalendarEventID', $gibbonCalendarEventID);
++
++        $form->addRow()->addConfirmSubmit();
++        echo $form->getOutput();
++    }
++}
++?>
+diff --git a/modules/Calendar/calendar_event_participants_deleteProcess.php b/modules/Calendar/calendar_event_participants_deleteProcess.php
+new file mode 100644
+index 000000000..8078f13c5
+--- /dev/null
++++ b/modules/Calendar/calendar_event_participants_deleteProcess.php
+@@ -0,0 +1,74 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Support\Facades\Access;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST);
++
++$gibbonCalendarEventPersonID = $_POST['gibbonCalendarEventPersonID'] ?? '';
++$gibbonCalendarEventID = $_POST['gibbonCalendarEventID'] ?? '';
++
++$URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_event_participants.php&gibbonCalendarEventID='.$gibbonCalendarEventID;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_participants_delete.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} elseif (empty($gibbonCalendarEventPersonID)) {
++    $URL .= '&return=error1';
++    header("Location: {$URL}");
++    exit;
++} else {
++    // Proceed!
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++    
++    // Get event details
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($event)) {
++        header("Location: {$URL}&return=error2");
++        exit;
++    } 
++
++    // Check for access to edit this event
++    if ($event['editor'] != 'Y' && !Access::allows('Calendar', 'calendar_event_edit', 'Manage Events_all')) {
++        header("Location: {$URL}&return=error0");
++        exit;
++    } 
++
++    // Validate the database relationships exist
++    if (!$calendarEventPersonGateway->exists($gibbonCalendarEventPersonID)) {
++        $URL .= '&return=error2';
++        header("Location: {$URL}");
++        exit;
++    }
++
++    $deleted = $calendarEventPersonGateway->delete($gibbonCalendarEventPersonID);
++
++    $URL .= !$deleted
++        ? '&return=error2'
++        : '&return=success0';
++
++    header("Location: {$URL}");
++}
+diff --git a/modules/Calendar/calendar_event_view.php b/modules/Calendar/calendar_event_view.php
+new file mode 100644
+index 000000000..46b2f0c19
+--- /dev/null
++++ b/modules/Calendar/calendar_event_view.php
+@@ -0,0 +1,149 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Services\Format;
++use Gibbon\Tables\DataTable;
++use Gibbon\Support\Facades\Access;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++
++if (!isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_event_view.php')) {
++	$page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $page->breadcrumbs
++        ->add(__('Manage Events'), 'calendar_event_manage.php')
++        ->add(__('View Event'));
++
++    $gibbonCalendarEventID = $_GET['gibbonCalendarEventID'] ?? '';
++
++    $calendarEventGateway = $container->get(CalendarEventGateway::class);
++    $calendarEventPersonGateway = $container->get(CalendarEventPersonGateway::class);
++
++    // Get event details
++    $event = $calendarEventGateway->getEventDetailsByID($gibbonCalendarEventID, $session->get('gibbonPersonID'));
++    if (empty($gibbonCalendarEventID) || empty($event)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    $canEditEvent = $event['editor'] == 'Y' && Access::allows('Calendar', 'calendar_event_edit');
++
++    // DATA TABLE TO VIEW EVENT DETAILS
++    $table = DataTable::createDetails('viewEvent');
++
++    $table->setTitle(__('View'));
++
++    if ($canEditEvent) {
++        $table->addHeaderAction('edit', __('Edit Event'))
++            ->setURL('/modules/Calendar/calendar_event_edit.php')
++            ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++            ->displayLabel();
++
++        $table->addHeaderAction('notify', __('Notify Staff'))
++            ->setURL('/modules/Calendar/calendar_event_notify.php')
++            ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++            ->setIcon('notify')
++            ->displayLabel();
++    }
++
++    $table->addColumn('name', __('Event Name'))->addClass('col-span-2');
++
++    $table->addColumn('status', __('Event Status'));
++
++    $table->addColumn('calendarName', __('Calendar'));
++
++    $table->addColumn('eventType', __('Event Type'));
++
++    $table->addColumn('organiser', __('Organiser'))
++        ->format(Format::using('nameLinked', ['gibbonPersonIDOrganiser', '', 'organiserPreferredName', 'organiserSurname', 'Staff', false, true]));
++
++    if (!empty($event['description'])) {
++        $table->addColumn('description', __('Description'))->addClass('col-span-3');
++    }
++
++    $col = $table->addColumn('Event Details', __('Event Details'));
++
++    $col->addColumn('dateStart', __('Date'))->format(Format::using('dateRange', ['dateStart', 'dateEnd']));
++
++    $col->addColumn('allDay', __('When'))
++        ->format(function($values) {
++            if ($values['allDay'] == 'N') return Format::timeRange($values['timeStart'], $values['timeEnd']);
++            return __('All Day');
++        });
++
++    if (!empty($event['locationType'])) {
++        $col->addColumn('location', __('Location'))->format(function($values)  {
++            if ($values['locationType'] == 'Internal') {
++                return $values['space']; 
++            }
++
++            return !empty($values['locationURL'])
++                ? Format::link($values['locationURL'], $values['locationDetail'])
++                : $values['locationDetail'];
++        });
++    }
++
++    echo $table->render([$event]);
++
++    // QUERY FOR DATATABLE
++    $criteria = $calendarEventPersonGateway->newQueryCriteria()
++        ->sortBy('role', 'DESC')
++        ->sortBy(['roleCategory', 'surname', 'preferredName'])
++        ->fromPOST();
++        
++    $participants = $calendarEventPersonGateway->queryAllEventParticipants($criteria, $gibbonCalendarEventID);
++
++    // DATA TABLE FOR ALL PARTICIPANTS
++    $table = DataTable::createPaginated('participants', $criteria)->withData($participants);
++    $table->setTitle(__('All Participants & Staff'));
++
++    if ($canEditEvent && Access::allows('Calendar', 'calendar_event_participants')) {
++        $table->addHeaderAction('participants', __('Edit Participants'))
++            ->setURL('/modules/Calendar/calendar_event_participants.php')
++            ->addParam('gibbonCalendarEventID', $gibbonCalendarEventID)
++            ->setIcon('attendance')
++            ->displayLabel();
++    }
++
++    $table->addColumn('image_240', __('Photo'))
++        ->context('primary')
++        ->width('7%')
++        ->notSortable()
++        ->format(Format::using('userPhoto', ['image_240', 'xs']));
++
++    $table->addColumn('name', __('Name'))
++        ->sortable(['surname', 'preferredName'])
++        ->format(Format::using('nameLinked', ['gibbonPersonID', '', 'preferredName', 'surname', 'roleCategory', true, true]));
++
++    $table->addColumn('roleCategory', __('Role'));
++
++    $table->addColumn('formGroup', __('Form Group'));
++
++    $table->addColumn('role', __('Event Role'))
++        ->format(function ($values) {
++            $status = $values['role'] != 'Attendee' ? 'message' : 'dull';
++            return Format::tag(__($values['role']), $status);
++        });
++
++    echo $table->getOutput();
++}
++?>
+diff --git a/modules/Calendar/calendar_manage.php b/modules/Calendar/calendar_manage.php
+new file mode 100644
+index 000000000..dad3fb72d
+--- /dev/null
++++ b/modules/Calendar/calendar_manage.php
+@@ -0,0 +1,113 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Tables\DataTable;
++use Gibbon\Domain\Calendar\CalendarGateway;
++use Gibbon\Services\Format;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_manage.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $page->breadcrumbs->add(__('Manage Calendars'));
++
++    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
++    $page->navigator->addSchoolYearNavigation($gibbonSchoolYearID);
++
++    $calendarGateway = $container->get(CalendarGateway::class);
++
++    $criteria = $calendarGateway->newQueryCriteria()
++        ->sortBy('sequenceNumber')
++        ->fromPOST();
++
++    $calendars = $calendarGateway->queryCalendars($criteria, $gibbonSchoolYearID);
++
++    // DATA TABLE
++    $table = DataTable::createPaginated('calendars', $criteria);
++
++    $table->addHeaderAction('add', __('Add'))
++        ->setURL('/modules/Calendar/calendar_manage_addEdit.php')
++        ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
++        ->displayLabel();
++
++    $table->addHeaderAction('editTypes', __('Event Types'))
++        ->setURL('/modules/Calendar/calendar_eventTypes_manage.php')
++        ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
++        ->setIcon('squares-plus')
++        ->displayLabel();
++
++    // COLUMNS
++    $table->addDraggableColumn('gibbonCalendarID', $session->get('absoluteURL').'/modules/Calendar/calendar_manage_orderAjax.php');
++
++    $table->addColumn('color', __('Colour'))
++        ->width('6%')
++        ->format(function ($values) {
++            return !empty($values['color'])? Format::colorSwatch($values['color']) : '';
++        });
++
++    $table->addColumn('name', __('Name'));
++
++    $table->addColumn('description', __('Description'));
++
++    $table->addColumn('public', __('Public'))
++        ->format(function ($values) {
++            return $values['public'] == 'Y' 
++                ? Format::tag(__('Yes'), 'success')
++                : Format::tag(__('No'), 'dull');
++        });
++
++    $table->addColumn('viewable', __('Viewable'))
++        ->notSortable()
++        ->format(function ($values) {
++            $viewable = [];
++            if ($values['public'] == 'Y') return __('All');
++            if ($values['viewableParticipants'] == 'Y') $viewable[] = __('Participants');
++            if ($values['viewableStaff'] == 'Y') $viewable[] = __('Staff');
++            if ($values['viewableStudents'] == 'Y') $viewable[] = __('Students');
++            if ($values['viewableParents'] == 'Y') $viewable[] = __('Parents');
++            if ($values['viewableOther'] == 'Y') $viewable[] = __('Other');
++
++            return !empty($viewable) 
++                ? implode(', ', $viewable)
++                : Format::tag(__('No'), 'dull');
++        });
++
++    $table->addColumn('editors', __('Editors'))
++        ->format(function ($values) {
++            if ($values['editableStaff'] == 'Y') return __('All Staff');
++
++            return $values['editors'];
++        });
++
++    $table->addActionColumn()
++        ->addParam('gibbonCalendarID')
++        ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
++        ->format(function ($row, $actions) {
++            $actions->addAction('edit', __('Edit'))
++                ->setURL('/modules/Calendar/calendar_manage_addEdit.php');
++
++            $actions->addAction('delete', __('Delete'))
++                ->setURL('/modules/Calendar/calendar_manage_delete.php');
++        });
++
++    echo $table->render($calendars);
++}
+diff --git a/modules/Calendar/calendar_manage_addEdit.php b/modules/Calendar/calendar_manage_addEdit.php
+new file mode 100755
+index 000000000..a77f1d003
+--- /dev/null
++++ b/modules/Calendar/calendar_manage_addEdit.php
+@@ -0,0 +1,144 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Forms\Form;
++use Gibbon\Forms\DatabaseFormFactory;
++use Gibbon\Domain\Calendar\CalendarGateway;
++use Gibbon\Domain\Calendar\CalendarEditorGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_manage_addEdit.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
++    $gibbonCalendarID = $_GET['gibbonCalendarID'] ?? '';
++    $action = !empty($gibbonCalendarID)? 'edit' : 'add';
++
++    $page->breadcrumbs
++        ->add(__('Manage Calendars'), 'calendar_manage.php')
++        ->add($action == 'edit' ? __('Edit Calendar') : __('Add Calendar'));
++
++    if (empty($gibbonCalendarID) && isset($_GET['editID'])) {
++        $page->return->setEditLink($session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_manage_addEdit.php&gibbonCalendarID='.$_GET['editID']);
++    }
++    
++    $calendarGateway = $container->get(CalendarGateway::class);
++    $values = $calendarGateway->getByID($gibbonCalendarID);
++
++    if (!empty($gibbonCalendarID) && empty($values)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    // FORM
++    $form = Form::create('calendar', $session->get('absoluteURL').'/modules/Calendar/calendar_manage_addEditProcess.php');
++    $form->setFactory(DatabaseFormFactory::create($pdo));
++    $form->addMeta()->addDefaultContent($action);
++    $form->enableQuickSave($action == 'edit');
++
++    $form->addHiddenValue('address', $session->get('address'));
++    $form->addHiddenValue('gibbonCalendarID', $gibbonCalendarID);
++    $form->addHiddenValue('gibbonSchoolYearID', $gibbonSchoolYearID);
++
++    $form->addRow()->addHeading(__('Basic Details'));
++
++    $row = $form->addRow();
++        $row->addLabel('name', __('Name'))->description(__('Must be unique for this school year.'));
++        $row->addTextField('name')->required()->maxLength(60);
++
++    $row = $form->addRow();
++        $row->addLabel('description', __('Description'));
++        $row->addTextField('description')->maxLength(255);
++        
++    $row = $form->addRow();
++        $row->addLabel('color', __('Colour'));
++        $row->addColor('color')->setPalette('background');
++        
++    // ACCESS
++    $form->addRow()->addHeading(__('Access'));
++
++    $form->toggleVisibilityByClass('viewable')->onRadio('public')->when('N');
++    $row = $form->addRow();
++        $row->addLabel('public', __('Public'))->description(__('If yes, members of the public can see events on this calendar without logging in.'));
++        $row->addYesNo('public')->selected('N');
++
++    $row = $form->addRow()->addClass('viewable');
++        $row->addLabel('viewableParticipants', __('Viewable by Participants'))->description(__('If yes, participants can always see events they have been added to, regardless of other permissions.'));
++        $row->addYesNo('viewableParticipants')->selected('Y');
++
++    $row = $form->addRow()->addClass('viewable');
++        $row->addLabel('viewableStaff', __('Viewable by Staff'));
++        $row->addYesNo('viewableStaff')->selected('N');
++
++    $row = $form->addRow()->addClass('viewable');
++        $row->addLabel('viewableStudents', __('Viewable by Students'));
++        $row->addYesNo('viewableStudents')->selected('N');
++
++    $row = $form->addRow()->addClass('viewable');
++        $row->addLabel('viewableParents', __('Viewable by Parents'));
++        $row->addYesNo('viewableParents')->selected('N');
++
++    $row = $form->addRow()->addClass('viewable');
++        $row->addLabel('viewableOther', __('Viewable by Other'));
++        $row->addYesNo('viewableOther')->selected('N');
++
++
++    // EDITORS
++    $form->addRow()->addHeading(__('Editors'));
++
++    $row = $form->addRow();
++        $row->addLabel('editableStaff', __('All Staff'))->description(__('Staff can add and edit their own events. They cannot edit other events without editor access.'));
++        $row->addYesNo('editableStaff')->selected('N');
++    
++
++    // Custom Block Template
++    $addBlockButton = $form->getFactory()->createButton(__m('Add'))->addClass('addBlock');
++
++    $blockTemplate = $form->getFactory()->createTable()->setClass('blank');
++    $row = $blockTemplate->addRow()->addClass('w-full max-w-lg flex justify-between items-center mt-1 ml-2');
++        $row->addSelectStaff('gibbonPersonID')->photo(false)->setClass('flex-1 mr-1')->required()->placeholder();
++        $row->addCheckbox('editAllEvents')->setLabelClass('w-32')->alignLeft()->setValue('Y')->description(__('Edit All Events?'))
++            ->append("<input type='hidden' id='gibbonCalendarEditorID' name='gibbonCalendarEditorID' value=''/>");
++
++    // Custom Blocks
++    $col = $form->addRow()->addColumn();
++    $col->addLabel('editors', __('Editors'));
++    $customBlocks = $col->addCustomBlocks('editors', $session)
++        ->fromTemplate($blockTemplate)
++        ->settings(array('inputNameStrategy' => 'object', 'addOnEvent' => 'click'))
++        ->placeholder(__('Add a person...'))
++        ->addToolInput($addBlockButton);
++
++    $editors = $container->get(CalendarEditorGateway::class)->selectEditorsByCalendar($gibbonCalendarID);
++    while ($person = $editors->fetch()) {
++        $customBlocks->addBlock($person['gibbonCalendarEditorID'], [
++            'gibbonCalendarEditorID' => $person['gibbonCalendarEditorID'],
++            'gibbonPersonID'         => $person['gibbonPersonID'],
++            'editAllEvents'          => $person['editAllEvents'] ?? 'N',
++        ]);
++    }
++
++    $row = $form->addRow();
++        $row->addSubmit();
++
++    $form->loadAllValuesFrom($values);
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_manage_addEditProcess.php b/modules/Calendar/calendar_manage_addEditProcess.php
+new file mode 100755
+index 000000000..5ba822d47
+--- /dev/null
++++ b/modules/Calendar/calendar_manage_addEditProcess.php
+@@ -0,0 +1,117 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Services\Format;
++use Gibbon\Domain\Calendar\CalendarGateway;
++use Gibbon\Domain\Calendar\CalendarEditorGateway;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST, ['summary' => 'HTML']);
++
++$gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
++$gibbonCalendarID = $_REQUEST['gibbonCalendarID'] ?? null;
++
++$URL = $session->get('absoluteURL')."/index.php?q=/modules/Calendar/calendar_manage_addEdit.php&gibbonSchoolYearID=$gibbonSchoolYearID&gibbonCalendarID=$gibbonCalendarID";
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_manage_addEdit.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} else {
++    // Proceed!
++    $partialFail = false;
++
++    $calendarGateway = $container->get(CalendarGateway::class);
++    $editorGateway = $container->get(CalendarEditorGateway::class);
++
++    $data = [
++        'gibbonSchoolYearID'   => $gibbonSchoolYearID,
++        'name'                 => $_POST['name'] ?? '',
++        'description'          => $_POST['description'] ?? '',
++        'color'                => $_POST['color'] ?? '',
++        'summary'              => $_POST['summary'] ?? '',
++        'public'               => $_POST['public'] ?? 'N',
++        'viewableStaff'        => $_POST['viewableStaff'] ?? 'N',
++        'viewableStudents'     => $_POST['viewableStudents'] ?? 'N',
++        'viewableParents'      => $_POST['viewableParents'] ?? 'N',
++        'viewableOther'        => $_POST['viewableOther'] ?? 'N',
++        'viewableParticipants' => $_POST['viewableParticipants'] ?? 'N',
++        'editableStaff'        => $_POST['editableStaff'] ?? 'N',
++    ];
++
++    // Validate the required values are present
++    if (empty($data['name'])) {
++        $URL .= '&return=error1';
++        header("Location: {$URL}");
++        exit;
++    }
++
++    // Validate that this record is unique
++    if (!$calendarGateway->unique($data, ['name', 'gibbonSchoolYearID'], $gibbonCalendarID)) {
++        $URL .= '&return=error7';
++        header("Location: {$URL}");
++        exit;
++    }
++
++    // Create the record
++    if (!empty($gibbonCalendarID)) {
++        $calendarGateway->update($gibbonCalendarID, $data);
++    } else {
++        $gibbonCalendarID = $calendarGateway->insert($data);
++    }
++
++    if (empty($gibbonCalendarID)) {
++        $URL .= "&return=error2";
++        header("Location: {$URL}");
++        exit;
++    }
++
++    // Update the editors
++    $editors = $_POST['editors'] ?? '';
++    $editorIDs = [];
++    foreach ($editors as $person) {
++        $editorData = [
++            'gibbonCalendarID' => $gibbonCalendarID,
++            'gibbonPersonID'   => $person['gibbonPersonID'],
++            'editAllEvents'    => $person['editAllEvents'] ?? 'N',
++        ];
++
++        $gibbonCalendarEditorID = $person['gibbonCalendarEditorID'] ?? '';
++
++        if (!empty($gibbonCalendarEditorID)) {
++            $partialFail &= !$editorGateway->update($gibbonCalendarEditorID, $editorData);
++        } else {
++            $gibbonCalendarEditorID = $editorGateway->insert($editorData);
++            $partialFail &= !$gibbonCalendarEditorID;
++        }
++
++        $editorIDs[] = str_pad($gibbonCalendarEditorID, 10, '0', STR_PAD_LEFT);
++    }
++
++    // Cleanup editor that have been deleted
++    $editorGateway->deleteEditorsNotInList($gibbonCalendarID, $editorIDs);
++
++    $URL .= $partialFail
++        ? "&return=warning1"
++        : "&return=success0&editID=$gibbonCalendarID";
++
++    header("Location: {$URL}");
++}
+diff --git a/modules/Calendar/calendar_manage_delete.php b/modules/Calendar/calendar_manage_delete.php
+new file mode 100644
+index 000000000..606c41042
+--- /dev/null
++++ b/modules/Calendar/calendar_manage_delete.php
+@@ -0,0 +1,47 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Services\Format;
++use Gibbon\Forms\Prefab\DeleteForm;
++use Gibbon\Domain\Calendar\CalendarGateway;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_manage_delete.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $gibbonCalendarID = $_GET['gibbonCalendarID'] ?? '';
++
++    if (empty($gibbonCalendarID)) {
++        $page->addError(__('You have not specified one or more required parameters.'));
++        return;
++    }
++
++    $values = $container->get(CalendarGateway::class)->getByID($gibbonCalendarID);
++
++    if (empty($values)) {
++        $page->addError(__('The specified record cannot be found.'));
++        return;
++    }
++
++    $form = DeleteForm::createForm($session->get('absoluteURL').'/modules/Calendar/calendar_manage_deleteProcess.php', true, false);
++    $form->addRow()->addConfirmSubmit();
++
++    echo $form->getOutput();
++}
+diff --git a/modules/Calendar/calendar_manage_deleteProcess.php b/modules/Calendar/calendar_manage_deleteProcess.php
+new file mode 100755
+index 000000000..90e602f29
+--- /dev/null
++++ b/modules/Calendar/calendar_manage_deleteProcess.php
+@@ -0,0 +1,57 @@
++<?php
++/*
++Gibbon, Flexible & Open School System
++Copyright (C) 2010, Ross Parker
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Data\Validator;
++use Gibbon\Domain\Calendar\CalendarGateway;
++
++require_once '../../gibbon.php';
++
++$_POST = $container->get(Validator::class)->sanitize($_POST);
++
++$gibbonCalendarID = $_POST['gibbonCalendarID'] ?? '';
++
++$URL = $session->get('absoluteURL').'/index.php?q=/modules/Calendar/calendar_manage.php';
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_manage_delete.php') == false) {
++    $URL .= '&return=error0';
++    header("Location: {$URL}");
++    exit;
++} elseif (empty($gibbonCalendarID)) {
++    $URL .= '&return=error1';
++    header("Location: {$URL}");
++    exit;
++  } else {
++    // Proceed!
++    $calendarGateway = $container->get(CalendarGateway::class);
++
++    // Validate the database relationships exist
++    if (!$calendarGateway->exists($gibbonCalendarID)) {
++        $URL .= '&return=error2';
++        header("Location: {$URL}");
++        exit;
++    }
++
++    $deleted = $calendarGateway->delete($gibbonCalendarID);
++
++    $URL .= !$deleted
++        ? '&return=error2'
++        : '&return=success0';
++
++    header("Location: {$URL}");
++}
+\ No newline at end of file
+diff --git a/modules/Calendar/calendar_manage_orderAjax.php b/modules/Calendar/calendar_manage_orderAjax.php
+new file mode 100644
+index 000000000..f195967e6
+--- /dev/null
++++ b/modules/Calendar/calendar_manage_orderAjax.php
+@@ -0,0 +1,45 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Domain\Calendar\CalendarGateway;
++
++$_POST['address'] = '/modules/Calendar/calendar_manage.php';
++
++require_once '../../gibbon.php';
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_manage.php') == false) {
++    exit;
++} else {
++    // Proceed!
++    $order = $_POST['order'] ?? [];
++
++    if (empty($order)) {
++        exit;
++    }
++
++    $calendarGateway = $container->get(CalendarGateway::class);
++
++    $count = 1;
++    foreach ($order as $gibbonCalendarID) {
++        $updated = $calendarGateway->update($gibbonCalendarID, ['sequenceNumber' => $count]);
++        $count++;
++    }
++}
+diff --git a/modules/Calendar/calendar_view.php b/modules/Calendar/calendar_view.php
+new file mode 100644
+index 000000000..551479a02
+--- /dev/null
++++ b/modules/Calendar/calendar_view.php
+@@ -0,0 +1,202 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Support\Facades\Access;
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_view.php') == false) {
++    // Access denied
++    $page->addError(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++    $page->breadcrumbs->add(__('View Calendar'));
++
++    echo '<div id="calendar"></div>';
++    
++    $canViewEvents = Access::allows('Calendar', 'calendar_event_view');
++    $canAddEvents = Access::allows('Calendar', 'calendar_event_add');
++
++    // Set the first day of the week based on system settings
++    $firstDayOfTheWeek = $session->get('firstDayOfTheWeek', 'Sunday');
++    $firstDay = $firstDayOfTheWeek == 'Monday' ? 1 : ($firstDayOfTheWeek == 'Saturday' ? 6 : 0);
++
++    // Set the ltr or rtl text direction
++    $i18n = $session->get('i18n');
++    $direction = $i18n['rtl'] == 'Y' ? 'rtl' : 'ltr';
++
++    // See if a locale file exists for the users locale and load it if possible
++    $localeFull = strtolower(str_replace('_', '-', $i18n['code'] ?? 'en'));
++    $localeShort = substr($localeFull, 0, 2);
++    
++    $localeFileFull = "/lib/fullcalendar/packages/locales/{$localeFull}.global.min.js";
++    $localeFileShort = "/lib/fullcalendar/packages/locales/{$localeShort}.global.min.js";
++
++    // First see if a full locale exists, otherwise fallback to two-char locale
++    if (file_exists($session->get('absolutePath').$localeFileFull)) {
++        $localeFile = $session->get('absoluteURL').$localeFileFull;
++        $locale = $localeFull;
++    } elseif (file_exists($session->get('absolutePath').$localeFileShort)) {
++        $localeFile = $session->get('absoluteURL').$localeFileShort;
++        $locale = $localeShort;
++    } else {
++        $localeFile = '';
++        $locale = 'en';
++    }
++}
++?>
++
++<script src="<?= $session->get('absoluteURL'); ?>/lib/fullcalendar/dist/index.global.min.js" type="text/javascript"></script>
++<?= !empty($localeFile) ? '<script src="'.$localeFile.'" type="text/javascript"></script>' : '' ?>
++
++<script type="text/javascript">
++
++    function setupCalendar() {
++        if (!(typeof FullCalendar === 'object')) window.location.reload();
++        
++        var calendarEl = document.getElementById('calendar');
++        var calendar = new FullCalendar.Calendar(calendarEl, {
++            timeZone: 'UTC',
++            editable: false,
++            selectable: true,
++            businessHours: true,
++            dayMaxEvents: true, 
++
++            firstDay: <?= $firstDay ?>,
++            direction: '<?= $direction ?>',
++            locale: '<?= $locale ?>',
++
++            headerToolbar: window.innerWidth < 765 ? {
++                start: 'title',
++                center: window.innerWidth > 500 ? 'dayGridMonth,listMonth' : '',
++                end: 'prev,next today',
++            } : {
++                start: 'prev,next today',
++                center: 'title',
++                end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
++            },
++            eventSources: [
++                {
++                    url: '<?= $session->get('absoluteURL') ?>/modules/Calendar/calendar_viewInternal.php',
++                },
++            ],
++
++            initialView: window.innerWidth < 765 ? 'listMonth' : 'dayGridMonth',
++            navLinks: true, 
++            selectable: <?= $canAddEvents ? 'true' : 'false' ?>,
++            selectMirror: true,
++
++            <?php if ($canAddEvents) { ?>
++            select: function(info) {
++                htmx.ajax('GET', '<?= $session->get('absoluteURL'); ?>/fullscreen.php?q=/modules/Calendar/calendar_event_add.php', {
++                    target: '#modalContent',
++                    values: {
++                        source: 'ajax',
++                        start: info.start.toISOString(),
++                        end: info.end.toISOString(),
++                        allDay: info.allDay
++                    }
++                }).then(() => {
++                    document.body.dispatchEvent(new CustomEvent('modalwindow', { bubbles: true, detail: 'delete'}));
++                });
++
++                calendar.unselect()
++            },
++            <?php } ?>
++
++            <?php if ($canViewEvents) { ?>
++            eventClick: function(info) {
++                htmx.ajax('GET', '<?= $session->get('absoluteURL'); ?>/fullscreen.php?q=/modules/Calendar/calendar_event_view.php', {
++                    target: '#modalContent',
++                    values: {
++                        source: 'ajax',
++                        gibbonCalendarEventID: info.event.id,
++                    }
++                }).then(() => {
++                    document.body.dispatchEvent(new CustomEvent('modalwindow', { bubbles: true, detail: 'full'}));
++                });
++            },
++            <?php } ?>
++
++            eventDidMount: function(info) {
++                var tooltipContent = `
++                <div class='w-80 flex flex-col py-2 gap-1 overflow-hidden'>
++                    <div class='px-2 pb-1'>
++                        <div class='flex justify-between leading-normal'>
++                            <span class='font-semibold text-sm'>${info.event.title}</span>
++                            <span class='tag ml-2 text-xxs h-5 border-0 outline outline-1 ' style='${info.event.extendedProps.palette.style} ${info.event.extendedProps.palette.textStyle}'>${info.event.extendedProps.type}</span>
++                        </div>
++                        <div class='font-normal mt-1'>${info.event.extendedProps.description}</div>
++                    </div>
++                    
++                    <div class='px-2 pt-2 border-t flex justify-between leading-relaxed'>
++                        <div><?= icon('outline', 'clock', 'size-4 text-gray-600 inline align-middle mr-1', ['stroke-width' => 2.4]) ?> 
++                        ${info.event.extendedProps.timeRange}
++                        </div>
++                    </div>
++
++                    <div class='px-2 flex justify-between leading-relaxed'>
++                        <div><?= icon('solid', 'calendar', 'size-4 text-gray-600 inline align-middle mr-1', ['stroke-width' => 2.4]) ?> 
++                        ${info.event.extendedProps.calendar}
++                        </div>
++                    </div>
++                `;
++
++                if (info.event.extendedProps.locationType == 'Internal' && info.event.extendedProps.location) {
++                tooltipContent += `
++                    <div class='px-2 flex justify-between leading-relaxed'>
++                        <div>
++                            <?= icon('solid', 'map-pin', 'size-4 text-gray-600 inline align-middle mr-1') ?> ${info.event.extendedProps.location} 
++                        </div>
++                        <div><?= icon('solid', 'phone', 'size-4 text-gray-600 inline align-middle mr-1') ?> ${info.event.extendedProps.phone}</div>
++                    </div>
++                `;
++                } else if (info.event.extendedProps.location) {
++                    tooltipContent += `
++                    <div class='px-2 flex justify-between leading-relaxed'>
++                        <div>
++                            <?= icon('solid', 'map-pin', 'size-4 text-gray-600 inline align-middle mr-1') ?> ${info.event.extendedProps.location} 
++                        </div>
++                    </div>
++                `;
++                }
++
++                tooltipContent += `
++                </div>
++                `;
++
++                info.el.setAttribute('x-tooltip.white', tooltipContent);
++            },
++                    
++        });
++
++        calendar.render();
++    }
++
++    setupCalendar();
++
++    // Force a reload after htmx swaps to the same page
++    document.addEventListener('htmx:beforeOnLoad', function (event) {
++        if (event.detail.pathInfo.finalRequestPath.includes('calendar_view')) {
++            window.location.reload();
++            event.preventDefault();
++        }
++    }, { once: true });
++
++</script>
+diff --git a/modules/Calendar/calendar_viewInternal.php b/modules/Calendar/calendar_viewInternal.php
+new file mode 100644
+index 000000000..2dcc50d96
+--- /dev/null
++++ b/modules/Calendar/calendar_viewInternal.php
+@@ -0,0 +1,70 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\UI\Timetable\Palette;
++use Gibbon\Services\Format;
++use Gibbon\UI\Timetable\Layers\SchoolCalendarLayer;
++
++require_once '../../gibbon.php';
++
++if (isActionAccessible($guid, $connection2, '/modules/Calendar/calendar_view.php') == false) {
++    // Access denied
++    die(__('You do not have access to this action.'));
++} else {
++    // Proceed!
++
++    $dateStart = $_GET['start'] ?? '';
++    $dateEnd = $_GET['end'] ?? '';
++
++    if (empty($dateStart) || empty($dateEnd)) return '[]';
++
++    // From FullCalendar ISO dates
++    $dateStart = date('Y-m-d', strtotime($dateStart));
++    $dateEnd = date('Y-m-d', strtotime($dateEnd)-86400);
++
++    $gibbonPersonID = $session->get('gibbonPersonID');
++    $roleCategory = $session->get('gibbonRoleIDCurrentCategory');
++
++    $palette = $container->get(Palette::class);
++    $eventGateway = $container->get(CalendarEventGateway::class);
++
++    $events = $eventGateway->selectVisibleEventsByPerson($gibbonPersonID, $roleCategory, $dateStart, $dateEnd)->fetchAll();
++
++    foreach ($events as $index => $event) {
++        $color = $event['color'] ?? '#6a6bef';
++        $contrast = $palette->getHexContrastColor($color);
++
++        $events[$index]['description'] = substr(strip_tags($event['description']), 0, 140);
++        $events[$index]['timeRange'] = $event['allDay'] == 'Y' ? __('All Day') : Format::timeRange($event['timeStart'], $event['timeEnd']);
++        $events[$index]['type'] = $event['type'] ?? __('Event');
++        $events[$index]['allDay'] = $event['allDay'] == 'Y';
++        $events[$index]['palette'] = $palette->getPalette($color);
++        $events[$index]['backgroundColor'] = $color;
++        $events[$index]['borderColor'] = $palette->adjustHexColor($event['color'], -0.1);
++        $events[$index]['textColor'] = $contrast == 'white'
++            ? $palette->adjustHexColor($event['color'], 0.7)
++            : $palette->adjustHexColor($event['color'], -0.7);
++    }
++
++    echo json_encode($events);
++}
++
+diff --git a/modules/Calendar/css/module.css b/modules/Calendar/css/module.css
+new file mode 100644
+index 000000000..3ce4d4718
+--- /dev/null
++++ b/modules/Calendar/css/module.css
+@@ -0,0 +1,34 @@
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++
++*/
++
++#calendar {
++    --fc-button-text-color: hsl(220 8% 52%);
++    --fc-button-bg-color: #fff;
++    --fc-button-border-color: hsl(220 14% 84%);
++    --fc-button-hover-bg-color: hsl(220 14% 94%);
++    --fc-button-hover-border-color: hsl(220 14% 84%);
++    --fc-button-active-bg-color: hsl(220 12% 78%);
++    --fc-button-active-border-color: hsl(220 12% 65%);
++
++    a, a:not([class]) {
++        color: inherit;
++    }
++}
+diff --git a/modules/Calendar/js/module.js b/modules/Calendar/js/module.js
+new file mode 100644
+index 000000000..ca17a7787
+--- /dev/null
++++ b/modules/Calendar/js/module.js
+@@ -0,0 +1,19 @@
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
+\ No newline at end of file
+diff --git a/modules/Calendar/src/CalendarEventNotificationProcess.php b/modules/Calendar/src/CalendarEventNotificationProcess.php
+new file mode 100644
+index 000000000..6fa1709a0
+--- /dev/null
++++ b/modules/Calendar/src/CalendarEventNotificationProcess.php
+@@ -0,0 +1,297 @@
++<?php
++/*
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This program is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program. If not, see <http://www.gnu.org/licenses/>.
++*/
++
++namespace Gibbon\Module\Calendar;
++
++use Gibbon\View\View;
++use Gibbon\Services\Format;
++use Gibbon\Contracts\Comms\Mailer;
++use Gibbon\Domain\User\UserGateway;
++use Gibbon\Domain\Staff\StaffGateway;
++use Gibbon\Services\BackgroundProcess;
++use Gibbon\Domain\School\YearGroupGateway;
++use Gibbon\Domain\FormGroups\FormGroupGateway;
++use Gibbon\Domain\Calendar\CalendarEventGateway;
++use Gibbon\Domain\Timetable\CourseEnrolmentGateway;
++use Gibbon\Domain\IndividualNeeds\INAssistantGateway;
++use Gibbon\Domain\Calendar\CalendarEventPersonGateway;
++
++/**
++ * CalendarEventNotificationProcess
++ *
++ * @version v30
++ * @since   v30
++ */
++class CalendarEventNotificationProcess extends BackgroundProcess
++{
++    protected $view;
++    protected $mail;
++    
++    protected $userGateway;
++    protected $staffGateway;
++    protected $yearGroupGateway;
++    protected $formGroupGateway;
++    protected $courseEnrolmentGateway;
++    protected $iNAssistantGateway;
++    protected $calendarEventGateway;
++    protected $calendarEventPersonGateway;
++
++    public function __construct(
++        View $view,
++        Mailer $mail,
++        UserGateway $userGateway,
++        StaffGateway $staffGateway,
++        YearGroupGateway $yearGroupGateway,
++        FormGroupGateway $formGroupGateway,
++        CourseEnrolmentGateway $courseEnrolmentGateway,
++        INAssistantGateway $iNAssistantGateway,
++        CalendarEventGateway $calendarEventGateway,
++        CalendarEventPersonGateway $calendarEventPersonGateway,
++    ) {
++        $this->view = $view;
++        $this->mail = $mail;
++        $this->userGateway = $userGateway;
++        $this->staffGateway = $staffGateway;
++        $this->yearGroupGateway = $yearGroupGateway;
++        $this->formGroupGateway = $formGroupGateway;
++        $this->courseEnrolmentGateway = $courseEnrolmentGateway;
++        $this->iNAssistantGateway = $iNAssistantGateway;
++        $this->calendarEventGateway = $calendarEventGateway;
++        $this->calendarEventPersonGateway = $calendarEventPersonGateway;
++    }
++
++    public function runNotifyStaff($gibbonCalendarEventID, $subject, $notes, $notifyGroups, $allStaff, $notificationList, $gibbonPersonIDSender, $gibbonSchoolYearID, $organisationEmail)
++    {
++        $staff = [];
++        $staffContexts = [];
++        $staffStudentContext = [];
++        $formGroups = [];
++
++        $event = $this->calendarEventGateway->getByID($gibbonCalendarEventID);
++
++        // Get all Attendees 
++        $criteria = $this->calendarEventPersonGateway->newQueryCriteria()
++            ->sortBy(['surname', 'preferredName', 'category']);
++        $students = $this->calendarEventPersonGateway->queryEventAttendees($criteria, $gibbonCalendarEventID)->toArray();
++
++        // All Staff
++        if ($allStaff == 'Y') {
++            $criteria = $this->staffGateway->newQueryCriteria();
++            $results = $this->staffGateway->queryAllStaff($criteria);
++
++            foreach ($results as $result) {
++                $staff[] = $result['gibbonPersonID'];
++            }    
++        } else {
++            if (!empty($notifyGroups)) {
++                foreach ($students as $student) {
++                    $gibbonPersonIDStudent = $student['gibbonPersonID'];
++                    if (!empty($student['formGroup'])) $formGroups[] = $student['formGroup'];
++
++                    // Head of Year
++                    if (in_array('HOY', $notifyGroups)) {
++                        $yearGroup = $this->yearGroupGateway->getByID($student['gibbonYearGroupID']);
++                        $gibbonPersonIDHOY = $yearGroup['gibbonPersonIDHOY'] ?? null;
++                        if (!empty($gibbonPersonIDHOY)) {
++                            $staff[] = $gibbonPersonIDHOY;
++                            $staffContexts[$gibbonPersonIDHOY][] = __('Head of Year');
++
++                            // Record Relation
++                            if (!isset($staffStudentContext[$gibbonPersonIDHOY][$gibbonPersonIDStudent]['context']) || !in_array('Head of Year', $staffStudentContext[$gibbonPersonIDHOY][$gibbonPersonIDStudent]['context'])) {
++                                $staffStudentContext[$gibbonPersonIDHOY][$gibbonPersonIDStudent]['context'][] = 'Head of Year';
++                            }
++                        }
++                    }
++
++                    // Form Tutors
++                    if (in_array('tutors', $notifyGroups)) {
++                        $formGroup = $this->formGroupGateway->getByID($student['gibbonFormGroupID']);
++                        $tutorIDs = [
++                            $formGroup['gibbonPersonIDTutor'] ?? null,
++                            $formGroup['gibbonPersonIDTutor2'] ?? null,
++                            $formGroup['gibbonPersonIDTutor3'] ?? null,
++                        ];
++
++                        foreach ($tutorIDs as $gibbonPersonIDTutor) {
++                            if (empty($gibbonPersonIDTutor)) continue;
++                            $staff[] = $gibbonPersonIDTutor;
++                            $staffContexts[$gibbonPersonIDTutor][] = __('Form Tutor');
++
++                            // Record Relation
++                            if (!isset($staffStudentContext[$gibbonPersonIDTutor][$gibbonPersonIDStudent]['context']) || !in_array('Form Tutor', $staffStudentContext[$gibbonPersonIDTutor][$gibbonPersonIDStudent]['context'])) {
++                                $staffStudentContext[$gibbonPersonIDTutor][$gibbonPersonIDStudent]['context'][] = 'Form Tutor';
++                            }
++                        }
++                    }
++
++                    // Class Teachers
++                    if (in_array('teachers', $notifyGroups)) {
++                        $teachers = $this->courseEnrolmentGateway->selectClassTeachersByStudent($gibbonSchoolYearID, $gibbonPersonIDStudent);
++                        foreach ($teachers as $teacher) {
++                            $gibbonPersonIDTeacher = $teacher['gibbonPersonID'] ?? null;
++
++                            if (empty($gibbonPersonIDTeacher)) continue;
++                            $staff[] = $gibbonPersonIDTeacher;
++                            $staffContexts[$gibbonPersonIDTeacher][] = __('Class Teacher');
++
++                            // Record relation
++                            if (!isset($staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context']) || !in_array('Class Teacher', $staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context'])) {
++                                $staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context'][] = 'Class Teacher';
++                            }
++                        }
++                    }
++
++                    // Educational Assistants
++                    if (in_array('INAssistant', $notifyGroups)) {
++                        $assistants = $this->iNAssistantGateway->selectINAssistantsByStudent($gibbonPersonIDStudent);
++                        foreach ($assistants as $assistant) {
++                            $gibbonPersonIDAssistant = $assistant['gibbonPersonID'] ?? null;
++
++                            if (empty($gibbonPersonIDAssistant)) continue; 
++                            $staff[] = $gibbonPersonIDAssistant;
++                            $staffContexts[$gibbonPersonIDAssistant][] = __('Educational Assistant');
++
++                            // Record Relation
++                            if (!isset($staffStudentContext[$gibbonPersonIDAssistant][$gibbonPersonIDStudent]['context']) || !in_array('Educational Assistant', $staffStudentContext[$gibbonPersonIDAssistant][$gibbonPersonIDStudent]['context'])) {
++                                $staffStudentContext[$gibbonPersonIDAssistant][$gibbonPersonIDStudent]['context'][] = 'Educational Assistant';
++                            }
++                        }
++                    }
++                }
++
++                // Staff Participants
++                if (in_array('participants', $notifyGroups)) {
++                    $participants = $this->calendarEventPersonGateway->queryAllEventParticipants($criteria, $gibbonCalendarEventID)->toArray();
++                    foreach ($participants as $participant) {
++                        if ($participant['roleCategory'] != 'Staff') continue;
++                        $staff[] = $participant['gibbonPersonID'];
++                    }
++                }
++            }
++
++            // Notify Additional People
++            if (!empty($notificationList)) {
++                $staff = array_merge($staff, $notificationList);
++            }
++        }
++
++        $staffPersonIDs = isset($staff) ? array_values(array_filter(array_unique($staff))) : [];
++
++        // Ensure the sender receives a copy
++        array_push($staffPersonIDs, $gibbonPersonIDSender);
++        $staffContexts[$gibbonPersonIDSender][] = __('Sender');
++
++        $staffDetails = $this->userGateway->selectNotificationDetailsByPerson($staffPersonIDs)->fetchAll();
++
++        $this->mail->SMTPKeepAlive = true;
++
++        $sender = $this->userGateway->getByID($gibbonPersonIDSender, ['gibbonPersonID', 'title', 'preferredName', 'surname', 'email']);
++        $replyTo = $sender['email'];
++        $replyToName = Format::name($sender['title'], $sender['preferredName'], $sender['surname'], 'Staff');
++        $sendReport = ['emailSent' => 0, 'emailFailed' => 0, 'emailErrors' => ''];
++
++        foreach ($staffDetails as $staffDetail) {
++            if (empty($staffDetail['email'])) continue;
++
++            $gibbonPersonIDTeacher = $staffDetail['gibbonPersonID'];
++
++            // Get the relevant students of this staff
++            $relevantStudents = 0;
++            foreach ($students as $index => $student) {
++                $gibbonPersonIDStudent = $student['gibbonPersonID'];
++                if (isset($staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context'])) {
++                    // Get all the roles for this student-teacher pair
++                    $contextLabels = implode(', ', $staffStudentContext[$gibbonPersonIDTeacher][$gibbonPersonIDStudent]['context']);
++                    $students[$index]['context'] = $contextLabels;
++                    $relevantStudents++;
++                } else {
++                    $students[$index]['context'] = '';
++                }
++            }
++
++            $buttonURL = "index.php?q=/modules/Calendar/calendar_event_view.php&gibbonCalendarEventID=".$gibbonCalendarEventID;
++            $subject = !empty($subject) ? $subject : __('Event').': '. $event['name'] . ($event['allDay'] != 'Y' ? ', ' .Format::dateRangeReadable($event['dateStart'], $event['dateEnd']) : '');
++        
++            // Generate content from template
++            $content = $this->view->fetchFromTemplate('calendarEvents.twig.html', [
++                'students'   => $students,
++                'sender'     => $sender,
++                'allStaff'   => $allStaff,
++                'contexts'   => !empty($staffContexts[$gibbonPersonIDTeacher]) ? implode(', ', $staffContexts[$gibbonPersonIDTeacher]) : '',
++                'relevant'   => $relevantStudents,
++                'formGroups' => count($formGroups),
++                'event'      => $event ?? [],
++                'notes'      => $notes ?? '',
++            ]);
++
++
++            $this->mail->AddReplyTo($replyTo ?? $organisationEmail, $replyToName ?? '');
++            $this->mail->AddAddress($staffDetail['email'], $staffDetail['surname'].', '.$staffDetail['preferredName']);
++
++            $this->mail->setDefaultSender($subject);
++            $this->mail->renderBody('mail/message.twig.html', [
++                'title'  => $subject,
++                'body'   => $content,
++                'button' => [
++                    'url'  => $buttonURL,
++                    'text' => __('View Details'),
++                ],
++            ]);
++
++            // Send
++            if ($this->mail->Send()) {
++                $sendReport['emailSent']++;
++            } else {
++                $sendReport['emailFailed']++;
++                $sendReport['emailErrors'] .= sprintf(__('An error (%1$s) occurred sending an email to %2$s.'), 'email send failed', $staffDetail['preferredName'].' '.$staffDetail['surname']).'<br/>';
++            }
++
++            $this->mail->ClearAllRecipients();
++            $this->mail->ClearAddresses();
++            $this->mail->clearReplyTos();
++        }
++        
++        $reportSubject = __('Email Report for Event: ').$event['name'];
++        $reportBody  = '<strong>'.__('Summary').':</strong><br/>';
++        $reportBody .= sprintf(__('Total Emails Sent: %1$s'), $sendReport['emailSent'] + $sendReport['emailFailed']) . '<br/>';
++        $reportBody .= sprintf(__('Emails Sent: %1$s'), $sendReport['emailSent']) . '<br/>';
++        $reportBody .= sprintf(__('Emails Failed: %1$s'), $sendReport['emailFailed']) . '<br/>';
++        
++        if (!empty($sendReport['emailErrors'])) {
++            $reportBody .= '<br/><strong>'.__('Errors').':</strong><br/>';
++            $reportBody .= $sendReport['emailErrors'];
++        }
++
++        $this->mail->AddAddress($sender['email'], $sender['surname'].', '.$sender['preferredName']);
++        $this->mail->setDefaultSender($reportSubject);
++        $this->mail->renderBody('mail/message.twig.html', [
++            'title'  => __('Email Report'),
++            'body'   => $reportBody,
++        ]);
++
++        $this->mail->Send();
++
++        // Close SMTP connection
++        $this->mail->smtpClose();
++
++        return $sendReport['emailFailed'] == 0;
++    }
++}
+diff --git a/modules/Calendar/templates/calendarEvents.twig.html b/modules/Calendar/templates/calendarEvents.twig.html
+new file mode 100644
+index 000000000..2e88d5e8b
+--- /dev/null
++++ b/modules/Calendar/templates/calendarEvents.twig.html
+@@ -0,0 +1,78 @@
++{#<!--
++Gibbon: the flexible, open school platform
++Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
++Copyright © 2010, Gibbon Foundation
++Gibbon™, Gibbon Education Ltd. (Hong Kong)
++
++This is a Gibbon template file, written in HTML and Twig syntax.
++For info about editing, see: https://twig.symfony.com/doc/2.x/
++-->#}
++
++{% if notes is not empty %}
++    <p>
++        {{ notes|raw }}
++    </p>
++{% else %}
++<p>
++    {{ __('{sender} has sent a notification about {eventName} on {eventDate}, {eventTime}.', {'sender': formatUsing('name', sender.title, sender.preferredName, sender.surname, 'Staff', false, true), 'eventName': event.name , 'eventDate': formatUsing('dateRangeReadable', event.dateStart, event.dateEnd), 'eventTime': event.allDay == 'Y' ? 'All Day' : formatUsing('timeRange', event.timeStart, event.timeEnd) }) }}
++</p>
++{% endif %}
++
++<h4>{{ __('Participants') }}</h4>
++
++{% if students is defined and students is not empty %}
++    <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; border: 1px solid #cacaca; ">
++        <thead>
++            <tr>
++                <th style="border: 1px solid #cacaca; min-width: 220px;">{{ __('Name') }}</th>
++
++                {% if formGroups %}
++                    <th style="border: 1px solid #cacaca; min-width: 100px;">{{ __('Form Group') }}</th>
++                {% endif %}
++
++                {% if relevant > 0 %}
++                    <th style="border: 1px solid #cacaca; min-width: 100px;">{{ __('Context') }}</th>
++                {% endif %}
++            </tr>
++        </thead>
++        
++        <tbody>
++            {% for student in students %}
++                <tr>
++                    <td style="border: 1px solid #cacaca;">
++                        {{ formatUsing('name', '', student.preferredName, student.surname, 'Student', false) }}
++                    </td>
++
++                    {% if formGroups %}
++                    <td style="border: 1px solid #cacaca;">
++                        {{  student.formGroup }}
++                    </td>
++                    {% endif %}
++
++                    {% if relevant > 0 %}
++                    <td style="border: 1px solid #cacaca;">
++                        {% if student.context is defined and student.context is not empty %}
++                            {{ __(student.context) }}
++                        {% endif %}
++                    </td>
++                    {% endif %}
++                </tr>
++            {% endfor %}
++        </tbody>
++    </table>
++
++{% else %}
++    <p>{{ __('There are no records to display.') }}</p>
++{% endif %}
++
++<br>
++<p style="color: #999999; font-size: 13px;">
++    <em>
++        {% if allStaff == 'Y' %}
++            {{ __('This notification has been sent to all staff.') }}
++        {% else %}
++            {{ __('This notification has been sent to individual recipients.') }}
++            {% if contexts %} {{ __('You are receiving this notification as {context}.', {'context': contexts }) }}{% endif %}
++        {% endif %}
++    </em>
++</p>
+diff --git a/modules/User Admin/user_manage_add.php b/modules/User Admin/user_manage_add.php
+index e11ca3f38..f9eff9d74 100644
+--- a/modules/User Admin/user_manage_add.php	
++++ b/modules/User Admin/user_manage_add.php	
+@@ -27,6 +27,9 @@ use Gibbon\Forms\DatabaseFormFactory;
+ use Gibbon\Domain\System\SettingGateway;
+ use Gibbon\Domain\Timetable\CourseSyncGateway;
+ 
++// Get the database connection
++global $pdo;
++
+ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_add.php') == false) {
+     // Access denied
+     $page->addError(__('You do not have access to this action.'));
+@@ -102,8 +105,8 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_add
+             ->description(__('Accepts images up to 360px by 480px.'))
+             ->description(__('Accepts aspect ratio between 1:1.2 and 1:1.4.'));
+         $row->addFileUpload('file1')
+-            ->accepts('.jpg,.jpeg,.gif,.png')
+-            ->setMaxUpload(false);
++            ->accepts('.jpg,.jpeg,.gif,.png');
++            // Note: setMaxUpload(true) is the default, so we removed setMaxUpload(false)
+ 
+     // SYSTEM ACCESS
+     $form->addRow()->addHeading('System Access', __('System Access'));
+@@ -470,7 +473,6 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_add
+ 
+     // SUBMIT
+     $row = $form->addRow();
+-        $row->addFooter()->append('<small>'.getMaxUpload(true).'</small>');
+         $row->addSubmit();
+ 
+     echo $form->getOutput();
+diff --git a/modules/User Admin/user_manage_edit.php b/modules/User Admin/user_manage_edit.php
+index 159694896..ab8b532c7 100644
+--- a/modules/User Admin/user_manage_edit.php	
++++ b/modules/User Admin/user_manage_edit.php	
+@@ -34,6 +34,9 @@ use Gibbon\Domain\User\UserGateway;
+ //Module includes
+ require_once __DIR__ . '/moduleFunctions.php';
+ 
++// Get the database connection
++global $pdo;
++
+ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edit.php') == false) {
+     // Access denied
+     $page->addError(__('You do not have access to this action.'));
+@@ -140,8 +143,8 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
+                     ->description(__('Accepts aspect ratio between 1:1.2 and 1:1.4.'));
+                 $row->addFileUpload('file1')
+                     ->accepts('.jpg,.jpeg,.gif,.png')
+-                    ->setAttachment('attachment1', $session->get('absoluteURL'), $values['image_240'])
+-                    ->setMaxUpload(false);
++                    ->setAttachment('attachment1', $session->get('absoluteURL'), $values['image_240']);
++                    // Note: setMaxUpload(true) is the default, so we removed setMaxUpload(false)
+ 
+             // SYSTEM ACCESS
+             $form->addRow()->addHeading('System Access', __('System Access'));
+@@ -564,7 +567,6 @@ if (isActionAccessible($guid, $connection2, '/modules/User Admin/user_manage_edi
+             $container->get(CustomFieldHandler::class)->addCustomFieldsToForm($form, 'User', $params, $values['fields']);
+ 
+             $row = $form->addRow();
+-                $row->addFooter()->append('<small>'.getMaxUpload(true).'</small>');
+                 $row->addSubmit();
+ 
+             $form->loadAllValuesFrom($values);
+diff --git a/resources/templates/footer.twig.html b/resources/templates/footer.twig.html
+index 114c6024d..6154db57c 100755
+--- a/resources/templates/footer.twig.html
++++ b/resources/templates/footer.twig.html
+@@ -23,17 +23,23 @@ The Gibbon Team
+ 
+ -->#}
+ 
+-<span class="inline-block font-bold">
+-    {{ __('Powered by') }} <a class="text-{{ themeColour }}-800" target='_blank' href='https://gibbonedu.org'>Gibbon</a> {{ versionName }}<br/>
+-</span> 
++ <span class="inline-block text-gray-300" style="font-size: 9px;
++           opacity: 0.4;">
++          {{ __('Powered by') }} <a class="text-gray-300
++         " target='_blank' href='https://gibbonedu.org'
++          style="text-decoration: none;"
++           >Gibbon</a> {{ versionName }}<br/>
++        </span>
+ <br/>
+ <span class="text-xs">
+-    {{ __('Founded by Ross Parker at ICHK Secondary') }} | {{ __('Built by Ross Parker, Sandra Kuipers and the Gibbon community') }}<br/>
+-    Copyright © <a class="text-{{ themeColour }}-800" target='_blank' href='http://gibbonedu.org'>Gibbon Foundation</a> 2010-{{ 'now'|date('Y') }} | Gibbon™ of Gibbon Education Ltd. (Hong Kong)<br/>
++    <span class="text-xs text-gray-300" style="font-size: 8px; 
++          opacity: 0.3;">
++    {{ __('Founded by Ross Parker at ICHK Secondary') }} | {{ __('Built by Ross Parker, Sandra Kuipers and the Gibbon community') }}<br/> Copyright © <a class="text-{{ themeColour }}-800" target='_blank' href='http://gibbonedu.org'>Gibbon Foundation</a> 2010-{{ 'now'|date('Y') }} | Gibbon™ of Gibbon Education Ltd. (Hong Kong)<br/>
+     {{ __('Created under the') }} <a class="text-{{ themeColour }}-800" target='_blank' href='https://www.gnu.org/licenses/gpl.html'>GNU GPL</a> |
+     <a class="text-{{ themeColour }}-800" target='_blank' href='https://gibbonedu.org/about/#ourTeam'>{{ __('Credits') }}</a> | 
+     <a class="text-{{ themeColour }}-800" target='_blank' href='https://gibbonedu.org/about/#translators'>{{ __('Translators') }}</a> | 
+     <a class="text-{{ themeColour }}-800" target='_blank' href='https://gibbonedu.org/support/'>{{ __('Support') }}</a>
+     <br/>
+     {{ footerThemeAuthor }}<br/>
++   
+ </span>
+diff --git a/resources/templates/menu.twig.html b/resources/templates/menu.twig.html
+index 958f20b9b..b63276f21 100755
+--- a/resources/templates/menu.twig.html
++++ b/resources/templates/menu.twig.html
+@@ -11,15 +11,27 @@ Main Menu: Displays the top-level categories and active modules.
+ -->#}
+ 
+ <hr class="opacity-25 border-{{ themeColour }}-300 border-b-0 mx-0 -my-px">
+-<ul class="list-none flex flex-wrap items-center my-3 -mx-4">
++<style>
++    #menu-main a:hover {
++        color: #fff !important;
++    }
++</style>
++<ul id="menu-main" class="list-none flex flex-wrap items-center my-3 -mx-4">
+     <li class="mx-0 px-0">
+-        <a hx-boost="true" hx-target="#content-wrap" hx-select="#content-wrap" hx-swap="outerHTML show:no-scroll swap:0s" class="block uppercase font-bold text-sm text-gray-100 hover:text-gray-800 no-underline ml-1 px-4 py-3" href="{{ absoluteURL }}/index.php">{{ __('Home') }}</a>
++        <a hx-boost="true" hx-target="#content-wrap" hx-select="#content-wrap"
++            hx-swap="outerHTML show:no-scroll swap:0s"
++            class="block uppercase font-bold text-sm text-red-100 hover:text-white no-underline ml-1 px-4 py-3"
++            href="{{ absoluteURL }}/index.php">{{ __('Home') }}</a>
+     </li>
++{#<!-- <ul class="list-none flex flex-wrap items-center my-3 -mx-4">
++    <li class="mx-0 px-0">
++        <a hx-boost="true" hx-target="#content-wrap" hx-select="#content-wrap" hx-swap="outerHTML show:no-scroll swap:0s" class="block uppercase font-bold text-sm text-red-800 hover:text-white-800 no-underline ml-1 px-4 py-3" href="{{ absoluteURL }}/index.php">{{ __('Home') }}</a>
++    </li>-->#}
+ 
+     {% if isLoggedIn %}
+         {% for categoryName, items in menuMain %}
+         <li class="sm:relative group mx-0 px-0 " x-data="{menuOpen: false}" @mouseleave="menuOpen = false" @click.outside="menuOpen = false">
+-            <a @mouseenter="menuOpen = true" @click="menuOpen = true" :class="{'text-gray-800': menuOpen, 'text-gray-100': !menuOpen}" class="block uppercase font-bold text-sm text-gray-100 no-underline px-4 py-3 cursor-pointer">{{ __(categoryName) }}</a>
++            <a @mouseenter="menuOpen = true" @click="menuOpen = true" :class="{'text-red-800': menuOpen, 'text-gray-100': !menuOpen}" class="block uppercase font-bold text-sm text-gray-100 no-underline px-4 py-3 cursor-pointer">{{ __(categoryName) }}</a>
+ 
+             <ul x-cloak x-show="menuOpen" x-transition:enter.duration.250ms x-transition:leave.duration.0s class="list-none bg-black bg-opacity-75 backdrop-blur-lg backdrop-contrast-125 backdrop-saturate-150 rounded-md absolute w-available ms-4 me-4 sm:mx-0 sm:w-52  my-0 p-1 sm:p-1.5 z-50 {{ rightToLeft ? 'right-0' : 'left-0' }}">
+                 {% for item in items %}
+diff --git a/src/Services/BackgroundProcessor.php b/src/Services/BackgroundProcessor.php
+index 29e292776..388b1cd2a 100755
+--- a/src/Services/BackgroundProcessor.php
++++ b/src/Services/BackgroundProcessor.php
+@@ -75,13 +75,11 @@ class BackgroundProcessor implements ContainerAwareInterface
+      */
+     public function startProcess($processClassName, $processMethodName, array $arguments = []) : int
+     {
+-        $phpFile = $this->session->get('absolutePath').'/cli/system_backgroundProcessor.php';
++        // Prefer the configured absolutePath, but fall back to project root if it's unavailable.
++        $basePath = $this->session->get('absolutePath') ?: realpath(__DIR__.'/../..');
++        $phpFile = $basePath.'/cli/system_backgroundProcessor.php';
+         $phpOutput = '/dev/null';
+ 
+-        if (!file_exists($phpFile)) {
+-            throw new \RuntimeException('File not found: '.$phpFile);
+-        }
+-
+         if (empty($processClassName) || !is_array($arguments)) {
+             throw new \InvalidArgumentException();
+         }
+@@ -104,6 +102,12 @@ class BackgroundProcessor implements ContainerAwareInterface
+             'serialisedArray'    => serialize($processData),
+         ]);
+ 
++        // If the background worker script is missing/unreadable, run synchronously.
++        if (!is_readable($phpFile)) {
++            $this->runProcess($processID, $processData['key']);
++            return $processID;
++        }
++
+         // Allow systems to disable background processing
+         if ($this->session->get('backgroundProcessing') == 'N') {
+             $this->runProcess($processID, $processData['key']);
+@@ -115,17 +119,23 @@ class BackgroundProcessor implements ContainerAwareInterface
+         $args = [$phpFile, $processID, $processData['key'], $this->session->get('module')];
+         $argsEscaped = implode(' ', array_map('escapeshellarg', $args));
+ 
++        // If exec is unavailable (often disabled in shared hosting), run synchronously.
++        if (!function_exists('exec') || $this->isExecDisabled()) {
++            $this->runProcess($processID, $processData['key']);
++            return $processID;
++        }
++
+         try {
+             // Start the background process as a long-running PHP command
+             switch ($this->getOS()) {
+                 case self::OS_WINDOWS:
+                     $command = PHP_BINARY.' '.$argsEscaped;
+-                    exec(sprintf('%s > NUL &', $command));
++                    \exec(sprintf('%s > NUL &', $command));
+                     break;
+ 
+                 case self::OS_NIX:
+                     $command = PHP_BINDIR.'/php '.$argsEscaped;
+-                    $pID = exec(sprintf("%s > %s 2>&1 & echo $!", $command, $phpOutput));
++                    $pID = \exec(sprintf("%s > %s 2>&1 & echo $!", $command, $phpOutput));
+                     break;
+ 
+                 default:
+@@ -275,7 +285,7 @@ class BackgroundProcessor implements ContainerAwareInterface
+ 
+         if ($processData = $this->getProcess($processID)) {
+             try {
+-                exec('kill -9 '.$processData['pID']);
++                \exec('kill -9 '.$processData['pID']);
+                 return $this->endProcess($processID, ['status' => 'Stopped'] + $processData);
+             } catch (\Exception $e) {
+                 return false;
+@@ -303,7 +313,7 @@ class BackgroundProcessor implements ContainerAwareInterface
+             }
+ 
+             try {
+-                $checkProcess = exec('ps '.$processData['pID']);
++                $checkProcess = \exec('ps '.$processData['pID']);
+                 if (stripos($checkProcess, $processData['pID']) !== false) {
+                     return true;
+                 } else {
+@@ -318,6 +328,19 @@ class BackgroundProcessor implements ContainerAwareInterface
+         return false;
+     }
+ 
++    /**
++     * Detect if exec is disabled via php.ini disable_functions.
++     *
++     * @return bool
++     */
++    protected function isExecDisabled() : bool
++    {
++        $disabled = ini_get('disable_functions') ?: '';
++        $functions = array_filter(array_map('trim', explode(',', $disabled)));
++
++        return in_array('exec', $functions, true);
++    }
++
+     protected function handleShutdown($processID, $processData)
+     {
+         $lastError = error_get_last();
+diff --git a/themes/Default/css/main.css b/themes/Default/css/main.css
+index 2921b419d..cea1a180d 100755
+--- a/themes/Default/css/main.css
++++ b/themes/Default/css/main.css
+@@ -1077,3 +1077,26 @@ table.smallIntBorder td.noPadding {
+ .standardForm:not(.blank) .formRow:not(:last-child)  {
+     border-bottom-width: 1px;
+ }
++
++/* ===================================
++   Custom Top Navigation - Red Hover
++   Added: 2025-11-30
++   Target: Horizontal top menu only (HOME, DASHBOARD, ADMIN, etc.)
++   =================================== */
++
++/* Target the horizontal top navigation bar including HOME */
++header nav > ul > li:hover,
++header nav > ul > li:focus-within,
++header > nav > ul > li:hover,
++header > nav > ul > li:focus-within,
++nav.relative > ul > li:hover,
++nav.relative > ul > li:focus-within {
++    background-color: #dc2626 !important;
++}
++
++/* Keep text white on red hover */
++header nav > ul > li:hover > a,
++header > nav > ul > li:hover > a,
++nav.relative > ul > li:hover > a {
++    color: white !important;
++}
