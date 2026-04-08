@@ -62,11 +62,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
             : explode(",", $gibbonPersonIDList);
     }
 
+    if (empty($gibbonPersonIDList)) $gibbonPersonIDList = [];
+
     $target = $_GET['target'] ?? '';
     $gibbonActivityID = $_GET['gibbonActivityID'] ?? '';
     $gibbonGroupID = $_GET['gibbonGroupID'] ?? '';
     $absenceType = $_GET['absenceType'] ?? 'full';
     $date = $_GET['date'] ?? '';
+    $dateStart = $_GET['dateStart'] ?? '';
+    $dateEnd = $_GET['dateEnd'] ?? '';
     $timeStart = $_GET['timeStart'] ?? '';
     $timeEnd = $_GET['timeEnd'] ?? '';
 
@@ -146,13 +150,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
     $col = $form->addRow()->addClass($canTakeAdHocAttendance ? 'targetSelect' : 'multiple')->addColumn();
         $col->addLabel('gibbonPersonIDList', __('Students'));
         $select = $col->addMultiSelect('gibbonPersonIDList')->isRequired();
-        $select->addSortableAttribute(__('Form Group'), $studentList['form']);
+        $select->addSortableAttribute(__('Form Group'), $studentList['form'] ?? '');
         $select->source()->fromArray($studentList['students']['source'] ?? []);
         $select->destination()->fromArray($studentList['students']['destination'] ?? []);
 
     if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_take_byCourseClass.php')) {
         $availableAbsenceTypes = [
-            'full' => __('Full Day'),
+            'full'    => __('Full Day'),
             'partial' => __('Partial'),
         ];
 
@@ -310,7 +314,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
                             foreach ($logs as $log) {
                                 if ($log['context'] == 'Class' && $class['gibbonCourseClassID'] == $log['gibbonCourseClassID'] && $log['date'] == $targetDate) {
                                     $name = $log['type'] . ' - ' . $class['courseNameShort'] . '.' . $class['classNameShort'];
-                                } else if ($log['context'] == 'Future') {
+                                } else if ($log['context'] == 'Future' && $log['date'] == $targetDate) {
                                     $name = $class['columnName'] . ' - ' . $log['type'] . ' '. $log['reason'];
                                 }
                             }
@@ -342,8 +346,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
                         }, []);
 
                         // Account for whole-day future absences that this student already has
-                        $futureAbsences = array_filter($logs, function ($log) {
-                            return $log['context'] == 'Future';
+                        $futureAbsences = array_filter($logs, function ($log) use ($targetDate) {
+                            return $log['context'] == 'Future' && $log['date'] == $targetDate;
                         });
                         if (count($futureAbsences) > 0) {
                             $disabled = array_keys($classOptions);
@@ -383,11 +387,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
         if ($absenceType == 'full') {
             $row = $form->addRow();
                 $row->addLabel('dateStart', __('Start Date'));
-                $row->addDate('dateStart')->required()->minimum(date('Y-m-d'));
+                $row->addDate('dateStart')->required()->minimum(date('Y-m-d'))->setValue($dateStart);
 
             $row = $form->addRow();
                 $row->addLabel('dateEnd', __('End Date'));
-                $row->addDate('dateEnd')->minimum(date('Y-m-d'));
+                $row->addDate('dateEnd')->minimum(date('Y-m-d'))->setValue($dateEnd);
         } else {
             $form->addHiddenValue('dateStart', $date);
             $form->addHiddenValue('dateEnd', $date);
@@ -422,8 +426,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Attendance/attendance_futu
                     }
 
                     // Account for whole-day future absences that this student already has
-                    $futureAbsences = array_filter($logs, function ($log) {
-                        return $log['context'] == 'Future';
+                    $futureAbsences = array_filter($logs, function ($log) use ($targetDate) {
+                        return $log['context'] == 'Future' && $log['date'] == $targetDate;
                     });
                     if (count($futureAbsences) > 0) {
                         $disabled = true;
