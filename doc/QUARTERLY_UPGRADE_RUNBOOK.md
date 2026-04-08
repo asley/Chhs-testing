@@ -338,4 +338,4 @@ Always verify these survive each upgrade:
 
 | Date | From | To | Branch | Notes |
 |------|------|----|--------|-------|
-| 2026-04-08 | v30.0.00 | v30.0.01 | `chore/upgrade-gibbon-v30.0.01` | 16 upstream files changed; CHANGEDB.php merged manually; no patch conflicts |
+| 2026-04-08 | v30.0.00 | v30.0.01 | `chore/upgrade-gibbon-v30.0.01` | 16 upstream files changed; CHANGEDB.php merged manually; no patch conflicts; DB upgrade ran successfully |
