@@ -403,14 +403,19 @@ function pdKpiAttendanceRate(PDO $connection2, string $schoolYearID, string $dat
     ];
     $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
 
-    $sql = "SELECT
-                COUNT(al.gibbonAttendanceLogPersonID) AS totalLogs,
+    $sql = "WITH cohort AS (
+                SELECT se.gibbonPersonID
+                FROM gibbonStudentEnrolment se
+                WHERE se.gibbonSchoolYearID = :yearID
+                  {$filters}
+            )
+            SELECT
+                COUNT(*) AS totalLogs,
                 SUM(CASE WHEN al.direction = 'Out' THEN 1 ELSE 0 END) AS absentLogs
             FROM gibbonAttendanceLogPerson al
-            JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = al.gibbonPersonID
-            WHERE se.gibbonSchoolYearID = :yearID
-              AND al.date BETWEEN :dateFrom AND :dateTo
-              {$filters}";
+            JOIN cohort co
+                ON co.gibbonPersonID = al.gibbonPersonID
+            WHERE al.date BETWEEN :dateFrom AND :dateTo";
 
     $stmt = $connection2->prepare($sql);
     $stmt->execute($params);
