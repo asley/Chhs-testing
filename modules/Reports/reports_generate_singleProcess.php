@@ -53,6 +53,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
 
     ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
     ini_set('memory_limit', '512M');  // Increase memory for mPDF report generation
+    set_time_limit(300); // Allow up to 5 minutes for report generation
 
     $reportGateway             = $container->get(ReportGateway::class);
     $reportArchiveEntryGateway = $container->get(ReportArchiveEntryGateway::class);

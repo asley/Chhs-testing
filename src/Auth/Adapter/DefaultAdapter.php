@@ -25,6 +25,7 @@ use Aura\Auth\Exception as AuraException;
 use Aura\Auth\Verifier\VerifierInterface;
 use Gibbon\Auth\Exception;
 use Gibbon\Auth\Adapter\AuthenticationAdapter;
+use Gibbon\Auth\PasswordSecurity;
 use Gibbon\Domain\User\UserGateway;
 
 /**

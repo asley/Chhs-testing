@@ -26,23 +26,27 @@ $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
 $yearRange = pdGetSchoolYearDateRange($connection2, $yearID);
 $params[':yearStart'] = $yearRange['firstDay'];
 $params[':yearEnd'] = $yearRange['lastDay'];
+$passMark = 65.0;
 
-$sql = "SELECT
-            p.gibbonPersonID                                          AS personID,
-            CONCAT(p.preferredName, ' ', p.surname)                   AS studentName,
-            yg.name                                                   AS yearGroup,
-            fg.name                                                   AS formGroup,
-            ROUND(mb.avgGrade, 1)                                     AS avgGrade,
-            COALESCE(att.absences, 0)                                 AS absences
-        FROM gibbonStudentEnrolment se
-        JOIN gibbonPerson p       ON p.gibbonPersonID    = se.gibbonPersonID
-        LEFT JOIN gibbonYearGroup yg ON yg.gibbonYearGroupID = se.gibbonYearGroupID
-        LEFT JOIN gibbonFormGroup fg ON fg.gibbonFormGroupID = se.gibbonFormGroupID
-        LEFT JOIN (
+$sql = "WITH cohort AS (
+            SELECT
+                se.gibbonPersonID,
+                se.gibbonYearGroupID,
+                se.gibbonFormGroupID
+            FROM gibbonStudentEnrolment se
+            JOIN gibbonPerson p
+                ON p.gibbonPersonID = se.gibbonPersonID
+            WHERE se.gibbonSchoolYearID = :yearID
+              AND p.status = 'Full'
+              {$filters}
+        ),
+        markbook AS (
             SELECT
                 me.gibbonPersonIDStudent AS gibbonPersonID,
                 AVG(me.attainmentValue) AS avgGrade
             FROM gibbonMarkbookEntry me
+            JOIN cohort co
+                ON co.gibbonPersonID = me.gibbonPersonIDStudent
             JOIN gibbonMarkbookColumn mc
                 ON mc.gibbonMarkbookColumnID = me.gibbonMarkbookColumnID
             JOIN gibbonCourseClass gc
@@ -52,24 +56,50 @@ $sql = "SELECT
             WHERE c.gibbonSchoolYearID = :yearID
               AND me.attainmentValue IS NOT NULL
             GROUP BY me.gibbonPersonIDStudent
-        ) mb ON mb.gibbonPersonID = se.gibbonPersonID
-        LEFT JOIN (
+        ),
+        attendance AS (
             SELECT
                 al.gibbonPersonID,
                 COUNT(*) AS absences
             FROM gibbonAttendanceLogPerson al
+            JOIN cohort co
+                ON co.gibbonPersonID = al.gibbonPersonID
             WHERE al.direction = 'Out'
               AND al.date BETWEEN :yearStart AND :yearEnd
             GROUP BY al.gibbonPersonID
-        ) att ON att.gibbonPersonID = se.gibbonPersonID
-        WHERE se.gibbonSchoolYearID = :yearID
-          AND p.status = 'Full'
-          {$filters}
-          AND (
-            (mb.avgGrade IS NOT NULL AND mb.avgGrade < 50)
-            OR COALESCE(att.absences, 0) > 18
-          )
-        ORDER BY mb.avgGrade IS NULL, mb.avgGrade ASC, absences DESC
+        ),
+        risk AS (
+            SELECT
+                p.gibbonPersonID AS personID,
+                CONCAT(p.preferredName, ' ', p.surname) AS studentName,
+                yg.name AS yearGroup,
+                fg.name AS formGroup,
+                ROUND(mb.avgGrade, 1) AS avgGrade,
+                COALESCE(att.absences, 0) AS absences
+            FROM cohort co
+            JOIN gibbonPerson p
+                ON p.gibbonPersonID = co.gibbonPersonID
+            LEFT JOIN gibbonYearGroup yg
+                ON yg.gibbonYearGroupID = co.gibbonYearGroupID
+            LEFT JOIN gibbonFormGroup fg
+                ON fg.gibbonFormGroupID = co.gibbonFormGroupID
+            LEFT JOIN markbook mb
+                ON mb.gibbonPersonID = co.gibbonPersonID
+            LEFT JOIN attendance att
+                ON att.gibbonPersonID = co.gibbonPersonID
+            WHERE (mb.avgGrade IS NOT NULL AND mb.avgGrade < {$passMark})
+               OR COALESCE(att.absences, 0) > 18
+        )
+        SELECT
+            personID,
+            studentName,
+            yearGroup,
+            formGroup,
+            avgGrade,
+            absences,
+            COUNT(*) OVER() AS totalAtRisk
+        FROM risk
+        ORDER BY avgGrade IS NULL, avgGrade ASC, absences DESC
         LIMIT 100";
 
 try {
@@ -89,8 +119,24 @@ try {
         ];
     }
 
+    $totalAtRisk = 0;
+    if (!empty($rows)) {
+        $totalAtRisk = (int) ($rows[0]['totalAtRisk'] ?? 0);
+    }
+    if ($totalAtRisk === 0 && !empty($rows)) {
+        $totalAtRisk = count($rows);
+    }
+
     ob_clean();
-    echo json_encode(['success' => true, 'data' => $result]);
+    echo json_encode([
+        'success' => true,
+        'data' => $result,
+        'meta' => [
+            'total' => (int) $totalAtRisk,
+            'returned' => count($result),
+            'limited' => ((int) $totalAtRisk > count($result)),
+        ],
+    ]);
 } catch (Exception $e) {
     ob_clean();
     error_log('PrincipalDashboard: ' . $e->getMessage()); echo json_encode(['success' => false, 'message' => 'An error occurred. Please try again.']);

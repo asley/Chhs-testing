@@ -15,6 +15,21 @@ Options -Indexes
     Header set Pragma "no-cache"
     Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
     Header set Expires "Thu, 1 Jan 1970 00:00:00 GMT"
+
+    # Security Headers - CRITICAL
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com"
+  </IfModule>
+
+  # Disable error display in HTTP
+  <IfModule mod_php.c>
+    php_flag display_errors off
+    php_flag display_startup_errors off
+    php_flag log_errors on
+    php_value error_log /var/log/php-errors.log
   </IfModule>
 </FilesMatch>
 
@@ -23,3 +38,18 @@ Options -Indexes
   mod_gzip_dechunk Yes
   mod_gzip_item_include file .(html?|txt|css|js|php)$
 </ifModule>
+
+# CORS Configuration - CRITICAL FIX
+# Only allow requests from this domain (localhost for development)
+# Change this to your actual domain in production!
+<IfModule mod_headers.c>
+  # DANGER: Wildcard CORS disabled. Restrict to specific trusted domains only.
+  # SetEnvIf Origin "^https?://localhost(:[0-9]+)?$" ORIGIN_ALLOWED=true
+  # SetEnvIf Origin "^https?://yourdomain\.edu$" ORIGIN_ALLOWED=true
+
+  # For now, remove wildcard CORS and require explicit configuration
+  # Header set Access-Control-Allow-Origin "*" env=ORIGIN_ALLOWED
+  # Header set Access-Control-Allow-Methods "GET, POST, OPTIONS" env=ORIGIN_ALLOWED
+  # Header set Access-Control-Allow-Headers "Content-Type, Authorization" env=ORIGIN_ALLOWED
+  # Header set Access-Control-Allow-Credentials "true" env=ORIGIN_ALLOWED
+</IfModule>

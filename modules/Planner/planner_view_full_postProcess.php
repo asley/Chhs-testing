@@ -102,7 +102,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                 $dataClassGroup = array('gibbonCourseClassID' => $row['gibbonCourseClassID']);
                 $sqlClassGroup = "SELECT * FROM gibbonCourseClassPerson INNER JOIN gibbonPerson ON gibbonCourseClassPerson.gibbonPersonID=gibbonPerson.gibbonPersonID WHERE gibbonCourseClassID=:gibbonCourseClassID AND status='Full' AND (dateStart IS NULL OR dateStart<='".date('Y-m-d')."') AND (dateEnd IS NULL  OR dateEnd>='".date('Y-m-d')."') AND (NOT role='Student - Left') AND (NOT role='Teacher - Left') ORDER BY role DESC, surname, preferredName";
                 $resultClassGroup = $connection2->prepare($sqlClassGroup);
-                $resultClassGroup->execute($dataClassGroup);
+                $resultClassGroup->execute(params: $dataClassGroup);
                 while ($rowClassGroup = $resultClassGroup->fetch()) {
                     if ($rowClassGroup['gibbonPersonID'] != $session->get('gibbonPersonID') and $rowClassGroup['gibbonPersonID'] != $replyToID) {
                         $notificationText = __('{person} has commented on your lesson plan {lessonName}.', ['person' => $personName, 'lessonName' => $row['name']]);

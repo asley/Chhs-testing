@@ -53,7 +53,13 @@ $sqlIA = "SELECT
                   gc.gibbonCourseClassID,
                   gc.name AS className,
                   iae.gibbonPersonIDStudent,
-                  AVG(CAST(REPLACE(iae.attainmentValue, '%', '') AS DECIMAL(6,2))) AS studentAvg
+                  AVG(
+                      CASE
+                          WHEN TRIM(iae.attainmentValue) REGEXP '^[0-9]+([.][0-9]+)?%?$'
+                              THEN CAST(REPLACE(TRIM(iae.attainmentValue), '%', '') AS DECIMAL(6,2))
+                          ELSE 0
+                      END
+                  ) AS studentAvg
               FROM gibbonInternalAssessmentColumn iac
               JOIN gibbonCourseClass gc
                   ON gc.gibbonCourseClassID = iac.gibbonCourseClassID
@@ -65,7 +71,6 @@ $sqlIA = "SELECT
                   ON se.gibbonPersonID = iae.gibbonPersonIDStudent
                  AND se.gibbonSchoolYearID = :yearID
               WHERE c.gibbonSchoolYearID = :yearID
-                AND (iac.locked IS NULL OR iac.locked = 'N')
                 AND iae.attainmentValue IS NOT NULL
                 AND iae.attainmentValue != ''
                 {$filters}

@@ -123,15 +123,16 @@ function pdKpiMarkbookAvg(PDO $connection2, string $schoolYearID, string $yearGr
 }
 
 /**
- * KPI: pass rate percentage based on each student's mean markbook score (>= 50).
+ * KPI: pass rate percentage based on each student's mean markbook score (>= 65).
  */
 function pdKpiPassRate(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): float
 {
+    $passMark = 65.0;
     $params = [':yearID' => $schoolYearID];
     $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
 
     $sql = "SELECT
-                COUNT(CASE WHEN studentAvg >= 50 THEN 1 END) AS passed,
+                COUNT(CASE WHEN studentAvg >= {$passMark} THEN 1 END) AS passed,
                 COUNT(*) AS total
             FROM (
                 SELECT
@@ -176,7 +177,13 @@ function pdKpiInternalAssessmentAvg(PDO $connection2, string $schoolYearID, stri
             FROM (
                 SELECT
                     se.gibbonPersonID,
-                    AVG(CAST(REPLACE(iae.attainmentValue, '%', '') AS DECIMAL(6,2))) AS studentAvg
+                    AVG(
+                        CASE
+                            WHEN TRIM(iae.attainmentValue) REGEXP '^[0-9]+([.][0-9]+)?%?$'
+                                THEN CAST(REPLACE(TRIM(iae.attainmentValue), '%', '') AS DECIMAL(6,2))
+                            ELSE 0
+                        END
+                    ) AS studentAvg
                 FROM gibbonStudentEnrolment se
                 JOIN gibbonInternalAssessmentEntry iae
                     ON iae.gibbonPersonIDStudent = se.gibbonPersonID
@@ -188,7 +195,6 @@ function pdKpiInternalAssessmentAvg(PDO $connection2, string $schoolYearID, stri
                     ON c.gibbonCourseID = gc.gibbonCourseID
                 WHERE se.gibbonSchoolYearID = :yearID
                   AND c.gibbonSchoolYearID = :yearID
-                  AND (iac.locked IS NULL OR iac.locked = 'N')
                   AND iae.attainmentValue IS NOT NULL
                   AND iae.attainmentValue != ''
                   {$filters}
@@ -245,10 +251,11 @@ function pdKpiChronicAbsenteeism(PDO $connection2, string $schoolYearID, string 
 }
 
 /**
- * KPI: number of at-risk students (student average below 50 OR high absence).
+ * KPI: number of at-risk students (student average below 65 OR high absence).
  */
 function pdKpiAtRiskCount(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): int
 {
+    $passMark = 65.0;
     $params = [':yearID' => $schoolYearID];
     $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
     $yearRange = pdGetSchoolYearDateRange($connection2, $schoolYearID);
@@ -294,7 +301,7 @@ function pdKpiAtRiskCount(PDO $connection2, string $schoolYearID, string $yearGr
                   AND p.status = 'Full'
                   {$filters}
             ) AS risk
-            WHERE (risk.avgGrade IS NOT NULL AND risk.avgGrade < 50)
+            WHERE (risk.avgGrade IS NOT NULL AND risk.avgGrade < {$passMark})
                OR risk.absences > 18";
     $stmt = $connection2->prepare($sql);
     $stmt->execute($params);

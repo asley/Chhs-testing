@@ -28,16 +28,15 @@ $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
 
 $sql = "SELECT
             DATE(al.date) AS logDate,
-            COUNT(DISTINCT se.gibbonPersonID) AS totalEnrolled,
+            COUNT(DISTINCT al.gibbonPersonID) AS totalLogged,
             COUNT(DISTINCT CASE WHEN al.direction = 'Out' THEN al.gibbonPersonID END) AS absent
-        FROM gibbonStudentEnrolment se
-        LEFT JOIN gibbonAttendanceLogPerson al
-            ON al.gibbonPersonID = se.gibbonPersonID
-           AND al.date BETWEEN :dateFrom AND :dateTo
-        WHERE se.gibbonSchoolYearID = :yearID
+        FROM gibbonAttendanceLogPerson al
+        JOIN gibbonStudentEnrolment se
+            ON se.gibbonPersonID = al.gibbonPersonID
+           AND se.gibbonSchoolYearID = :yearID
+        WHERE al.date BETWEEN :dateFrom AND :dateTo
           {$filters}
-          AND al.date IS NOT NULL
-        GROUP BY logDate
+        GROUP BY DATE(al.date)
         ORDER BY logDate";
 
 try {
@@ -49,7 +48,7 @@ try {
     $values = [];
     foreach ($rows as $row) {
         $labels[] = $row['logDate'];
-        $total    = (int) $row['totalEnrolled'];
+        $total    = (int) $row['totalLogged'];
         $absent   = (int) $row['absent'];
         $values[] = $total > 0 ? round((($total - $absent) / $total) * 100, 1) : null;
     }

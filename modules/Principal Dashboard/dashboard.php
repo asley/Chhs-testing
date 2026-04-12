@@ -133,10 +133,11 @@ foreach ($badgeStudentsAll as $badgeStudent) {
 }
 
 $atRiskRate = $studentCount > 0 ? round(($kpiAtRisk / $studentCount) * 100, 1) : 0.0;
-$attendanceRisk = max(0.0, min(100.0, 100.0 - $kpiAbsenteeism));
 $ratioHealth = $teacherCount > 0
     ? min(100.0, round((20.0 / max(1.0, $studentTeacherRatio)) * 100.0, 1))
     : 0.0;
+$studentsDataURL = $absoluteURL . '/index.php?q=/modules/Students/student_view.php';
+$teachersDataURL = $absoluteURL . '/index.php?q=/modules/Staff/staff_view.php';
 
 $clampPercent = static function ($value): float {
     return max(0.0, min(100.0, (float) $value));
@@ -152,6 +153,7 @@ $kpiRows = [
             'ring' => 100.0,
             'ringText' => __('Cohort'),
             'tone' => 'teal',
+            'href' => $studentsDataURL,
         ],
         [
             'title' => __('Teachers'),
@@ -161,6 +163,7 @@ $kpiRows = [
             'ring' => $clampPercent($staffingHealth),
             'ringText' => number_format($staffingHealth, 1) . '%',
             'tone' => 'blue',
+            'href' => $teachersDataURL,
         ],
     ],
     [
@@ -172,6 +175,7 @@ $kpiRows = [
             'ring' => $clampPercent($ratioHealth),
             'ringText' => number_format($ratioHealth, 1) . '%',
             'tone' => 'green',
+            'href' => '#section-enrolment',
         ],
         [
             'title' => __('Attendance Rate'),
@@ -181,6 +185,7 @@ $kpiRows = [
             'ring' => $clampPercent($kpiAttendanceRate),
             'ringText' => number_format($kpiAttendanceRate, 1) . '%',
             'tone' => 'teal',
+            'href' => '#panel-attendance-trend',
         ],
     ],
     [
@@ -192,6 +197,7 @@ $kpiRows = [
             'ring' => $clampPercent($kpiMarkbookAvg),
             'ringText' => number_format($kpiMarkbookAvg, 1) . '%',
             'tone' => 'blue',
+            'href' => '#panel-markbook-distribution',
         ],
         [
             'title' => __('Internal Assessment Avg'),
@@ -201,6 +207,7 @@ $kpiRows = [
             'ring' => $clampPercent($kpiInternalAssessmentAvg),
             'ringText' => number_format($kpiInternalAssessmentAvg, 1) . '%',
             'tone' => 'teal',
+            'href' => '#panel-ia-comparison',
         ],
     ],
     [
@@ -208,19 +215,21 @@ $kpiRows = [
             'title' => __('Pass Rate'),
             'code' => 'PASS',
             'value' => number_format($kpiPassRate, 1) . '%',
-            'sub' => __('Students with markbook score 50% and above'),
+            'sub' => __('Students with markbook score 65% and above'),
             'ring' => $clampPercent($kpiPassRate),
             'ringText' => number_format($kpiPassRate, 1) . '%',
             'tone' => 'green',
+            'href' => '#panel-markbook-distribution',
         ],
         [
             'title' => __('Chronic Absenteeism'),
             'code' => 'RISK',
             'value' => number_format($kpiAbsenteeism, 1) . '%',
             'sub' => __('Students absent more than 18 days'),
-            'ring' => $clampPercent($attendanceRisk),
+            'ring' => $clampPercent($kpiAbsenteeism),
             'ringText' => number_format($kpiAbsenteeism, 1) . '%',
             'tone' => 'amber',
+            'href' => '#panel-absence-heatmap',
         ],
     ],
     [
@@ -232,6 +241,7 @@ $kpiRows = [
             'ring' => $clampPercent($atRiskRate),
             'ringText' => number_format($atRiskRate, 1) . '%',
             'tone' => 'red',
+            'href' => '#panel-at-risk-data',
         ],
         [
             'title' => __('Behaviour Flags'),
@@ -241,6 +251,7 @@ $kpiRows = [
             'ring' => $clampPercent($behaviourFlagRate),
             'ringText' => number_format($behaviourFlagRate, 1) . '%',
             'tone' => 'red',
+            'href' => '#panel-behaviour-snapshot',
         ],
     ],
 ];
@@ -263,6 +274,44 @@ $h = static function ($value): string {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 };
 
+$renderKpiCard = static function (array $card) use ($h): string {
+    $gaugeValue = max(0.0, min(100.0, (float) ($card['ring'] ?? 0.0)));
+    $gaugeValueText = number_format($gaugeValue, 1, '.', '');
+    $gaugeAngle = number_format($gaugeValue * 1.8, 1, '.', '') . 'deg';
+    $gaugeColor = '#16a34a';
+    if ($gaugeValue < 45.0) {
+        $gaugeColor = '#dc2626';
+    } elseif ($gaugeValue < 70.0) {
+        $gaugeColor = '#d97706';
+    }
+
+    $html = '';
+    $html .= '<article class="pd-kpi-card" style="--gauge-value:' . $h($gaugeValueText) . ';--gauge-angle:' . $h($gaugeAngle) . ';--gauge-color:' . $h($gaugeColor) . ';">';
+    $html .= '<span class="pd-kpi-badge">' . $h($card['code'] ?? '') . '</span>';
+    $html .= '<div class="pd-kpi-main">';
+    $html .= '<div class="pd-kpi-gauge" aria-hidden="true">';
+    $html .= '<div class="pd-kpi-gauge-track"></div>';
+    $html .= '<div class="pd-kpi-gauge-scale"></div>';
+    $html .= '<div class="pd-kpi-gauge-arc"></div>';
+    $html .= '<div class="pd-kpi-gauge-mask"></div>';
+    $html .= '<div class="pd-kpi-gauge-needle"></div>';
+    $html .= '<div class="pd-kpi-gauge-hub"></div>';
+    $html .= '<div class="pd-kpi-gauge-text">' . $h($card['ringText'] ?? '') . '</div>';
+    $html .= '</div>';
+    $html .= '<div class="pd-kpi-meta">';
+    $html .= '<div class="pd-kpi-value">' . $h($card['value'] ?? '') . '</div>';
+    $html .= '<div class="pd-kpi-title">' . $h($card['title'] ?? '') . '</div>';
+    $html .= '<div class="pd-kpi-sub">' . $h($card['sub'] ?? '') . '</div>';
+    if (!empty($card['href'])) {
+        $html .= '<a class="pd-kpi-link" href="' . $h($card['href']) . '">View data</a>';
+    }
+    $html .= '</div>';
+    $html .= '</div>';
+    $html .= '</article>';
+
+    return $html;
+};
+
 $studentProfileBaseURL = $absoluteURL . '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=';
 
 echo "<script src='https://cdn.jsdelivr.net/npm/apexcharts@3.49.0/dist/apexcharts.min.js'></script>";
@@ -279,8 +328,8 @@ echo "<script>window.PD = {$jsConfig};</script>";
     --pd-bg: #f0f4f9;
     --pd-surface: #ffffff;
     --pd-border: #dce5ef;
-    --pd-shadow-sm: 0 1px 3px rgba(15,35,60,.07), 0 4px 14px rgba(15,35,60,.05);
-    --pd-shadow-md: 0 2px 8px rgba(15,35,60,.08), 0 12px 32px rgba(15,35,60,.07);
+    --pd-shadow-sm: 0 2px 6px rgba(15,35,60,.08), 0 10px 24px rgba(15,35,60,.06);
+    --pd-shadow-md: 0 6px 16px rgba(15,35,60,.12), 0 20px 42px rgba(15,35,60,.10);
     --pd-text: #1a3450;
     --pd-muted: #526a82;
     --pd-radius: 14px;
@@ -434,13 +483,6 @@ echo "<script>window.PD = {$jsConfig};</script>";
     text-transform: uppercase;
 }
 
-.pd-section-desc {
-    font-size: 12px;
-    color: var(--pd-muted);
-    margin-left: auto;
-    font-weight: 600;
-}
-
 /* Category colour bindings */
 .pd-section.enrol .pd-section-dot   { background: var(--cat-enrol); }
 .pd-section.enrol .pd-section-label { color: var(--cat-enrol); }
@@ -470,26 +512,28 @@ echo "<script>window.PD = {$jsConfig};</script>";
     border: 1.5px solid var(--pd-border);
     border-radius: var(--pd-radius);
     box-shadow: var(--pd-shadow-sm);
-    padding: 18px 18px 16px;
+    padding: 12px 14px 14px;
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
     transition: box-shadow .18s, transform .18s;
 }
 .pd-kpi-card:hover {
     box-shadow: var(--pd-shadow-md);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 
 /* Left accent bar */
 .pd-kpi-card::before {
     content: '';
     position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 4px;
-    border-radius: var(--pd-radius) 0 0 var(--pd-radius);
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    border-radius: var(--pd-radius) var(--pd-radius) 0 0;
 }
 
 /* Category accent per section */
@@ -512,16 +556,27 @@ echo "<script>window.PD = {$jsConfig};</script>";
     padding: 2px 8px;
     border-radius: 999px;
     align-self: flex-start;
-    margin-bottom: 6px;
+    margin-bottom: 1px;
 }
 .pd-section.enrol    .pd-kpi-badge { background: var(--cat-enrol-bg);    color: var(--cat-enrol);    border: 1px solid var(--cat-enrol-border); }
 .pd-section.academic .pd-kpi-badge { background: var(--cat-academic-bg); color: var(--cat-academic); border: 1px solid var(--cat-academic-border); }
 .pd-section.attend   .pd-kpi-badge { background: var(--cat-attend-bg);   color: var(--cat-attend);   border: 1px solid var(--cat-attend-border); }
 .pd-section.risk     .pd-kpi-badge { background: var(--cat-risk-bg);     color: var(--cat-risk);     border: 1px solid var(--cat-risk-border); }
 
+.pd-kpi-main {
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    gap: 12px;
+    align-items: center;
+}
+
+.pd-kpi-meta {
+    min-width: 0;
+}
+
 .pd-kpi-value {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 36px;
+    font-size: 34px;
     font-weight: 700;
     line-height: 1;
     color: var(--pd-text);
@@ -529,21 +584,127 @@ echo "<script>window.PD = {$jsConfig};</script>";
 }
 
 .pd-kpi-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--pd-text);
     line-height: 1.3;
+    margin-top: 4px;
 }
 
 .pd-kpi-sub {
-    font-size: 11.5px;
+    font-size: 11px;
     color: var(--pd-muted);
     line-height: 1.35;
     font-weight: 500;
 }
 
-/* Ring gauge (kept for backward compat, hidden in new layout) */
-.pd-ring { display: none; }
+.pd-kpi-link {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1e5a90;
+    text-decoration: none;
+    border-bottom: 1px dashed #9bb6d2;
+    width: fit-content;
+}
+
+.pd-kpi-link:hover {
+    color: #174b79;
+    border-bottom-color: #174b79;
+}
+
+/* Semi-gauge indicator */
+.pd-kpi-gauge {
+    position: relative;
+    width: 104px;
+    height: 72px;
+    flex-shrink: 0;
+}
+
+.pd-kpi-gauge-track,
+.pd-kpi-gauge-scale,
+.pd-kpi-gauge-arc {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    clip-path: inset(0 0 50% 0);
+}
+
+.pd-kpi-gauge-track {
+    background: conic-gradient(from -90deg, #d2dfeb 0deg, #d2dfeb 180deg, transparent 180deg);
+}
+
+.pd-kpi-gauge-scale {
+    background: repeating-conic-gradient(
+        from -90deg,
+        rgba(56, 74, 95, 0.26) 0deg 1.2deg,
+        transparent 1.2deg 15deg
+    );
+    opacity: 0.8;
+}
+
+.pd-kpi-gauge-arc {
+    background:
+        conic-gradient(
+            from -90deg,
+            var(--gauge-color, #16a34a) var(--gauge-angle, 0deg),
+            transparent 0deg
+        );
+}
+
+.pd-kpi-gauge-mask {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    clip-path: inset(0 0 50% 0);
+}
+
+.pd-kpi-gauge-needle {
+    position: absolute;
+    left: 50px;
+    top: 13px;
+    width: 3px;
+    height: 38px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #2e4359 0%, #5e748a 100%);
+    transform-origin: bottom center;
+    transform: rotate(calc(-90deg + var(--gauge-angle, 0deg)));
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.pd-kpi-gauge-hub {
+    position: absolute;
+    left: 46px;
+    top: 46px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #2f4359;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(17, 31, 46, 0.25);
+}
+
+.pd-kpi-gauge-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 3px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #4c637a;
+    letter-spacing: 0.04em;
+}
 
 /* ── Panels (charts / tables / behaviour) ───────────────────── */
 .pd-panel-grid {
@@ -740,6 +901,82 @@ echo "<script>window.PD = {$jsConfig};</script>";
     font-weight: 600;
 }
 
+/* ── Panel insight KPIs ────────────────────────────────────── */
+.pd-insight-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.pd-insight-loading {
+    grid-column: 1 / -1;
+    border: 1px dashed #c5d5e5;
+    border-radius: 10px;
+    color: #6a8099;
+    font-size: 12px;
+    font-weight: 700;
+    background: #f8fbff;
+    padding: 10px 12px;
+}
+
+.pd-insight-card {
+    border: 1px solid #dce9f5;
+    background: #f7fbff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    min-height: 58px;
+}
+
+.pd-insight-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: #5b738c;
+    margin-bottom: 4px;
+}
+
+.pd-insight-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pd-insight-gauge {
+    --value: 0;
+    --gcolor: #16a34a;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: conic-gradient(var(--gcolor) calc(var(--value) * 1%), #d8e4f0 0);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.pd-insight-gauge::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.pd-insight-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 19px;
+    font-weight: 700;
+    color: #1e3d5c;
+    line-height: 1;
+}
+
+.pd-insight-sub {
+    font-size: 11px;
+    font-weight: 700;
+    color: #5b738c;
+    margin-top: 2px;
+}
+
 /* ── Panel tools (pagination controls) ──────────────────────── */
 .pd-panel-tools {
     display: flex;
@@ -799,6 +1036,13 @@ echo "<script>window.PD = {$jsConfig};</script>";
     border-radius: 10px;
 }
 
+.pd-table-note {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4f6982;
+}
+
 .pd-table {
     width: 100%;
     border-collapse: collapse;
@@ -848,6 +1092,11 @@ echo "<script>window.PD = {$jsConfig};</script>";
     background: rgba(10,25,45,.48);
     z-index: 9000;
     padding: 24px;
+}
+
+section[id],
+article[id] {
+    scroll-margin-top: 16px;
 }
 .pd-modal-overlay.active { display: flex; justify-content: center; align-items: center; }
 
@@ -902,6 +1151,8 @@ echo "<script>window.PD = {$jsConfig};</script>";
 @media (max-width: 1100px) {
     .pd-filter-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .pd-kpi-grid    { grid-template-columns: repeat(2, 1fr); }
+    .pd-kpi-value   { font-size: 31px; }
+    .pd-kpi-main    { grid-template-columns: 96px 1fr; }
 
     /* Stack panels to single column */
     .pd-panel-grid > .pd-panel,
@@ -917,12 +1168,26 @@ echo "<script>window.PD = {$jsConfig};</script>";
 @media (max-width: 680px) {
     .pd-filter-form     { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .pd-kpi-grid        { grid-template-columns: 1fr; }
+    .pd-insight-row     { grid-template-columns: 1fr; }
     .pd-filter-actions  { width: 100%; }
     .pd-btn             { width: 100%; }
+    .pd-kpi-value       { font-size: 28px; }
+    .pd-kpi-main        { grid-template-columns: 88px 1fr; }
+    .pd-kpi-gauge       { width: 88px; height: 62px; }
+    .pd-kpi-gauge-track,
+    .pd-kpi-gauge-scale,
+    .pd-kpi-gauge-arc   { width: 88px; height: 88px; }
+    .pd-kpi-gauge-mask  { width: 60px; height: 60px; left: 14px; top: 14px; }
+    .pd-kpi-gauge-needle { left: 42px; top: 12px; height: 32px; }
+    .pd-kpi-gauge-hub   { left: 39px; top: 39px; width: 10px; height: 10px; }
+    .pd-kpi-gauge-text  { font-size: 10px; }
 }
 
 @media (max-width: 480px) {
     .pd-filter-form { grid-template-columns: 1fr; }
+    .pd-kpi-main { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 4px; }
+    .pd-kpi-meta { text-align: center; }
+    .pd-kpi-badge { align-self: center; }
 }
 </style>
 
@@ -999,106 +1264,66 @@ echo "<script>window.PD = {$jsConfig};</script>";
         </section>
 
         <!-- ── ENROLMENT ─────────────────────────────────────── -->
-        <section class="pd-section enrol">
+        <section class="pd-section enrol" id="section-enrolment">
             <div class="pd-section-header">
                 <span class="pd-section-dot"></span>
                 <span class="pd-section-label"><?= $h(__('Enrolment')) ?></span>
-                <span class="pd-section-desc"><?= $h(__('Staffing &amp; cohort size')) ?></span>
             </div>
             <div class="pd-kpi-grid">
                 <?php foreach ($kpiRows[0] as $card): ?>
-                    <article class="pd-kpi-card">
-                        <span class="pd-kpi-badge"><?= $h($card['code']) ?></span>
-                        <div class="pd-kpi-value"><?= $h($card['value']) ?></div>
-                        <div class="pd-kpi-title"><?= $h($card['title']) ?></div>
-                        <div class="pd-kpi-sub"><?= $h($card['sub']) ?></div>
-                    </article>
+                    <?= $renderKpiCard($card) ?>
                 <?php endforeach; ?>
                 <?php foreach ($kpiRows[1] as $card): ?>
-                    <article class="pd-kpi-card">
-                        <span class="pd-kpi-badge"><?= $h($card['code']) ?></span>
-                        <div class="pd-kpi-value"><?= $h($card['value']) ?></div>
-                        <div class="pd-kpi-title"><?= $h($card['title']) ?></div>
-                        <div class="pd-kpi-sub"><?= $h($card['sub']) ?></div>
-                    </article>
+                    <?= $renderKpiCard($card) ?>
                 <?php endforeach; ?>
             </div>
         </section>
 
         <!-- ── ACADEMIC ──────────────────────────────────────── -->
-        <section class="pd-section academic">
+        <section class="pd-section academic" id="section-academic">
             <div class="pd-section-header">
                 <span class="pd-section-dot"></span>
                 <span class="pd-section-label"><?= $h(__('Academic')) ?></span>
-                <span class="pd-section-desc"><?= $h(__('Markbook &amp; internal assessment averages')) ?></span>
             </div>
             <div class="pd-kpi-grid">
                 <?php foreach ($kpiRows[2] as $card): ?>
-                    <article class="pd-kpi-card">
-                        <span class="pd-kpi-badge"><?= $h($card['code']) ?></span>
-                        <div class="pd-kpi-value"><?= $h($card['value']) ?></div>
-                        <div class="pd-kpi-title"><?= $h($card['title']) ?></div>
-                        <div class="pd-kpi-sub"><?= $h($card['sub']) ?></div>
-                    </article>
+                    <?= $renderKpiCard($card) ?>
                 <?php endforeach; ?>
                 <?php foreach ($kpiRows[3] as $card): ?>
-                    <article class="pd-kpi-card">
-                        <span class="pd-kpi-badge"><?= $h($card['code']) ?></span>
-                        <div class="pd-kpi-value"><?= $h($card['value']) ?></div>
-                        <div class="pd-kpi-title"><?= $h($card['title']) ?></div>
-                        <div class="pd-kpi-sub"><?= $h($card['sub']) ?></div>
-                    </article>
+                    <?= $renderKpiCard($card) ?>
                 <?php endforeach; ?>
             </div>
         </section>
 
         <!-- ── ATTENDANCE ────────────────────────────────────── -->
-        <section class="pd-section attend">
+        <section class="pd-section attend" id="section-attendance">
             <div class="pd-section-header">
                 <span class="pd-section-dot"></span>
                 <span class="pd-section-label"><?= $h(__('Attendance')) ?></span>
-                <span class="pd-section-desc"><?= $h($dateFrom) ?> — <?= $h($dateTo) ?></span>
             </div>
             <div class="pd-kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
                 <?php $attendCard = $kpiRows[1][1]; /* Attendance Rate */ ?>
-                <article class="pd-kpi-card">
-                    <span class="pd-kpi-badge"><?= $h($attendCard['code']) ?></span>
-                    <div class="pd-kpi-value"><?= $h($attendCard['value']) ?></div>
-                    <div class="pd-kpi-title"><?= $h($attendCard['title']) ?></div>
-                    <div class="pd-kpi-sub"><?= $h($attendCard['sub']) ?></div>
-                </article>
-                <?php $abCard = $kpiRows[3][1]; /* Chronic Absenteeism */ ?>
-                <article class="pd-kpi-card">
-                    <span class="pd-kpi-badge"><?= $h($abCard['code']) ?></span>
-                    <div class="pd-kpi-value"><?= $h($abCard['value']) ?></div>
-                    <div class="pd-kpi-title"><?= $h($abCard['title']) ?></div>
-                    <div class="pd-kpi-sub"><?= $h($abCard['sub']) ?></div>
-                </article>
+                <?= $renderKpiCard($attendCard) ?>
             </div>
         </section>
 
         <!-- ── RISK & BEHAVIOUR ──────────────────────────────── -->
-        <section class="pd-section risk">
+        <section class="pd-section risk" id="section-risk">
             <div class="pd-section-header">
                 <span class="pd-section-dot"></span>
                 <span class="pd-section-label"><?= $h(__('Risk &amp; Behaviour')) ?></span>
-                <span class="pd-section-desc"><?= $h(__('Students requiring attention')) ?></span>
             </div>
             <div class="pd-kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin-bottom: 16px;">
-                <?php foreach ($kpiRows[4] as $card): ?>
-                    <article class="pd-kpi-card">
-                        <span class="pd-kpi-badge"><?= $h($card['code']) ?></span>
-                        <div class="pd-kpi-value"><?= $h($card['value']) ?></div>
-                        <div class="pd-kpi-title"><?= $h($card['title']) ?></div>
-                        <div class="pd-kpi-sub"><?= $h($card['sub']) ?></div>
-                    </article>
-                <?php endforeach; ?>
+                <?php $atRiskCard = $kpiRows[4][0]; /* At-Risk Students */ ?>
+                <?= $renderKpiCard($atRiskCard) ?>
+                <?php $behaviourCard = $kpiRows[4][1]; /* Behaviour Flags */ ?>
+                <?= $renderKpiCard($behaviourCard) ?>
             </div>
         </section>
 
         <!-- ── Behaviour & Badges ────────────────────────────── -->
         <div class="pd-panel-grid" style="margin-bottom: 20px;">
-            <article class="pd-panel">
+            <article class="pd-panel" id="panel-behaviour-snapshot">
                 <header class="pd-panel-head">
                     <div>
                         <h2 class="pd-panel-title"><?= $h(__('Behaviour Snapshot')) ?></h2>
@@ -1176,7 +1401,7 @@ echo "<script>window.PD = {$jsConfig};</script>";
                 <?php endif; ?>
             </article>
 
-            <article class="pd-panel">
+            <article class="pd-panel" id="panel-badge-activity">
                 <header class="pd-panel-head">
                     <div>
                         <h2 class="pd-panel-title"><?= $h(__('Badge Activity')) ?></h2>
@@ -1239,11 +1464,11 @@ echo "<script>window.PD = {$jsConfig};</script>";
 
         <!-- ── Academic charts ──────────────────────────────── -->
         <div class="pd-panel-grid">
-            <article class="pd-panel">
+            <article class="pd-panel" id="panel-markbook-distribution">
                 <header class="pd-panel-head">
                     <div>
                         <h2 class="pd-panel-title"><?= $h(__('Markbook Grade Distribution')) ?></h2>
-                        <p class="pd-panel-subtitle"><?= $h(__('Student count by each student\'s average markbook grade.')) ?></p>
+                        <p class="pd-panel-subtitle"><?= $h(__('Student count by each student\'s average markbook grade. Click a bar to view students in that band.')) ?></p>
                     </div>
                 </header>
                 <div id="chart-markbook-dist" class="pd-chart-host">
@@ -1251,7 +1476,7 @@ echo "<script>window.PD = {$jsConfig};</script>";
                 </div>
             </article>
 
-            <article class="pd-panel">
+            <article class="pd-panel" id="panel-ia-comparison">
                 <header class="pd-panel-head">
                     <div>
                         <h2 class="pd-panel-title"><?= $h(__('IA vs Markbook — Class Averages')) ?></h2>
@@ -1273,32 +1498,43 @@ echo "<script>window.PD = {$jsConfig};</script>";
                 </div>
             </article>
 
-            <article class="pd-panel">
+            <article class="pd-panel" id="panel-ia-trends">
                 <header class="pd-panel-head">
                     <div>
-                        <h2 class="pd-panel-title"><?= $h(__('Internal Assessment Trends')) ?></h2>
-                        <p class="pd-panel-subtitle"><?= $h(__('Average % per assessment column over time. Click a marker to drill down into individual scores.')) ?></p>
+                        <h2 class="pd-panel-title"><?= $h(__('Internal Assessment Representation')) ?></h2>
+                        <p class="pd-panel-subtitle"><?= $h(__('100% stacked distribution by performance band per assessment column. Use the assessment filter and click a column to drill down into student scores.')) ?></p>
                     </div>
                 </header>
+                <div class="pd-panel-tools">
+                    <select id="pd-ia-assessment" class="pd-tool-select" aria-label="<?= $h(__('Filter by assessment')) ?>">
+                        <option value=""><?= $h(__('All Assessments')) ?></option>
+                    </select>
+                </div>
+                <div id="ia-insights" class="pd-insight-row">
+                    <div class="pd-insight-loading"><?= $h(__('Loading summary...')) ?></div>
+                </div>
                 <div id="chart-ia-trend" class="pd-chart-host">
                     <div class="pd-loading"><?= $h(__('Loading chart...')) ?></div>
                 </div>
             </article>
 
             <!-- ── Attendance charts ─────────────────────────── -->
-            <article class="pd-panel">
+            <article class="pd-panel" id="panel-attendance-trend">
                 <header class="pd-panel-head">
                     <div>
-                        <h2 class="pd-panel-title"><?= $h(__('Daily Attendance Trend')) ?></h2>
-                        <p class="pd-panel-subtitle"><?= $h(__('Attendance percentage over the selected date range.')) ?></p>
+                        <h2 class="pd-panel-title"><?= $h(__('Attendance Representation by Week')) ?></h2>
+                        <p class="pd-panel-subtitle"><?= $h(__('Weekly 100% stacked distribution of daily attendance bands.')) ?></p>
                     </div>
                 </header>
+                <div id="attendance-insights" class="pd-insight-row">
+                    <div class="pd-insight-loading"><?= $h(__('Loading summary...')) ?></div>
+                </div>
                 <div id="chart-attendance" class="pd-chart-host">
                     <div class="pd-loading"><?= $h(__('Loading chart...')) ?></div>
                 </div>
             </article>
 
-            <article class="pd-panel">
+            <article class="pd-panel" id="panel-absence-heatmap">
                 <header class="pd-panel-head">
                     <div>
                         <h2 class="pd-panel-title"><?= $h(__('Absence Heatmap')) ?></h2>
@@ -1311,11 +1547,11 @@ echo "<script>window.PD = {$jsConfig};</script>";
             </article>
 
             <!-- ── At-Risk table ─────────────────────────────── -->
-            <article class="pd-panel">
+            <article class="pd-panel" id="panel-at-risk-data">
                 <header class="pd-panel-head">
                     <div>
                         <h2 class="pd-panel-title"><?= $h(__('At-Risk Students')) ?></h2>
-                        <p class="pd-panel-subtitle"><?= $h(__('Flagged by low markbook average (&lt;50%) or high absenteeism (&gt;18 days).')) ?></p>
+                        <p class="pd-panel-subtitle"><?= $h(__('Flagged by low markbook average (&lt;65%) or high absenteeism (&gt;18 days).')) ?></p>
                     </div>
                 </header>
                 <div id="at-risk-container" class="pd-table-host">
@@ -1355,6 +1591,9 @@ echo "<script>window.PD = {$jsConfig};</script>";
         pageSize: 21
     };
     var iaTrendColumnIDs = [];
+    var iaTrendState = {
+        assessmentName: ''
+    };
 
     var moduleAjaxBase = '/modules/Principal%20Dashboard/ajax/';
     var palette = {
@@ -1440,7 +1679,28 @@ echo "<script>window.PD = {$jsConfig};</script>";
             if (!response.ok) {
                 throw new Error('HTTP ' + response.status);
             }
-            return response.json();
+            return response.text().then(function (text) {
+                var payload = text === null || text === undefined ? '' : String(text).trim();
+
+                try {
+                    return JSON.parse(payload);
+                } catch (parseError) {
+                    // Some environments leak PHP warnings before JSON. Try extracting the JSON envelope.
+                    var start = payload.indexOf('{');
+                    var end = payload.lastIndexOf('}');
+                    if (start !== -1 && end > start) {
+                        var candidate = payload.slice(start, end + 1);
+                        try {
+                            return JSON.parse(candidate);
+                        } catch (ignored) {
+                            // Fall through to throw a descriptive error.
+                        }
+                    }
+
+                    var sample = payload.slice(0, 180).replace(/\s+/g, ' ');
+                    throw new Error('Invalid JSON response from ' + endpoint + (sample ? ': ' + sample : ''));
+                }
+            });
         });
     }
 
@@ -1480,6 +1740,259 @@ echo "<script>window.PD = {$jsConfig};</script>";
         chartRefs[containerID].render();
     }
 
+    function setInsightLoading(containerID, message) {
+        var el = document.getElementById(containerID);
+        if (!el) {
+            return;
+        }
+        el.innerHTML = '<div class="pd-insight-loading">' + escHtml(message) + '</div>';
+    }
+
+    function insightGaugeColor(percent, inverse) {
+        var value = clampPercent(percent);
+        if (inverse) {
+            if (value <= 30) {
+                return palette.green;
+            }
+            if (value <= 55) {
+                return palette.amber;
+            }
+            return palette.red;
+        }
+
+        if (value < 50) {
+            return palette.red;
+        }
+        if (value < 70) {
+            return palette.amber;
+        }
+        return palette.green;
+    }
+
+    function fmtInt(value) {
+        var n = Number(value);
+        if (!isFinite(n)) {
+            return '0';
+        }
+        return Math.round(n).toLocaleString();
+    }
+
+    function renderInsightCards(containerID, cards) {
+        var el = document.getElementById(containerID);
+        if (!el) {
+            return;
+        }
+
+        if (!Array.isArray(cards) || cards.length === 0) {
+            el.innerHTML = '<div class="pd-insight-loading">No summary available for current filters.</div>';
+            return;
+        }
+
+        var html = cards.map(function (card) {
+            var gauge = clampPercent(card && card.gauge);
+            var gaugeColor = card && card.gaugeColor ? card.gaugeColor : insightGaugeColor(gauge, !!(card && card.inverse));
+            var label = card && card.label ? String(card.label) : '';
+            var valueText = card && card.valueText ? String(card.valueText) : 'N/A';
+            var subText = card && card.subText ? String(card.subText) : '';
+
+            return '' +
+                '<div class="pd-insight-card">' +
+                    '<div class="pd-insight-label">' + escHtml(label) + '</div>' +
+                    '<div class="pd-insight-main">' +
+                        '<div class="pd-insight-gauge" style="--value:' + escHtml(gauge) + ';--gcolor:' + escHtml(gaugeColor) + ';"></div>' +
+                        '<div>' +
+                            '<div class="pd-insight-value">' + escHtml(valueText) + '</div>' +
+                            '<div class="pd-insight-sub">' + escHtml(subText) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        }).join('');
+
+        el.innerHTML = html;
+    }
+
+    function populateIAAssessmentOptions(options) {
+        var select = document.getElementById('pd-ia-assessment');
+        if (!select) {
+            return;
+        }
+
+        var current = iaTrendState.assessmentName || '';
+        var list = Array.isArray(options)
+            ? options
+                .map(function (name) {
+                    return name === null || name === undefined ? '' : String(name).trim();
+                })
+                .filter(function (name, index, arr) {
+                    return name !== '' && arr.indexOf(name) === index;
+                })
+            : [];
+
+        var html = '<option value="">' + escHtml('All Assessments') + '</option>';
+        list.forEach(function (name) {
+            html += '<option value="' + escHtml(name) + '">' + escHtml(name) + '</option>';
+        });
+        select.innerHTML = html;
+
+        if (current !== '' && list.indexOf(current) !== -1) {
+            select.value = current;
+        } else {
+            iaTrendState.assessmentName = '';
+            select.value = '';
+        }
+    }
+
+    function pad2(value) {
+        var n = Number(value);
+        if (!isFinite(n)) {
+            return '00';
+        }
+        var intValue = Math.floor(Math.abs(n));
+        return intValue < 10 ? '0' + intValue : String(intValue);
+    }
+
+    function parseISODate(value) {
+        if (typeof value !== 'string') {
+            return null;
+        }
+
+        var parts = value.split('-');
+        if (parts.length !== 3) {
+            return null;
+        }
+
+        var year = Number(parts[0]);
+        var month = Number(parts[1]);
+        var day = Number(parts[2]);
+        if (!isFinite(year) || !isFinite(month) || !isFinite(day)) {
+            return null;
+        }
+
+        var dateObj = new Date(year, month - 1, day);
+        if (
+            dateObj.getFullYear() !== year ||
+            dateObj.getMonth() !== month - 1 ||
+            dateObj.getDate() !== day
+        ) {
+            return null;
+        }
+
+        return dateObj;
+    }
+
+    function weekStartDate(dateObj) {
+        var weekStart = new Date(dateObj.getTime());
+        var day = weekStart.getDay();
+        var diffToMonday = (day + 6) % 7;
+        weekStart.setDate(weekStart.getDate() - diffToMonday);
+        return weekStart;
+    }
+
+    function formatDateKey(dateObj) {
+        return dateObj.getFullYear() + '-' + pad2(dateObj.getMonth() + 1) + '-' + pad2(dateObj.getDate());
+    }
+
+    function formatWeekLabel(dateKey) {
+        var dateObj = parseISODate(dateKey);
+        if (!dateObj) {
+            return dateKey;
+        }
+
+        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return monthNames[dateObj.getMonth()] + ' ' + dateObj.getDate();
+    }
+
+    function round1(value) {
+        var n = Number(value);
+        if (!isFinite(n)) {
+            return 0;
+        }
+        return Math.round(n * 10) / 10;
+    }
+
+    function buildWeeklyAttendanceBands(labels, values) {
+        var weeklyMap = {};
+        var weeklyOrder = [];
+        var totalDays = 0;
+        var totalValue = 0;
+        var daysBelow80 = 0;
+        var days8090 = 0;
+        var days90Plus = 0;
+
+        var maxLen = Math.max(
+            Array.isArray(labels) ? labels.length : 0,
+            Array.isArray(values) ? values.length : 0
+        );
+
+        for (var i = 0; i < maxLen; i += 1) {
+            var attendanceValue = Number(values && values[i]);
+            if (!isFinite(attendanceValue)) {
+                continue;
+            }
+
+            var dateObj = parseISODate(labels && labels[i]);
+            if (!dateObj) {
+                continue;
+            }
+
+            var weekKey = formatDateKey(weekStartDate(dateObj));
+            if (!weeklyMap[weekKey]) {
+                weeklyMap[weekKey] = { low: 0, mid: 0, high: 0, total: 0 };
+                weeklyOrder.push(weekKey);
+            }
+
+            var bucket = weeklyMap[weekKey];
+            if (attendanceValue < 80) {
+                bucket.low += 1;
+                daysBelow80 += 1;
+            } else if (attendanceValue < 90) {
+                bucket.mid += 1;
+                days8090 += 1;
+            } else {
+                bucket.high += 1;
+                days90Plus += 1;
+            }
+
+            bucket.total += 1;
+            totalDays += 1;
+            totalValue += attendanceValue;
+        }
+
+        var weekLabels = [];
+        var lowSeries = [];
+        var midSeries = [];
+        var highSeries = [];
+
+        weeklyOrder.forEach(function (weekKey) {
+            var bucket = weeklyMap[weekKey];
+            if (!bucket || bucket.total <= 0) {
+                return;
+            }
+
+            weekLabels.push(formatWeekLabel(weekKey));
+            lowSeries.push(round1((bucket.low / bucket.total) * 100));
+            midSeries.push(round1((bucket.mid / bucket.total) * 100));
+            highSeries.push(round1((bucket.high / bucket.total) * 100));
+        });
+
+        return {
+            labels: weekLabels,
+            series: [
+                { name: '< 80%', data: lowSeries },
+                { name: '80-89%', data: midSeries },
+                { name: '>= 90%', data: highSeries }
+            ],
+            summary: {
+                avgDaily: totalDays > 0 ? round1(totalValue / totalDays) : 0,
+                below80Pct: totalDays > 0 ? round1((daysBelow80 / totalDays) * 100) : 0,
+                onTargetPct: totalDays > 0 ? round1((days90Plus / totalDays) * 100) : 0,
+                totalDays: totalDays,
+                weeksTracked: weekLabels.length,
+                warningPct: totalDays > 0 ? round1((days8090 / totalDays) * 100) : 0
+            }
+        };
+    }
+
     function loadMarkbookDistribution() {
         setLoading('chart-markbook-dist', 'Loading chart...');
 
@@ -1493,7 +2006,16 @@ echo "<script>window.PD = {$jsConfig};</script>";
                 chart: {
                     type: 'bar',
                     height: 320,
-                    toolbar: { show: true }
+                    toolbar: { show: true },
+                    events: {
+                        dataPointSelection: function (event, chartContext, config) {
+                            var pointIndex = config && typeof config.dataPointIndex === 'number' ? config.dataPointIndex : -1;
+                            if (pointIndex < 0 || !Array.isArray(res.data.labels) || !res.data.labels[pointIndex]) {
+                                return;
+                            }
+                            openGradeBandDrillDown(res.data.labels[pointIndex]);
+                        }
+                    }
                 },
                 series: [{
                     name: 'Students',
@@ -1535,6 +2057,13 @@ echo "<script>window.PD = {$jsConfig};</script>";
                     y: {
                         formatter: function (value) {
                             return value + ' students';
+                        }
+                    }
+                },
+                states: {
+                    active: {
+                        filter: {
+                            type: 'none'
                         }
                     }
                 }
@@ -1705,7 +2234,13 @@ echo "<script>window.PD = {$jsConfig};</script>";
         fetchJSON('assessmentDrillDown.php', {
             columnID: columnID
         }).then(function (res) {
-            if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+            if (!res || res.success === false) {
+                var errorText = (res && res.message) ? String(res.message) : 'Failed to load drilldown data.';
+                modalBody.innerHTML = '<div class="pd-loading">' + escHtml(errorText) + '</div>';
+                return;
+            }
+
+            if (!Array.isArray(res.data) || res.data.length === 0) {
                 modalBody.innerHTML = '<div class="pd-loading">No student data found for this assessment.</div>';
                 return;
             }
@@ -1750,58 +2285,161 @@ echo "<script>window.PD = {$jsConfig};</script>";
         });
     }
 
+    function openGradeBandDrillDown(gradeBand) {
+        var modal = document.getElementById('pd-modal');
+        var modalTitle = document.getElementById('pd-modal-title');
+        var modalSubtitle = document.getElementById('pd-modal-subtitle');
+        var modalBody = document.getElementById('pd-modal-body');
+
+        if (!modal || !modalTitle || !modalSubtitle || !modalBody) {
+            return;
+        }
+
+        var gradeLabel = String(gradeBand || '').trim();
+        var gradeLetter = gradeLabel.charAt(0) || 'Grade';
+
+        modalTitle.textContent = 'Grade ' + gradeLetter + ' Students';
+        modalSubtitle.textContent = 'Students with markbook averages in ' + gradeLabel + '.';
+        modalBody.innerHTML = '<div class="pd-loading">Loading...</div>';
+        modal.classList.add('active');
+
+        fetchJSON('markbookBandDrillDown.php', {
+            gradeBand: gradeLabel
+        }).then(function (res) {
+            if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                modalBody.innerHTML = '<div class="pd-loading">No students found in this grade band.</div>';
+                return;
+            }
+
+            var html = '';
+            html += '<div class="pd-table-wrap">';
+            html += '<table class="pd-table">';
+            html += '<thead><tr>';
+            html += '<th>#</th><th>Student</th><th>Form Group</th><th>Year Group</th><th>Grade</th>';
+            html += '</tr></thead><tbody>';
+
+            res.data.forEach(function (student, index) {
+                var profileURL = PD.baseURL + '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=' + encodeURIComponent(student.personID);
+                html += '<tr>';
+                html += '<td>' + escHtml(index + 1) + '</td>';
+                html += '<td><a href="' + profileURL + '">' + escHtml(student.name) + '</a></td>';
+                html += '<td>' + escHtml(student.formGroup || '-') + '</td>';
+                html += '<td>' + escHtml(student.yearGroup || '-') + '</td>';
+                html += '<td><strong>' + escHtml(fmtPct(student.avgGrade)) + '</strong></td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            html += '</div>';
+            modalBody.innerHTML = html;
+        }).catch(function () {
+            modalBody.innerHTML = '<div class="pd-loading">Failed to load grade band data.</div>';
+        });
+    }
+
     function loadIATrend() {
         setLoading('chart-ia-trend', 'Loading chart...');
+        setInsightLoading('ia-insights', 'Loading summary...');
 
-        fetchJSON('assessmentTrend.php').then(function (res) {
+        var extraParams = {};
+        if (iaTrendState.assessmentName) {
+            extraParams.assessmentName = iaTrendState.assessmentName;
+        }
+
+        fetchJSON('assessmentTrend.php', extraParams).then(function (res) {
+            if (res && res.data) {
+                populateIAAssessmentOptions(res.data.assessmentOptions);
+            } else {
+                populateIAAssessmentOptions([]);
+            }
+
             if (!res.success || !res.data || !Array.isArray(res.data.series) || res.data.series.length === 0) {
                 setEmpty('chart-ia-trend', 'No internal assessment trend data available.');
                 iaTrendColumnIDs = [];
+                setInsightLoading('ia-insights', 'No summary available for current filters.');
                 return;
             }
 
             iaTrendColumnIDs = Array.isArray(res.data.columnIDs) ? res.data.columnIDs : [];
             var categories = Array.isArray(res.data.labels) ? res.data.labels.map(function (label) {
-                return truncateLabel(label, 24);
+                return truncateLabel(label, 18);
             }) : [];
             var fullLabels = Array.isArray(res.data.labels) ? res.data.labels : [];
+            var summary = (res.data.summary && typeof res.data.summary === 'object') ? res.data.summary : {};
+            var avgScore = Number(summary.avgScore);
+            var below65Pct = Number(summary.below65Pct);
+            var strongPct = Number(summary.strongPct);
+            var totalEntries = Number(summary.totalEntries);
+            var columnsTracked = Number(summary.columnsTracked);
+
+            if (!isFinite(avgScore)) {
+                avgScore = 0;
+            }
+            if (!isFinite(below65Pct)) {
+                below65Pct = 0;
+            }
+            if (!isFinite(strongPct)) {
+                strongPct = 0;
+            }
+            if (!isFinite(totalEntries) || totalEntries < 0) {
+                totalEntries = 0;
+            }
+            if (!isFinite(columnsTracked) || columnsTracked < 0) {
+                columnsTracked = 0;
+            }
+
+            renderInsightCards('ia-insights', [
+                {
+                    label: 'Average Score',
+                    gauge: avgScore,
+                    valueText: fmtPct(avgScore),
+                    subText: fmtInt(totalEntries) + ' scored entries'
+                },
+                {
+                    label: 'Below 65%',
+                    gauge: below65Pct,
+                    valueText: fmtPct(below65Pct),
+                    subText: 'Share requiring support',
+                    inverse: true
+                },
+                {
+                    label: 'Strong (80%+)',
+                    gauge: strongPct,
+                    valueText: fmtPct(strongPct),
+                    subText: fmtInt(columnsTracked) + ' assessment columns'
+                }
+            ]);
 
             renderChart('chart-ia-trend', {
                 chart: {
-                    type: 'line',
+                    type: 'bar',
                     height: 320,
+                    stacked: true,
+                    stackType: '100%',
                     toolbar: { show: true },
                     events: {
-                        markerClick: function (event, chartContext, config) {
-                            var index = config.dataPointIndex;
-                            if (index < 0) {
+                        dataPointSelection: function (event, chartContext, config) {
+                            var index = config && typeof config.dataPointIndex === 'number' ? config.dataPointIndex : -1;
+                            if (index < 0 || !iaTrendColumnIDs[index]) {
                                 return;
                             }
-                            var columnID = iaTrendColumnIDs[index];
-                            if (!columnID) {
-                                return;
-                            }
-                            var columnName = fullLabels[index] || 'Assessment';
-                            openDrillDown(columnID, columnName);
+                            openDrillDown(iaTrendColumnIDs[index], fullLabels[index] || 'Assessment');
                         }
                     }
                 },
                 series: res.data.series,
-                colors: [palette.blue],
-                stroke: {
-                    curve: 'smooth',
-                    width: 3
-                },
-                markers: {
-                    size: 4,
-                    hover: {
-                        sizeOffset: 3
+                colors: [palette.red, palette.amber, palette.green, palette.blue],
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        borderRadius: 3,
+                        columnWidth: '74%'
                     }
                 },
                 xaxis: {
                     categories: categories,
                     labels: {
-                        rotate: -30,
+                        rotate: -34,
                         style: {
                             colors: '#4f6a83',
                             fontSize: '11px'
@@ -1811,8 +2449,9 @@ echo "<script>window.PD = {$jsConfig};</script>";
                 yaxis: {
                     min: 0,
                     max: 100,
+                    tickAmount: 5,
                     title: {
-                        text: 'Average Score (%)'
+                        text: 'Distribution (%)'
                     },
                     labels: {
                         style: {
@@ -1824,28 +2463,15 @@ echo "<script>window.PD = {$jsConfig};</script>";
                     enabled: false
                 },
                 legend: {
-                    show: false
+                    position: 'top'
                 },
                 grid: {
                     borderColor: '#dbe6f2',
                     strokeDashArray: 3
                 },
-                annotations: {
-                    yaxis: [{
-                        y: 50,
-                        borderColor: palette.red,
-                        strokeDashArray: 5,
-                        label: {
-                            text: 'Pass Threshold (50%)',
-                            style: {
-                                color: '#fff',
-                                background: palette.red,
-                                fontSize: '11px'
-                            }
-                        }
-                    }]
-                },
                 tooltip: {
+                    shared: true,
+                    intersect: false,
                     y: {
                         formatter: function (value) {
                             return fmtPct(value);
@@ -1853,40 +2479,113 @@ echo "<script>window.PD = {$jsConfig};</script>";
                     }
                 }
             });
-        }).catch(function () {
+        }).catch(function (error) {
+            if (window.console && typeof window.console.error === 'function') {
+                window.console.error('PD IA trend load error:', error);
+            }
+            populateIAAssessmentOptions([]);
             setEmpty('chart-ia-trend', 'Failed to load internal assessment trend.');
+            setInsightLoading('ia-insights', 'Failed to load summary.');
         });
     }
 
     function loadAttendanceTrend() {
         setLoading('chart-attendance', 'Loading chart...');
+        setInsightLoading('attendance-insights', 'Loading summary...');
 
         fetchJSON('attendanceTrend.php').then(function (res) {
             if (!res.success || !res.data || !Array.isArray(res.data.labels)) {
                 setEmpty('chart-attendance', 'No attendance trend data available.');
+                setInsightLoading('attendance-insights', 'No summary available for current filters.');
                 return;
             }
 
+            var weeklyBands = buildWeeklyAttendanceBands(
+                Array.isArray(res.data.labels) ? res.data.labels : [],
+                Array.isArray(res.data.values) ? res.data.values : []
+            );
+
+            if (!Array.isArray(weeklyBands.labels) || weeklyBands.labels.length === 0) {
+                setEmpty('chart-attendance', 'No attendance trend data available.');
+                setInsightLoading('attendance-insights', 'No summary available for current filters.');
+                return;
+            }
+
+            var summary = weeklyBands.summary || {};
+            var avgDaily = Number(summary.avgDaily);
+            var below80Pct = Number(summary.below80Pct);
+            var onTargetPct = Number(summary.onTargetPct);
+            var warningPct = Number(summary.warningPct);
+            var totalDays = Number(summary.totalDays);
+            var weeksTracked = Number(summary.weeksTracked);
+
+            if (!isFinite(avgDaily)) {
+                avgDaily = 0;
+            }
+            if (!isFinite(below80Pct)) {
+                below80Pct = 0;
+            }
+            if (!isFinite(onTargetPct)) {
+                onTargetPct = 0;
+            }
+            if (!isFinite(warningPct)) {
+                warningPct = 0;
+            }
+            if (!isFinite(totalDays) || totalDays < 0) {
+                totalDays = 0;
+            }
+            if (!isFinite(weeksTracked) || weeksTracked < 0) {
+                weeksTracked = 0;
+            }
+
+            renderInsightCards('attendance-insights', [
+                {
+                    label: 'Average Daily Attendance',
+                    gauge: avgDaily,
+                    valueText: fmtPct(avgDaily),
+                    subText: fmtInt(totalDays) + ' school days analysed'
+                },
+                {
+                    label: 'Days < 80%',
+                    gauge: below80Pct,
+                    valueText: fmtPct(below80Pct),
+                    subText: 'Low-attendance days',
+                    inverse: true
+                },
+                {
+                    label: 'Days 80-89%',
+                    gauge: warningPct,
+                    valueText: fmtPct(warningPct),
+                    subText: fmtInt(weeksTracked) + ' weeks tracked',
+                    inverse: true
+                },
+                {
+                    label: 'Days >= 90%',
+                    gauge: onTargetPct,
+                    valueText: fmtPct(onTargetPct),
+                    subText: 'On-target attendance'
+                }
+            ]);
+
             renderChart('chart-attendance', {
                 chart: {
-                    type: 'line',
+                    type: 'bar',
                     height: 320,
+                    stacked: true,
+                    stackType: '100%',
                     toolbar: { show: true }
                 },
-                series: [{
-                    name: 'Attendance %',
-                    data: Array.isArray(res.data.values) ? res.data.values : []
-                }],
-                colors: [palette.green],
-                stroke: {
-                    curve: 'smooth',
-                    width: 3
-                },
-                markers: {
-                    size: 0
+                series: weeklyBands.series,
+                colors: [palette.red, palette.amber, palette.green],
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        borderRadius: 3,
+                        columnWidth: '72%'
+                    }
                 },
                 xaxis: {
-                    categories: res.data.labels,
+                    categories: weeklyBands.labels,
                     labels: {
                         rotate: -30,
                         style: {
@@ -1898,8 +2597,9 @@ echo "<script>window.PD = {$jsConfig};</script>";
                 yaxis: {
                     min: 0,
                     max: 100,
+                    tickAmount: 5,
                     title: {
-                        text: 'Attendance (%)'
+                        text: 'Distribution (%)'
                     },
                     labels: {
                         style: {
@@ -1910,26 +2610,16 @@ echo "<script>window.PD = {$jsConfig};</script>";
                 dataLabels: {
                     enabled: false
                 },
+                legend: {
+                    position: 'top'
+                },
                 grid: {
                     borderColor: '#dbe6f2',
                     strokeDashArray: 3
                 },
-                annotations: {
-                    yaxis: [{
-                        y: 90,
-                        borderColor: palette.amber,
-                        strokeDashArray: 4,
-                        label: {
-                            text: 'Target 90%',
-                            style: {
-                                color: '#fff',
-                                background: palette.amber,
-                                fontSize: '11px'
-                            }
-                        }
-                    }]
-                },
                 tooltip: {
+                    shared: true,
+                    intersect: false,
                     y: {
                         formatter: function (value) {
                             return fmtPct(value);
@@ -1937,8 +2627,12 @@ echo "<script>window.PD = {$jsConfig};</script>";
                     }
                 }
             });
-        }).catch(function () {
+        }).catch(function (error) {
+            if (window.console && typeof window.console.error === 'function') {
+                window.console.error('PD attendance trend load error:', error);
+            }
             setEmpty('chart-attendance', 'Failed to load attendance trend.');
+            setInsightLoading('attendance-insights', 'Failed to load summary.');
         });
     }
 
@@ -2057,7 +2751,17 @@ echo "<script>window.PD = {$jsConfig};</script>";
                 return;
             }
 
+            var totalAtRisk = Number(res.meta && res.meta.total);
+            if (!isFinite(totalAtRisk) || totalAtRisk < 0) {
+                totalAtRisk = res.data.length;
+            }
+
             var html = '';
+            if (totalAtRisk > res.data.length) {
+                html += '<div class="pd-table-note">Showing first ' + escHtml(res.data.length) + ' of ' + escHtml(totalAtRisk) + ' at-risk students.</div>';
+            } else {
+                html += '<div class="pd-table-note">Showing ' + escHtml(totalAtRisk) + ' at-risk students.</div>';
+            }
             html += '<div class="pd-table-wrap">';
             html += '<table class="pd-table">';
             html += '<thead><tr>';
@@ -2105,6 +2809,7 @@ echo "<script>window.PD = {$jsConfig};</script>";
         var prevButton = document.getElementById('pd-comp-prev');
         var nextButton = document.getElementById('pd-comp-next');
         var sizeSelect = document.getElementById('pd-comp-size');
+        var iaAssessmentSelect = document.getElementById('pd-ia-assessment');
 
         if (prevButton) {
             prevButton.addEventListener('click', function () {
@@ -2133,6 +2838,13 @@ echo "<script>window.PD = {$jsConfig};</script>";
                     comparisonState.page = 0;
                     renderComparisonPage();
                 }
+            });
+        }
+
+        if (iaAssessmentSelect) {
+            iaAssessmentSelect.addEventListener('change', function () {
+                iaTrendState.assessmentName = iaAssessmentSelect.value || '';
+                loadIATrend();
             });
         }
 

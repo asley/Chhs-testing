@@ -69,6 +69,16 @@
       "env": {
         "POSTGRES_CONNECTION_STRING": "${POSTGRES_CONNECTION_STRING}"
       }
+    },
+    "gemini-planner": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/asleysmith/mcp-agents/gemini-planner/index.js"]
+    },
+    "codex-security": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/asleysmith/mcp-agents/codex-security/index.js"]
     }
   }
 }
