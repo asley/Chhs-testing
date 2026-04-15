@@ -22,6 +22,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Services\GoogleDriveService;
 use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 
+// Allow static call to buildFilename without a full namespace prefix below
+
+
 require_once '../../gibbon.php';
 
 $URL = $session->get('absoluteURL').'/index.php?q=/modules/Reports/archive_manage_googledrive.php';
@@ -60,18 +63,30 @@ if ($forceResync) {
     $requeueSql = "UPDATE gibbonReportArchiveEntry
                    SET googleDriveFileID = NULL
                    WHERE status = 'Final'
+                   AND type = 'Single'
                    AND googleDriveFileID IS NOT NULL
                    AND googleDriveFileID <> ''
                    AND googleDriveFileID NOT LIKE 'missing_local:%'";
     $requeued = (int)$pdo->affectingStatement($requeueSql);
 }
 
-// Fetch a scan window of unsynced FINAL entries. Missing files are skipped, and we
-// continue scanning so one run can still upload up to batchLimit actual files.
-$sql = "SELECT e.gibbonReportArchiveEntryID, e.filePath, a.path AS archivePath
+// Fetch a scan window of unsynced FINAL Single-type entries with the metadata needed
+// to build a human-readable filename and the folder hierarchy in Drive.
+// Batch (year-group combined) PDFs are intentionally excluded (type = 'Single' only).
+$sql = "SELECT e.gibbonReportArchiveEntryID, e.filePath, e.reportIdentifier,
+               a.path AS archivePath,
+               p.surname, p.preferredName,
+               yg.name  AS yearGroupName,
+               fg.nameShort AS formGroupName,
+               sy.name  AS schoolYearName
         FROM gibbonReportArchiveEntry e
-        JOIN gibbonReportArchive a ON (a.gibbonReportArchiveID = e.gibbonReportArchiveID)
+        JOIN gibbonReportArchive a  ON (a.gibbonReportArchiveID  = e.gibbonReportArchiveID)
+        JOIN gibbonPerson p         ON (p.gibbonPersonID         = e.gibbonPersonID)
+        LEFT JOIN gibbonYearGroup  yg ON (yg.gibbonYearGroupID  = e.gibbonYearGroupID)
+        LEFT JOIN gibbonFormGroup  fg ON (fg.gibbonFormGroupID  = e.gibbonFormGroupID)
+        LEFT JOIN gibbonSchoolYear sy ON (sy.gibbonSchoolYearID = e.gibbonSchoolYearID)
         WHERE e.status = 'Final'
+        AND e.type = 'Single'
         AND (e.googleDriveFileID IS NULL OR e.googleDriveFileID = '')
         ORDER BY e.timestampCreated ASC
         LIMIT {$scanLimit}";
@@ -103,8 +118,24 @@ foreach ($entries as $entry) {
         continue;
     }
 
+    // Build human-readable filename and resolve Drive folder hierarchy
+    $driveFilename = GoogleDriveService::buildFilename(
+        $entry['surname'] ?? '',
+        $entry['preferredName'] ?? '',
+        $entry['reportIdentifier'] ?? basename($entry['filePath'], '.pdf')
+    );
+
+    $parentFolderId = null;
+    if (!empty($entry['schoolYearName']) && !empty($entry['yearGroupName']) && !empty($entry['formGroupName'])) {
+        $parentFolderId = $driveService->resolveFolderPath(
+            $entry['schoolYearName'],
+            $entry['yearGroupName'],
+            $entry['formGroupName']
+        );
+    }
+
     $uploadAttempts++;
-    $driveFileId = $driveService->uploadFile($localPath, basename($entry['filePath']));
+    $driveFileId = $driveService->uploadFile($localPath, $driveFilename, 'application/pdf', $parentFolderId);
 
     if ($driveFileId) {
         $reportArchiveEntryGateway->update($entry['gibbonReportArchiveEntryID'], [

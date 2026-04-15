@@ -77,6 +77,17 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
         $archiveFile = $this->container->get(ArchiveFile::class);
         $driveService = $this->container->get(GoogleDriveService::class);
 
+        // Resolve school year name once per batch run (used for Drive folder hierarchy)
+        $db = $this->container->get(\Gibbon\Contracts\Database\Connection::class);
+        $schoolYearName = $db->selectOne(
+            "SELECT name FROM gibbonSchoolYear WHERE gibbonSchoolYearID = ?",
+            [$report['gibbonSchoolYearID']]
+        ) ?: '';
+
+        // Caches for year group and form group names (small lookup tables, few distinct values)
+        $yearGroupNames = [];
+        $formGroupNames = [];
+
         $template = $reportBuilder->buildTemplate($report['gibbonReportTemplateID'], $options['status'] == 'Draft');
 
         foreach ($contexts as $contextData) {
@@ -92,14 +103,9 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
             $path = $archiveFile->getBatchFilePath($gibbonReportID, $contextData);
             $renderer->render($template, $reports, $this->absolutePath.$archive['path'].'/'.$path);
 
-            // Sync batch PDF to Google Drive (before archive entry so we can store the file ID)
+            // Batch PDFs (combined year-group files) are intentionally excluded from Drive sync.
+            // Only individual student (Single) reports are uploaded.
             $batchDriveFileId = null;
-            if ($driveService->isEnabled()) {
-                $batchDriveFileId = $driveService->uploadFile(
-                    $this->absolutePath.$archive['path'].'/'.$path,
-                    basename($path)
-                );
-            }
 
             // Update the Archive: Batch
             $batchArchiveData = [
@@ -132,12 +138,49 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
                     $path = $archiveFile->getSingleFilePath($gibbonReportID, $student['gibbonYearGroupID'], $identifier);
                     $renderer->render($template, [$studentReport], $this->absolutePath.$archive['path'].'/'.$path);
 
-                    // Sync single PDF to Google Drive (before archive entry so we can store the file ID)
+                    // Sync single PDF to Google Drive with folder hierarchy and human-readable filename.
                     $singleDriveFileId = null;
                     if ($driveService->isEnabled()) {
+                        // Resolve year group and form group names (cached per run)
+                        $ygID = $student['gibbonYearGroupID'] ?? '';
+                        $fgID = $student['gibbonFormGroupID'] ?? '';
+                        if ($ygID && !isset($yearGroupNames[$ygID])) {
+                            $yearGroupNames[$ygID] = $db->selectOne(
+                                "SELECT name FROM gibbonYearGroup WHERE gibbonYearGroupID = ?", [$ygID]
+                            ) ?: $ygID;
+                        }
+                        if ($fgID && !isset($formGroupNames[$fgID])) {
+                            $formGroupNames[$fgID] = $db->selectOne(
+                                "SELECT nameShort FROM gibbonFormGroup WHERE gibbonFormGroupID = ?", [$fgID]
+                            ) ?: $fgID;
+                        }
+
+                        $parentFolderId = null;
+                        if (!empty($schoolYearName) && !empty($yearGroupNames[$ygID]) && !empty($formGroupNames[$fgID])) {
+                            $parentFolderId = $driveService->resolveFolderPath(
+                                $schoolYearName,
+                                $yearGroupNames[$ygID],
+                                $formGroupNames[$fgID]
+                            );
+                        }
+
+                        // getByID returns gibbonStudentEnrolment columns only — fetch person name separately
+                        $personRow = $db->select(
+                            "SELECT surname, preferredName FROM gibbonPerson WHERE gibbonPersonID = ?",
+                            [$student['gibbonPersonID']]
+                        )->fetch(\PDO::FETCH_ASSOC);
+
+                        $driveFilename = GoogleDriveService::buildFilename(
+                            $personRow['surname'] ?? '',
+                            $personRow['preferredName'] ?? '',
+                            $report['name'] ?? basename($path, '.pdf')
+                        );
+
                         $singleDriveFileId = $driveService->uploadFile(
                             $this->absolutePath.$archive['path'].'/'.$path,
-                            basename($path)
+                            $driveFilename,
+                            'application/pdf',
+                            $parentFolderId
                         );
                     }
 

@@ -54,6 +54,9 @@ class GoogleDriveService
     /** @var string|null */
     private $lastError = null;
 
+    /** @var array In-memory folder ID cache keyed by "{parentId}/{name}" */
+    private $folderCache = [];
+
     public function __construct(SettingGateway $settingGateway, Connection $db)
     {
         $this->db = $db;
@@ -79,12 +82,13 @@ class GoogleDriveService
     /**
      * Upload a local file to Google Drive.
      *
-     * @param string $localPath  Absolute path to the file on disk.
-     * @param string $filename   Filename to use in Drive.
-     * @param string $mimeType   MIME type (default: application/pdf).
-     * @return string|null       Drive file ID on success, null on failure.
+     * @param string      $localPath      Absolute path to the file on disk.
+     * @param string      $filename       Filename to use in Drive.
+     * @param string      $mimeType       MIME type (default: application/pdf).
+     * @param string|null $parentFolderId Override the root folder ID (e.g. a year/form subfolder).
+     * @return string|null                Drive file ID on success, null on failure.
      */
-    public function uploadFile(string $localPath, string $filename, string $mimeType = 'application/pdf'): ?string
+    public function uploadFile(string $localPath, string $filename, string $mimeType = 'application/pdf', ?string $parentFolderId = null): ?string
     {
         $this->lastError = null;
 
@@ -103,7 +107,7 @@ class GoogleDriveService
 
             $fileMetadata = new DriveFile([
                 'name'    => $filename,
-                'parents' => [$this->settings['folderId']],
+                'parents' => [$parentFolderId ?? $this->settings['folderId']],
             ]);
 
             $content = file_get_contents($localPath);
@@ -149,6 +153,108 @@ class GoogleDriveService
     public function getWebViewLink(string $fileId): string
     {
         return 'https://drive.google.com/file/d/' . urlencode($fileId) . '/view';
+    }
+
+    /**
+     * Find an existing Drive folder by name inside a parent, or create it.
+     * Results are cached in-memory so repeated calls within one request are free.
+     *
+     * @param string $name      Folder display name.
+     * @param string $parentId  Parent folder ID.
+     * @return string|null      Folder ID on success, null on failure.
+     */
+    public function findOrCreateFolder(string $name, string $parentId): ?string
+    {
+        $cacheKey = $parentId . '/' . $name;
+        if (isset($this->folderCache[$cacheKey])) {
+            return $this->folderCache[$cacheKey];
+        }
+
+        try {
+            $service = $this->getDriveService();
+
+            // Escape single quotes in folder name for the Drive query
+            $safeName = str_replace("'", "\\'", $name);
+            $results = $service->files->listFiles([
+                'q'                         => "name = '{$safeName}' and '{$parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+                'fields'                    => 'files(id)',
+                'supportsAllDrives'         => true,
+                'includeItemsFromAllDrives' => true,
+            ]);
+
+            $files = $results->getFiles();
+            if (!empty($files)) {
+                $folderId = $files[0]->getId();
+                $this->folderCache[$cacheKey] = $folderId;
+                return $folderId;
+            }
+
+            // Folder not found — create it
+            $folderMetadata = new DriveFile([
+                'name'     => $name,
+                'mimeType' => 'application/vnd.google-apps.folder',
+                'parents'  => [$parentId],
+            ]);
+            $folder = $service->files->create($folderMetadata, [
+                'fields'            => 'id',
+                'supportsAllDrives' => true,
+            ]);
+
+            $folderId = $folder->getId();
+            $this->folderCache[$cacheKey] = $folderId;
+            return $folderId;
+
+        } catch (\Exception $e) {
+            $this->lastError = $e->getMessage();
+            error_log('GoogleDriveService::findOrCreateFolder error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Resolve the three-level folder hierarchy (school year → year group → form group)
+     * under the configured root folder, creating subfolders as needed.
+     *
+     * Returns the leaf (form group) folder ID, or the root folder ID if any level fails.
+     *
+     * @param string $schoolYear  e.g. "2025-2026"
+     * @param string $yearGroup   e.g. "Year 7"
+     * @param string $formGroup   e.g. "7A"
+     * @return string             Leaf folder ID to upload into.
+     */
+    public function resolveFolderPath(string $schoolYear, string $yearGroup, string $formGroup): string
+    {
+        $rootId = $this->settings['folderId'];
+
+        $yearId = $this->findOrCreateFolder($schoolYear, $rootId);
+        if (empty($yearId)) return $rootId;
+
+        $yearGroupId = $this->findOrCreateFolder($yearGroup, $yearId);
+        if (empty($yearGroupId)) return $yearId;
+
+        $formGroupId = $this->findOrCreateFolder($formGroup, $yearGroupId);
+        return $formGroupId ?: $yearGroupId;
+    }
+
+    /**
+     * Build a human-readable Drive filename from student and report context.
+     * Format: {Surname}_{PreferredName}_{ReportIdentifier}.pdf
+     *
+     * @param string $surname
+     * @param string $preferredName
+     * @param string $reportIdentifier
+     * @return string
+     */
+    public static function buildFilename(string $surname, string $preferredName, string $reportIdentifier): string
+    {
+        $clean = function (string $s): string {
+            $s = preg_replace('/[\/\\\\:*?"<>|]/', '', $s); // strip Drive-unsafe chars
+            $s = preg_replace('/\s+/', '_', $s);             // spaces → underscores
+            $s = preg_replace('/_+/', '_', $s);              // collapse runs
+            return trim($s, '_');
+        };
+
+        return $clean($surname) . '_' . $clean($preferredName) . '_' . $clean($reportIdentifier) . '.pdf';
     }
 
     /**
