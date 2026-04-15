@@ -94,37 +94,57 @@ $sql = "SELECT e.gibbonReportArchiveEntryID, e.filePath, e.reportIdentifier,
 $result = $pdo->select($sql);
 $entries = $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
 
-$synced      = 0;
-$partialFail = false;
+$synced         = 0;
+$partialFail    = false;
 $missingSkipped = 0;
-$scanned = 0;
+$scanned        = 0;
 $uploadAttempts = 0;
 
 // Increase execution time for large archives
 set_time_limit(600);
 
-$errors = [];
+$errors    = [];
+$debugLog  = [];  // Per-entry trace — stored in session when batchLimit <= 10
 
 foreach ($entries as $entry) {
     $scanned++;
+    $entryID   = $entry['gibbonReportArchiveEntryID'];
     $localPath = $absolutePath . rtrim($entry['archivePath'], '/') . '/' . ltrim($entry['filePath'], '/');
 
-    if (!is_file($localPath)) {
-        // Persist a marker so missing files are not retried every batch forever.
-        $reportArchiveEntryGateway->update($entry['gibbonReportArchiveEntryID'], [
-            'googleDriveFileID' => $missingMarkerPrefix . $entry['gibbonReportArchiveEntryID'],
+    $trace = [
+        'id'        => $entryID,
+        'student'   => ($entry['preferredName'] ?? '') . ' ' . ($entry['surname'] ?? ''),
+        'localPath' => $localPath,
+        'fileExists'=> is_file($localPath),
+        'schoolYear'=> $entry['schoolYearName'] ?? '(none)',
+        'yearGroup' => $entry['yearGroupName']  ?? '(none)',
+        'formGroup' => $entry['formGroupName']  ?? '(none)',
+        'filename'  => '',
+        'folderId'  => '',
+        'driveId'   => '',
+        'error'     => '',
+        'status'    => '',
+    ];
+
+    if (!$trace['fileExists']) {
+        $reportArchiveEntryGateway->update($entryID, [
+            'googleDriveFileID' => $missingMarkerPrefix . $entryID,
         ]);
+        $trace['status'] = 'SKIPPED — local file missing';
+        $debugLog[] = $trace;
         $missingSkipped++;
         continue;
     }
 
-    // Build human-readable filename and resolve Drive folder hierarchy
+    // Build human-readable filename
     $driveFilename = GoogleDriveService::buildFilename(
-        $entry['surname'] ?? '',
-        $entry['preferredName'] ?? '',
+        $entry['surname']          ?? '',
+        $entry['preferredName']    ?? '',
         $entry['reportIdentifier'] ?? basename($entry['filePath'], '.pdf')
     );
+    $trace['filename'] = $driveFilename;
 
+    // Resolve Drive folder hierarchy
     $parentFolderId = null;
     if (!empty($entry['schoolYearName']) && !empty($entry['yearGroupName']) && !empty($entry['formGroupName'])) {
         $parentFolderId = $driveService->resolveFolderPath(
@@ -132,38 +152,53 @@ foreach ($entries as $entry) {
             $entry['yearGroupName'],
             $entry['formGroupName']
         );
+        $trace['folderId'] = $parentFolderId ?? '(folder resolution failed — ' . $driveService->getLastError() . ')';
+    } else {
+        $trace['folderId'] = '(missing year/form metadata — falling back to root folder)';
     }
 
     $uploadAttempts++;
     $driveFileId = $driveService->uploadFile($localPath, $driveFilename, 'application/pdf', $parentFolderId);
 
     if ($driveFileId) {
-        $reportArchiveEntryGateway->update($entry['gibbonReportArchiveEntryID'], [
+        $reportArchiveEntryGateway->update($entryID, [
             'googleDriveFileID' => $driveFileId,
         ]);
+        $trace['driveId'] = $driveFileId;
+        $trace['status']  = 'OK';
         $synced++;
     } else {
         $uploadError = trim((string)$driveService->getLastError());
         $uploadError = preg_replace('/\s+/', ' ', $uploadError);
-        if (strlen($uploadError) > 180) {
-            $uploadError = substr($uploadError, 0, 180) . '...';
-        }
 
-        $errors[] = empty($uploadError)
-            ? 'Drive upload failed for: ' . $entry['filePath']
-            : 'Drive upload failed for: ' . $entry['filePath'] . ' (' . $uploadError . ')';
+        $trace['error']  = $uploadError ?: 'unknown error';
+        $trace['status'] = 'FAILED';
+
+        $errors[] = '[' . $entryID . '] ' . $driveFilename . ': ' . ($uploadError ?: 'upload returned null');
         $partialFail = true;
     }
+
+    $debugLog[] = $trace;
 
     if ($uploadAttempts >= $batchLimit) {
         break;
     }
 }
 
-// Log first error to PHP error log for debugging
+// Always log all errors to PHP error log
 if (!empty($errors)) {
-    error_log('GoogleDriveSync errors: ' . implode(' | ', array_slice($errors, 0, 3)));
-    // Store first error in session for display
+    error_log('GoogleDriveSync errors (' . count($errors) . '): ' . implode(' | ', $errors));
+}
+
+// Store full debug log in session when running a small test batch (≤ 10)
+if ($batchLimit <= 10) {
+    $session->set('googleDriveSyncDebug', $debugLog);
+} else {
+    $session->forget('googleDriveSyncDebug');
+}
+
+// Store first error for the banner display (any batch size)
+if (!empty($errors)) {
     $session->set('googleDriveSyncError', $errors[0]);
 } else {
     $session->forget('googleDriveSyncError');
