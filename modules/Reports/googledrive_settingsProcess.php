@@ -92,23 +92,19 @@ $newSettings = [
     'serviceAccountJSON' => $serviceAccountJSON,
 ];
 
-// updateSettingByScope only does an UPDATE — if the row doesn't exist yet (first save
-// on a fresh install) it returns false. Fall back to an INSERT in that case.
-$updated = $settingGateway->updateSettingByScope('Reports', 'googleDrive', json_encode($newSettings));
-
-if (!$updated) {
-    // Row may not exist yet — insert it using affectingStatement (same pattern as core Gibbon code)
-    try {
-        $count = $pdo->affectingStatement(
-            "INSERT INTO gibbonSetting (scope, name, value) VALUES (:scope, :name, :value)
-             ON DUPLICATE KEY UPDATE value = VALUES(value)",
-            ['scope' => 'Reports', 'name' => 'googleDrive', 'value' => json_encode($newSettings)]
-        );
-        $updated = ($count !== false);
-    } catch (\Exception $e) {
-        error_log('googledrive_settingsProcess: insert failed — ' . $e->getMessage());
-        $updated = false;
-    }
+// Use INSERT ... ON DUPLICATE KEY UPDATE so this works whether the row exists or not.
+// updateSettingByScope only runs UPDATE and returns true even on 0 rows affected,
+// so it cannot reliably detect a missing row.
+try {
+    $pdo->affectingStatement(
+        "INSERT INTO gibbonSetting (scope, name, value) VALUES (:scope, :name, :value)
+         ON DUPLICATE KEY UPDATE value = VALUES(value)",
+        ['scope' => 'Reports', 'name' => 'googleDrive', 'value' => json_encode($newSettings)]
+    );
+    $updated = true;
+} catch (\Exception $e) {
+    error_log('googledrive_settingsProcess: save failed — ' . $e->getMessage());
+    $updated = false;
 }
 
 $URL .= $updated ? '&return=success0' : '&return=error2';
