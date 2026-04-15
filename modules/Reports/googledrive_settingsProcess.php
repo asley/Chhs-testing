@@ -97,15 +97,16 @@ $newSettings = [
 $updated = $settingGateway->updateSettingByScope('Reports', 'googleDrive', json_encode($newSettings));
 
 if (!$updated) {
-    // Row may not exist yet — insert it
+    // Row may not exist yet — insert it using affectingStatement (same pattern as core Gibbon code)
     try {
-        $pdo->insert(
+        $count = $pdo->affectingStatement(
             "INSERT INTO gibbonSetting (scope, name, value) VALUES (:scope, :name, :value)
              ON DUPLICATE KEY UPDATE value = VALUES(value)",
             ['scope' => 'Reports', 'name' => 'googleDrive', 'value' => json_encode($newSettings)]
         );
-        $updated = true;
+        $updated = ($count !== false);
     } catch (\Exception $e) {
+        error_log('googledrive_settingsProcess: insert failed — ' . $e->getMessage());
         $updated = false;
     }
 }
