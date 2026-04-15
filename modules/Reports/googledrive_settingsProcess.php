@@ -92,7 +92,23 @@ $newSettings = [
     'serviceAccountJSON' => $serviceAccountJSON,
 ];
 
+// updateSettingByScope only does an UPDATE — if the row doesn't exist yet (first save
+// on a fresh install) it returns false. Fall back to an INSERT in that case.
 $updated = $settingGateway->updateSettingByScope('Reports', 'googleDrive', json_encode($newSettings));
+
+if (!$updated) {
+    // Row may not exist yet — insert it
+    try {
+        $pdo->insert(
+            "INSERT INTO gibbonSetting (scope, name, value) VALUES (:scope, :name, :value)
+             ON DUPLICATE KEY UPDATE value = VALUES(value)",
+            ['scope' => 'Reports', 'name' => 'googleDrive', 'value' => json_encode($newSettings)]
+        );
+        $updated = true;
+    } catch (\Exception $e) {
+        $updated = false;
+    }
+}
 
 $URL .= $updated ? '&return=success0' : '&return=error2';
 header("Location: {$URL}");
