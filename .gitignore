@@ -43,6 +43,10 @@ yarn-error.log*
 .env.local
 .env.*.local
 
+# Local credential material
+GoogleGibbonMigration_Folder/
+*service-account*.json
+
 # Test files (development only)
 modules/*/test_*.php
 modules/*/debug_*.php

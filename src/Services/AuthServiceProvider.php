@@ -23,6 +23,7 @@ namespace Gibbon\Services;
 
 use Google_Client;
 use Google_Service_Calendar;
+use Gibbon\Services\GoogleDriveService;
 use Aura\Auth\AuthFactory;
 use Aura\Auth\Verifier\PasswordVerifier;
 use Aura\Auth\Verifier\VerifierInterface;
@@ -56,6 +57,7 @@ class AuthServiceProvider extends AbstractServiceProvider
         VerifierInterface::class,
         'Google_Client',
         'Google_Service_Calendar',
+        GoogleDriveService::class,
         'Microsoft_Auth',
         'Generic_Auth',
     ];
@@ -138,6 +140,12 @@ class AuthServiceProvider extends AbstractServiceProvider
             $client = $this->getContainer()->get(Google_Client::class);
 
             return $client ? new Google_Service_Calendar($client) : null;
+        });
+
+        $container->share(GoogleDriveService::class, function () {
+            $settingGateway = $this->getContainer()->get(SettingGateway::class);
+            $db = $this->getContainer()->get(\Gibbon\Contracts\Database\Connection::class);
+            return new GoogleDriveService($settingGateway, $db);
         });
 
 

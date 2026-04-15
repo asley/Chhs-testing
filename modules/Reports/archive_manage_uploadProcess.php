@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\FileUploader;
+use Gibbon\Services\GoogleDriveService;
 use Gibbon\Domain\Students\StudentGateway;
 use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 use Gibbon\Module\Reports\Domain\ReportArchiveGateway;
@@ -56,6 +57,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage_upl
     $reportArchiveGateway = $container->get(ReportArchiveGateway::class);
     $reportArchiveEntryGateway = $container->get(ReportArchiveEntryGateway::class);
     $studentGateway = $container->get(StudentGateway::class);
+    $driveService = $container->get(GoogleDriveService::class);
 
     $archive = $reportArchiveGateway->getByID($gibbonReportArchiveID);
     if (empty($archive)) {
@@ -122,6 +124,13 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage_upl
             continue;
         }
 
+        // Sync to Google Drive before creating archive entry (to store file ID)
+        $driveFileId = null;
+        if ($driveService->isEnabled()) {
+            $localFilePath = $absolutePath.'/'.$archive['path'].'/'.$reportFolder.'/'.$report['filename'];
+            $driveFileId = $driveService->uploadFile($localFilePath, $report['filename']);
+        }
+
         // Create an archive entry for this file
         $archiveEntry = [
             'gibbonReportID' => 0,
@@ -137,6 +146,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage_upl
             'timestampCreated' => $reportDate.' 00:00:00',
             'timestampModified' => $reportDate.' 00:00:00',
         ];
+        if ($driveFileId) {
+            $archiveEntry['googleDriveFileID'] = $driveFileId;
+        }
 
         $inserted = $reportArchiveEntryGateway->insertAndUpdate($archiveEntry, $archiveEntry);
         if ($inserted) {

@@ -32,6 +32,7 @@ class ReportArchiveEntryGateway extends QueryableGateway
     private static $tableName = 'gibbonReportArchiveEntry';
     private static $primaryKey = 'gibbonReportArchiveEntryID';
     private static $searchableColumns = ['gibbonPerson.surname', 'gibbonPerson.preferredName', 'gibbonPerson.username'];
+    private static $hasGoogleDriveFileIDColumn = null;
     
     /**
      * @param QueryCriteria $criteria
@@ -39,11 +40,16 @@ class ReportArchiveEntryGateway extends QueryableGateway
      */
     public function queryArchiveByReport(QueryCriteria $criteria, $gibbonReportID, $gibbonYearGroupID = '', $gibbonFormGroupID = '', $roleCategory = 'Other', $viewDraft = false, $viewPast = false)
     {
+        $columns = ['gibbonReportArchiveEntry.gibbonReportArchiveEntryID', 'gibbonReportArchiveEntry.gibbonReportID', 'gibbonReportArchiveEntry.gibbonYearGroupID', 'gibbonReportArchiveEntry.gibbonFormGroupID', 'gibbonReportArchiveEntry.filePath', 'gibbonReportArchiveEntry.status', 'gibbonReportArchiveEntry.timestampModified', 'gibbonReportArchiveEntry.timestampSent', 'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.surname', 'gibbonPerson.preferredName', 'gibbonPerson.email', 'gibbonReportArchiveEntry.timestampAccessed', 'parent.title as parentTitle', 'parent.preferredName as parentPreferredName', 'parent.surname as parentSurname'];
+        if ($this->hasGoogleDriveFileIDColumn()) {
+            $columns[] = 'gibbonReportArchiveEntry.googleDriveFileID';
+        }
+
         $query = $this
             ->newQuery()
             ->distinct()
             ->from($this->getTableName())
-            ->cols(['gibbonReportArchiveEntry.gibbonReportArchiveEntryID', 'gibbonReportArchiveEntry.gibbonReportID', 'gibbonReportArchiveEntry.gibbonYearGroupID', 'gibbonReportArchiveEntry.gibbonFormGroupID', 'gibbonReportArchiveEntry.filePath', 'gibbonReportArchiveEntry.status', 'gibbonReportArchiveEntry.timestampModified', 'gibbonReportArchiveEntry.timestampSent', 'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.surname', 'gibbonPerson.preferredName', 'gibbonPerson.email', 'gibbonReportArchiveEntry.timestampAccessed', 'parent.title as parentTitle', 'parent.preferredName as parentPreferredName', 'parent.surname as parentSurname'])
+            ->cols($columns)
             ->innerJoin('gibbonReportArchive', 'gibbonReportArchive.gibbonReportArchiveID=gibbonReportArchiveEntry.gibbonReportArchiveID')
             ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID=gibbonReportArchiveEntry.gibbonPersonID')
             ->leftJoin('gibbonPerson as parent', 'gibbonReportArchiveEntry.gibbonPersonIDAccessed=parent.gibbonPersonID')
@@ -189,11 +195,16 @@ class ReportArchiveEntryGateway extends QueryableGateway
 
     public function queryArchiveByStudent(QueryCriteria $criteria, $gibbonPersonID, $roleCategory = 'Other', $viewDraft = false, $viewPast = false)
     {
+        $columns = ['gibbonSchoolYear.name as schoolYear', 'gibbonSchoolYear.sequenceNumber', 'gibbonReportArchiveEntry.gibbonReportArchiveEntryID', 'gibbonReportArchiveEntry.status', 'gibbonReportArchiveEntry.timestampModified', 'gibbonReportArchiveEntry.reportIdentifier', 'gibbonReportArchiveEntry.gibbonReportID', 'gibbonReportArchiveEntry.gibbonYearGroupID', 'gibbonReportArchiveEntry.gibbonFormGroupID', 'gibbonPerson.gibbonPersonID', 'gibbonYearGroup.nameShort as yearGroup', 'gibbonFormGroup.nameShort as formGroup', 'gibbonReport.name as reportName', 'gibbonReportArchiveEntry.timestampAccessed', 'parent.title as parentTitle', 'parent.preferredName as parentPreferredName', 'parent.surname as parentSurname'];
+        if ($this->hasGoogleDriveFileIDColumn()) {
+            $columns[] = 'gibbonReportArchiveEntry.googleDriveFileID';
+        }
+
         $query = $this
             ->newQuery()
             ->distinct()
             ->from($this->getTableName())
-            ->cols(['gibbonSchoolYear.name as schoolYear', 'gibbonSchoolYear.sequenceNumber', 'gibbonReportArchiveEntry.gibbonReportArchiveEntryID', 'gibbonReportArchiveEntry.status', 'gibbonReportArchiveEntry.timestampModified', 'gibbonReportArchiveEntry.reportIdentifier', 'gibbonReportArchiveEntry.gibbonReportID', 'gibbonReportArchiveEntry.gibbonYearGroupID', 'gibbonReportArchiveEntry.gibbonFormGroupID', 'gibbonPerson.gibbonPersonID', 'gibbonYearGroup.nameShort as yearGroup', 'gibbonFormGroup.nameShort as formGroup', 'gibbonReport.name as reportName', 'gibbonReportArchiveEntry.timestampAccessed', 'parent.title as parentTitle', 'parent.preferredName as parentPreferredName', 'parent.surname as parentSurname'])
+            ->cols($columns)
             ->innerJoin('gibbonReportArchive', 'gibbonReportArchive.gibbonReportArchiveID=gibbonReportArchiveEntry.gibbonReportArchiveID')
             ->innerJoin('gibbonSchoolYear', 'gibbonSchoolYear.gibbonSchoolYearID=gibbonReportArchiveEntry.gibbonSchoolYearID')
             ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID=gibbonReportArchiveEntry.gibbonPersonID')
@@ -354,5 +365,20 @@ class ReportArchiveEntryGateway extends QueryableGateway
         }
 
         return $query;
+    }
+
+    /**
+     * Check for the optional Drive sync column so queries remain backward-compatible.
+     */
+    private function hasGoogleDriveFileIDColumn(): bool
+    {
+        if (self::$hasGoogleDriveFileIDColumn !== null) {
+            return self::$hasGoogleDriveFileIDColumn;
+        }
+
+        $column = $this->db()->selectOne("SHOW COLUMNS FROM gibbonReportArchiveEntry LIKE 'googleDriveFileID'");
+        self::$hasGoogleDriveFileIDColumn = !empty($column);
+
+        return self::$hasGoogleDriveFileIDColumn;
     }
 }

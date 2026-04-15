@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Services\Format;
+use Gibbon\Services\GoogleDriveService;
 use Gibbon\Module\Reports\Domain\ReportGateway;
 use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 use Gibbon\Tables\DataTable;
@@ -81,6 +82,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_byReport_v
     $canViewDraftReports = isActionAccessible($guid, $connection2, '/modules/Reports/archive_byReport.php', 'View Draft Reports');
     $canViewPastReports = isActionAccessible($guid, $connection2, '/modules/Reports/archive_byReport.php', 'View Past Reports');
     $roleCategory = $session->get('gibbonRoleIDCurrentCategory');
+    $driveEnabled = $container->get(GoogleDriveService::class)->isEnabled();
 
     $criteria = $reportGateway->newQueryCriteria(true)
         ->sortBy($gibbonFormGroupID ? ['surname', 'preferredName'] : ['sequenceNumber', 'name'])
@@ -198,7 +200,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_byReport_v
         ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
         ->addParam('gibbonReportID', $gibbonReportID)
         ->addParam('reportIdentifier', $reportIdentifier)
-        ->format(function ($report, $actions) {
+        ->format(function ($report, $actions) use ($driveEnabled, $roleCategory) {
             if (!empty($report['gibbonFormGroupID']) && !empty($report['gibbonPersonID'])) {
                 $actions->addAction('view', __('View'))
                         ->directLink()
@@ -213,6 +215,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_byReport_v
                         ->addParam('gibbonPersonID', $report['gibbonPersonID'] ?? '')
                         ->addParam('gibbonReportArchiveEntryID', $report['archive']['gibbonReportArchiveEntryID'] ?? '')
                         ->setURL('/modules/Reports/archive_byStudent_download.php');
+
+                // Show Google Drive link for staff only when we have a plausible Drive file ID.
+                $driveFileId = $report['archive']['googleDriveFileID'] ?? '';
+                if ($driveEnabled && $roleCategory === 'Staff' && preg_match('/^[A-Za-z0-9_-]{20,}$/', (string)$driveFileId)) {
+                    $driveUrl = 'https://drive.google.com/file/d/' . urlencode($driveFileId) . '/view';
+                    $actions->addAction('googledrive', __('View in Google Drive'))
+                        ->setIcon('iconTick')
+                        ->setExternalURL($driveUrl);
+                }
 
                 $actions->addAction('go', __('View by Student'))
                     ->setIcon('page_right')

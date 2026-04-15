@@ -26,6 +26,7 @@ use Gibbon\Tables\DataTable;
 use Gibbon\Domain\User\UserGateway;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\StudentGateway;
+use Gibbon\Services\GoogleDriveService;
 use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 
 if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_byStudent_view.php') == false) {
@@ -94,6 +95,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_byStudent_
     }
 
     $archiveInformation = $container->get(SettingGateway::class)->getSettingByScope('Reports', 'archiveInformation');
+    $driveEnabled = $container->get(GoogleDriveService::class)->isEnabled();
 
     echo $page->fetchFromTemplate('ui/archiveStudentHeader.twig.html', ['student' => $student, 'archiveInformation' => $archiveInformation]);
 
@@ -151,7 +153,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_byStudent_
 
         $table->addActionColumn()
             ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
-            ->format(function ($report, $actions) {
+            ->format(function ($report, $actions) use ($driveEnabled, $roleCategory) {
                 $actions->addAction('view', __('View'))
                     ->directLink()
                     ->addParam('action', 'view')
@@ -165,6 +167,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_byStudent_
                     ->addParam('gibbonReportArchiveEntryID', $report['gibbonReportArchiveEntryID'] ?? '')
                     ->addParam('gibbonPersonID', $report['gibbonPersonID'] ?? '')
                     ->setURL('/modules/Reports/archive_byStudent_download.php');
+
+                // Show Google Drive link for staff only when we have a plausible Drive file ID.
+                $driveFileId = $report['googleDriveFileID'] ?? '';
+                if ($driveEnabled && $roleCategory === 'Staff' && preg_match('/^[A-Za-z0-9_-]{20,}$/', (string)$driveFileId)) {
+                    $driveUrl = 'https://drive.google.com/file/d/' . urlencode($driveFileId) . '/view';
+                    $actions->addAction('googledrive', __('View in Google Drive'))
+                        ->setIcon('iconTick')
+                        ->setExternalURL($driveUrl);
+                }
             });
 
         echo $table->render(new DataSet($reports));

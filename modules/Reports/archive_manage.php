@@ -54,6 +54,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage.php
         ->setURL('/modules/Reports/archive_manage_migrate.php')
         ->displayLabel();
 
+    $table->addHeaderAction('googledrive', __('Google Drive Sync'))
+        ->setIcon('config')
+        ->setURL('/modules/Reports/archive_manage_googledrive.php')
+        ->displayLabel();
+
     $table->addColumn('name', __('Name'));
     $table->addColumn('path', __('Path'));
     $table->addColumn('readonly', __('Read Only'))->format(Format::using('yesNo', 'readonly'));

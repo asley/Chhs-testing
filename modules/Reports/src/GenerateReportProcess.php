@@ -22,6 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 namespace Gibbon\Module\Reports;
 
 use Gibbon\Services\BackgroundProcess;
+use Gibbon\Services\GoogleDriveService;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Students\StudentGateway;
@@ -74,6 +75,7 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
         $reportBuilder = $this->container->get(ReportBuilder::class);
         $archive = $this->container->get(ReportArchiveGateway::class)->getByID($report['gibbonReportArchiveID']);
         $archiveFile = $this->container->get(ArchiveFile::class);
+        $driveService = $this->container->get(GoogleDriveService::class);
 
         $template = $reportBuilder->buildTemplate($report['gibbonReportTemplateID'], $options['status'] == 'Draft');
 
@@ -90,8 +92,17 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
             $path = $archiveFile->getBatchFilePath($gibbonReportID, $contextData);
             $renderer->render($template, $reports, $this->absolutePath.$archive['path'].'/'.$path);
 
+            // Sync batch PDF to Google Drive (before archive entry so we can store the file ID)
+            $batchDriveFileId = null;
+            if ($driveService->isEnabled()) {
+                $batchDriveFileId = $driveService->uploadFile(
+                    $this->absolutePath.$archive['path'].'/'.$path,
+                    basename($path)
+                );
+            }
+
             // Update the Archive: Batch
-            $reportArchiveEntryGateway->insertAndUpdate([
+            $batchArchiveData = [
                 'reportIdentifier'      => $report['name'],
                 'gibbonReportID'        => $gibbonReportID,
                 'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
@@ -100,7 +111,17 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
                 'type'                  => 'Batch',
                 'status'                => $options['status'],
                 'filePath'              => $path,
-            ], ['status' => $options['status'], 'timestampModified' => date('Y-m-d H:i:s')]);
+            ];
+            if ($batchDriveFileId) {
+                $batchArchiveData['googleDriveFileID'] = $batchDriveFileId;
+            }
+            $reportArchiveEntryGateway->insertAndUpdate(
+                $batchArchiveData,
+                array_merge(
+                    ['status' => $options['status'], 'timestampModified' => date('Y-m-d H:i:s')],
+                    $batchDriveFileId ? ['googleDriveFileID' => $batchDriveFileId] : []
+                )
+            );
 
             // Create reports for each student
             foreach ($reports as $studentReport) {
@@ -111,8 +132,17 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
                     $path = $archiveFile->getSingleFilePath($gibbonReportID, $student['gibbonYearGroupID'], $identifier);
                     $renderer->render($template, [$studentReport], $this->absolutePath.$archive['path'].'/'.$path);
 
+                    // Sync single PDF to Google Drive (before archive entry so we can store the file ID)
+                    $singleDriveFileId = null;
+                    if ($driveService->isEnabled()) {
+                        $singleDriveFileId = $driveService->uploadFile(
+                            $this->absolutePath.$archive['path'].'/'.$path,
+                            basename($path)
+                        );
+                    }
+
                     // Update the Archive: Single
-                    $reportArchiveEntryGateway->insertAndUpdate([
+                    $singleArchiveData = [
                         'reportIdentifier'      => $report['name'],
                         'gibbonReportID'        => $gibbonReportID,
                         'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
@@ -123,7 +153,17 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
                         'type'                  => 'Single',
                         'status'                => $options['status'],
                         'filePath'              => $path,
-                    ], ['status' => $options['status'], 'timestampModified' => date('Y-m-d H:i:s'), 'filePath' => $path]);
+                    ];
+                    if ($singleDriveFileId) {
+                        $singleArchiveData['googleDriveFileID'] = $singleDriveFileId;
+                    }
+                    $reportArchiveEntryGateway->insertAndUpdate(
+                        $singleArchiveData,
+                        array_merge(
+                            ['status' => $options['status'], 'timestampModified' => date('Y-m-d H:i:s'), 'filePath' => $path],
+                            $singleDriveFileId ? ['googleDriveFileID' => $singleDriveFileId] : []
+                        )
+                    );
                 }
             }
         }
