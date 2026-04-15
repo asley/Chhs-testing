@@ -190,8 +190,8 @@ if (!empty($errors)) {
     error_log('GoogleDriveSync errors (' . count($errors) . '): ' . implode(' | ', $errors));
 }
 
-// Store full debug log in session when running a small test batch (≤ 10)
-if ($batchLimit <= 10) {
+// Store full debug log in session when running a small test batch (≤ 50)
+if ($batchLimit <= 50) {
     $session->set('googleDriveSyncDebug', $debugLog);
 } else {
     $session->forget('googleDriveSyncDebug');
