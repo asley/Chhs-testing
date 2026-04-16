@@ -28,6 +28,7 @@ use Gibbon\Module\Reports\Domain\ReportArchiveEntryGateway;
 use Gibbon\Module\Reports\Renderer\MpdfRenderer;
 use Gibbon\Module\Reports\Renderer\TcpdfRenderer;
 use Gibbon\Data\Validator;
+use Gibbon\Services\GoogleDriveService;
 
 require_once '../../gibbon.php';
 
@@ -59,6 +60,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
     $reportArchiveEntryGateway = $container->get(ReportArchiveEntryGateway::class);
     $studentGateway            = $container->get(StudentGateway::class);
     $userGateway               = $container->get(UserGateway::class);
+    $driveService              = $container->get(GoogleDriveService::class);
 
     $report = $reportGateway->getByID($gibbonReportID);
 
@@ -70,6 +72,8 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
     }
 
     if ($action == 'Generate') {
+        $clearDriveIdOnGenerate = $driveService->isEnabled() && $status === 'Final';
+
         // Set reports to cache in a separate location
         $cachePath = $session->has('cachePath') ? $session->get('cachePath').'/reports' : '/uploads/cache';
         $container->get('twig')->setCache($session->get('absolutePath').$cachePath);
@@ -118,8 +122,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
             // Render the report to the friendly file path
             $renderer->render($template, $reports, $fullPath);
 
-            // Insert or update the archive entry with the friendly file name
-            $reportArchiveEntryGateway->insertAndUpdate([
+            // Insert or update the archive entry with the friendly file name.
+            // For regenerated Final reports, clear Drive ID so only this entry is re-queued for sync.
+            $insertData = [
                 'reportIdentifier'      => $report['name'],
                 'gibbonReportID'        => $gibbonReportID,
                 'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
@@ -130,11 +135,18 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
                 'type'                  => 'Single',
                 'status'                => $status,
                 'filePath'              => $path,
-            ], [
+            ];
+            $updateData = [
                 'status'            => $status,
                 'timestampModified' => date('Y-m-d H:i:s'),
-                'filePath'          => $path
-            ]);
+                'filePath'          => $path,
+            ];
+            if ($clearDriveIdOnGenerate) {
+                $insertData['googleDriveFileID'] = null;
+                $updateData['googleDriveFileID'] = null;
+            }
+
+            $reportArchiveEntryGateway->insertAndUpdate($insertData, $updateData);
         }
 
     // --------------------------------------
@@ -142,6 +154,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
     // --------------------------------------
     } else if ($action == 'Delete') {
         $archive = $container->get(ReportArchiveGateway::class)->getByID($report['gibbonReportArchiveID']);
+        $deleteDriveFileOnArchiveDelete = $driveService->isEnabled();
 
         foreach ($identifiers as $identifier) {
             $studentEnrolment = $studentGateway->getByID($identifier);
@@ -164,6 +177,11 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/reports_generate_b
                 $path = $session->get('absolutePath').$archive['path'].'/'.$entry['filePath'];
                 if (!empty($archive) && file_exists($path)) {
                     unlink($path);
+                }
+
+                $driveFileId = trim((string)($entry['googleDriveFileID'] ?? ''));
+                if ($deleteDriveFileOnArchiveDelete && !empty($driveFileId) && strpos($driveFileId, 'missing_local:') !== 0) {
+                    $driveService->deleteFile($driveFileId);
                 }
 
                 $deleted = $reportArchiveEntryGateway->delete($entry['gibbonReportArchiveEntryID']);

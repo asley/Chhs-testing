@@ -138,6 +138,17 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
                     $path = $archiveFile->getSingleFilePath($gibbonReportID, $student['gibbonYearGroupID'], $identifier);
                     $renderer->render($template, [$studentReport], $this->absolutePath.$archive['path'].'/'.$path);
 
+                    $existingSingleEntry = $reportArchiveEntryGateway->selectBy([
+                        'reportIdentifier'      => $report['name'],
+                        'gibbonReportID'        => $gibbonReportID,
+                        'gibbonReportArchiveID' => $report['gibbonReportArchiveID'],
+                        'gibbonSchoolYearID'    => $student['gibbonSchoolYearID'],
+                        'gibbonYearGroupID'     => $student['gibbonYearGroupID'],
+                        'gibbonFormGroupID'     => $student['gibbonFormGroupID'],
+                        'gibbonPersonID'        => $student['gibbonPersonID'],
+                        'type'                  => 'Single',
+                    ])->fetch();
+
                     // Sync single PDF to Google Drive with folder hierarchy and human-readable filename.
                     $singleDriveFileId = null;
                     if ($driveService->isEnabled()) {
@@ -176,11 +187,21 @@ class GenerateReportProcess extends BackgroundProcess implements ContainerAwareI
                             $report['name'] ?? basename($path, '.pdf')
                         );
 
+                        $uploadOptions = [];
+                        $existingDriveFileId = trim((string)($existingSingleEntry['googleDriveFileID'] ?? ''));
+                        if (!empty($existingDriveFileId) && strpos($existingDriveFileId, 'missing_local:') !== 0) {
+                            $uploadOptions['existingFileId'] = $existingDriveFileId;
+                        }
+                        if (!empty($existingSingleEntry['gibbonReportArchiveEntryID'])) {
+                            $uploadOptions['externalKey'] = (string)$existingSingleEntry['gibbonReportArchiveEntryID'];
+                        }
+
                         $singleDriveFileId = $driveService->uploadFile(
                             $this->absolutePath.$archive['path'].'/'.$path,
                             $driveFilename,
                             'application/pdf',
-                            $parentFolderId
+                            $parentFolderId,
+                            $uploadOptions
                         );
                     }
 

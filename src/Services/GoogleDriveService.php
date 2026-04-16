@@ -26,6 +26,7 @@ use Gibbon\Domain\System\SettingGateway;
 use Google\Client as GoogleClient;
 use Google\Service\Drive as GoogleDrive;
 use Google\Service\Drive\DriveFile;
+use Google\Service\Exception as GoogleServiceException;
 
 /**
  * GoogleDriveService
@@ -39,6 +40,8 @@ use Google\Service\Drive\DriveFile;
  */
 class GoogleDriveService
 {
+    private const APP_PROPERTY_REPORT_ARCHIVE_ENTRY = 'gibbonReportArchiveEntryID';
+
     /** @var array|null */
     private $settings = null;
 
@@ -86,9 +89,10 @@ class GoogleDriveService
      * @param string      $filename       Filename to use in Drive.
      * @param string      $mimeType       MIME type (default: application/pdf).
      * @param string|null $parentFolderId Override the root folder ID (e.g. a year/form subfolder).
+     * @param array       $options        Optional upload behavior: existingFileId, externalKey.
      * @return string|null                Drive file ID on success, null on failure.
      */
-    public function uploadFile(string $localPath, string $filename, string $mimeType = 'application/pdf', ?string $parentFolderId = null): ?string
+    public function uploadFile(string $localPath, string $filename, string $mimeType = 'application/pdf', ?string $parentFolderId = null, array $options = []): ?string
     {
         $this->lastError = null;
 
@@ -102,19 +106,53 @@ class GoogleDriveService
             return null;
         }
 
+        $content = file_get_contents($localPath);
+        if ($content === false) {
+            $this->lastError = 'Unable to read local file before upload: ' . $localPath;
+            return null;
+        }
+
         try {
             $service = $this->getDriveService();
+            $targetFolderId = $parentFolderId ?? $this->settings['folderId'];
+            $existingFileId = trim((string)($options['existingFileId'] ?? ''));
+            $externalKey = trim((string)($options['externalKey'] ?? ''));
 
-            $fileMetadata = new DriveFile([
-                'name'    => $filename,
-                'parents' => [$parentFolderId ?? $this->settings['folderId']],
-            ]);
-
-            $content = file_get_contents($localPath);
-            if ($content === false) {
-                $this->lastError = 'Unable to read local file before upload: ' . $localPath;
-                return null;
+            if (!empty($existingFileId)) {
+                $updatedFileId = $this->updateExistingFile($service, $existingFileId, $targetFolderId, $filename, $content, $mimeType, $externalKey);
+                if (!empty($updatedFileId)) {
+                    return $updatedFileId;
+                }
             }
+
+            if (!empty($externalKey)) {
+                $matchedByKey = $this->findFileByExternalKey($service, $externalKey);
+                if (!empty($matchedByKey)) {
+                    $updatedFileId = $this->updateExistingFile($service, $matchedByKey, $targetFolderId, $filename, $content, $mimeType, $externalKey);
+                    if (!empty($updatedFileId)) {
+                        return $updatedFileId;
+                    }
+                }
+            }
+
+            $matchedByName = $this->findFileByName($service, $filename, $targetFolderId);
+            if (!empty($matchedByName)) {
+                $updatedFileId = $this->updateExistingFile($service, $matchedByName, $targetFolderId, $filename, $content, $mimeType, $externalKey);
+                if (!empty($updatedFileId)) {
+                    return $updatedFileId;
+                }
+            }
+
+            $fileMetadataData = [
+                'name'    => $filename,
+                'parents' => [$targetFolderId],
+            ];
+            if (!empty($externalKey)) {
+                $fileMetadataData['appProperties'] = [
+                    self::APP_PROPERTY_REPORT_ARCHIVE_ENTRY => $externalKey,
+                ];
+            }
+            $fileMetadata = new DriveFile($fileMetadataData);
 
             $file = $service->files->create($fileMetadata, [
                 'data'             => $content,
@@ -136,6 +174,74 @@ class GoogleDriveService
             $this->lastError = $e->getMessage();
             error_log('GoogleDriveService::uploadFile error: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    /**
+     * Delete a Drive file by ID. Returns true when deleted or already missing.
+     */
+    public function deleteFile(string $fileId): bool
+    {
+        $this->lastError = null;
+
+        if (!$this->isEnabled()) {
+            $this->lastError = 'Google Drive sync is disabled or not fully configured.';
+            return false;
+        }
+
+        if (empty($fileId)) {
+            return true;
+        }
+
+        try {
+            $service = $this->getDriveService();
+            $service->files->delete($fileId, [
+                'supportsAllDrives' => true,
+            ]);
+            return true;
+        } catch (\Exception $e) {
+            if ($this->isNotFoundException($e)) {
+                return true;
+            }
+
+            $this->lastError = $e->getMessage();
+            error_log('GoogleDriveService::deleteFile error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Check whether a Drive file exists and is not trashed.
+     */
+    public function fileExists(string $fileId): bool
+    {
+        $this->lastError = null;
+
+        if (!$this->isEnabled()) {
+            $this->lastError = 'Google Drive sync is disabled or not fully configured.';
+            return false;
+        }
+
+        if (empty($fileId)) {
+            return false;
+        }
+
+        try {
+            $service = $this->getDriveService();
+            $file = $service->files->get($fileId, [
+                'fields'            => 'id,trashed',
+                'supportsAllDrives' => true,
+            ]);
+
+            return !empty($file->getId()) && !$file->getTrashed();
+        } catch (\Exception $e) {
+            if ($this->isNotFoundException($e)) {
+                return false;
+            }
+
+            $this->lastError = $e->getMessage();
+            error_log('GoogleDriveService::fileExists error: ' . $e->getMessage());
+            return false;
         }
     }
 
@@ -174,7 +280,7 @@ class GoogleDriveService
             $service = $this->getDriveService();
 
             // Escape single quotes in folder name for the Drive query
-            $safeName = str_replace("'", "\\'", $name);
+            $safeName = $this->escapeDriveQueryLiteral($name);
             $results = $service->files->listFiles([
                 'q'                         => "name = '{$safeName}' and '{$parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
                 'fields'                    => 'files(id)',
@@ -332,6 +438,138 @@ class GoogleDriveService
         }
 
         return null;
+    }
+
+    /**
+     * Attempt to update an existing file in-place, including optional parent move.
+     *
+     * Returns null only when the file is no longer found and caller should create a new file.
+     */
+    private function updateExistingFile(
+        GoogleDrive $service,
+        string $fileId,
+        string $parentFolderId,
+        string $filename,
+        string $content,
+        string $mimeType,
+        string $externalKey = ''
+    ): ?string {
+        $metadataData = ['name' => $filename];
+        if (!empty($externalKey)) {
+            $metadataData['appProperties'] = [
+                self::APP_PROPERTY_REPORT_ARCHIVE_ENTRY => $externalKey,
+            ];
+        }
+
+        try {
+            $removeParents = '';
+            $addParents = '';
+
+            $current = $service->files->get($fileId, [
+                'fields'            => 'id,parents',
+                'supportsAllDrives' => true,
+            ]);
+
+            $currentParents = $current->getParents() ?: [];
+            if (!empty($parentFolderId) && !in_array($parentFolderId, $currentParents, true)) {
+                $addParents = $parentFolderId;
+                if (!empty($currentParents)) {
+                    $removeParents = implode(',', $currentParents);
+                }
+            }
+
+            $params = [
+                'data'             => $content,
+                'mimeType'         => $mimeType,
+                'uploadType'       => 'multipart',
+                'fields'           => 'id',
+                'supportsAllDrives' => true,
+            ];
+
+            if (!empty($addParents)) {
+                $params['addParents'] = $addParents;
+            }
+            if (!empty($removeParents)) {
+                $params['removeParents'] = $removeParents;
+            }
+
+            $updated = $service->files->update($fileId, new DriveFile($metadataData), $params);
+            $updatedId = $updated->getId();
+
+            return !empty($updatedId) ? $updatedId : $fileId;
+        } catch (\Exception $e) {
+            if ($this->isNotFoundException($e)) {
+                return null;
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Find a Drive file by report archive entry key in appProperties.
+     */
+    private function findFileByExternalKey(GoogleDrive $service, string $externalKey): ?string
+    {
+        $safeValue = $this->escapeDriveQueryLiteral($externalKey);
+
+        $results = $service->files->listFiles([
+            'q'                         => "appProperties has { key='" . self::APP_PROPERTY_REPORT_ARCHIVE_ENTRY . "' and value='{$safeValue}' } and trashed = false",
+            'fields'                    => 'files(id)',
+            'pageSize'                  => 1,
+            'supportsAllDrives'         => true,
+            'includeItemsFromAllDrives' => true,
+        ]);
+
+        $files = $results->getFiles();
+        if (!empty($files)) {
+            return $files[0]->getId();
+        }
+
+        return null;
+    }
+
+    /**
+     * Find a Drive file by name within a single parent folder.
+     */
+    private function findFileByName(GoogleDrive $service, string $filename, string $parentFolderId): ?string
+    {
+        $safeName = $this->escapeDriveQueryLiteral($filename);
+        $results = $service->files->listFiles([
+            'q'                         => "name = '{$safeName}' and '{$parentFolderId}' in parents and trashed = false",
+            'fields'                    => 'files(id)',
+            'pageSize'                  => 1,
+            'supportsAllDrives'         => true,
+            'includeItemsFromAllDrives' => true,
+        ]);
+
+        $files = $results->getFiles();
+        if (!empty($files)) {
+            return $files[0]->getId();
+        }
+
+        return null;
+    }
+
+    /**
+     * Escape values interpolated into Drive query strings.
+     */
+    private function escapeDriveQueryLiteral(string $value): string
+    {
+        return str_replace(['\\', "'"], ['\\\\', "\\'"], $value);
+    }
+
+    /**
+     * Identify common "not found" responses from Google Drive client exceptions.
+     */
+    private function isNotFoundException(\Exception $e): bool
+    {
+        if ($e instanceof GoogleServiceException && (int)$e->getCode() === 404) {
+            return true;
+        }
+
+        $message = strtolower($e->getMessage());
+        return strpos($message, 'not found') !== false || strpos($message, 'notfound') !== false;
     }
 
     /**

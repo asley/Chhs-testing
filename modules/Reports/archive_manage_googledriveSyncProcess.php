@@ -49,6 +49,16 @@ if (!$driveService->isEnabled()) {
     exit;
 }
 
+$lockPath = sys_get_temp_dir() . '/gibbon-google-drive-sync.lock';
+$lockHandle = @fopen($lockPath, 'c');
+if ($lockHandle === false || !flock($lockHandle, LOCK_EX | LOCK_NB)) {
+    if (is_resource($lockHandle)) {
+        fclose($lockHandle);
+    }
+    $URL .= '&return=error4';
+    header("Location: {$URL}");
+    exit;
+}
 
 $reportArchiveEntryGateway = $container->get(ReportArchiveEntryGateway::class);
 $absolutePath = $session->get('absolutePath');
@@ -58,16 +68,43 @@ $scanLimit = min($scanLimit, 5000);
 $forceResync = ($_POST['forceResync'] ?? 'N') === 'Y';
 $missingMarkerPrefix = 'missing_local:';
 $requeued = 0;
+$remoteChecked = 0;
 
 if ($forceResync) {
-    $requeueSql = "UPDATE gibbonReportArchiveEntry
-                   SET googleDriveFileID = NULL
+    // Safety-first resync: only re-queue entries whose stored Drive file is missing.
+    // This avoids wiping IDs for the full archive and accidentally re-uploading everything.
+    $requeueSql = "SELECT gibbonReportArchiveEntryID, googleDriveFileID
+                   FROM gibbonReportArchiveEntry
                    WHERE status = 'Final'
                    AND type = 'Single'
                    AND googleDriveFileID IS NOT NULL
                    AND googleDriveFileID <> ''
-                   AND googleDriveFileID NOT LIKE 'missing_local:%'";
-    $requeued = (int)$pdo->affectingStatement($requeueSql);
+                   AND googleDriveFileID NOT LIKE 'missing_local:%'
+                   ORDER BY timestampModified DESC
+                   LIMIT {$scanLimit}";
+    $requeueResult = $pdo->select($requeueSql);
+    $requeueCandidates = $requeueResult ? $requeueResult->fetchAll(PDO::FETCH_ASSOC) : [];
+
+    foreach ($requeueCandidates as $candidate) {
+        $entryID = (int)($candidate['gibbonReportArchiveEntryID'] ?? 0);
+        $driveFileID = trim((string)($candidate['googleDriveFileID'] ?? ''));
+        if (empty($entryID) || empty($driveFileID)) {
+            continue;
+        }
+
+        // Guardrail: malformed IDs are treated as unsynced and re-queued immediately.
+        if (!preg_match('/^[A-Za-z0-9_-]{20,}$/', $driveFileID)) {
+            $reportArchiveEntryGateway->update($entryID, ['googleDriveFileID' => null]);
+            $requeued++;
+            continue;
+        }
+
+        $remoteChecked++;
+        if (!$driveService->fileExists($driveFileID)) {
+            $reportArchiveEntryGateway->update($entryID, ['googleDriveFileID' => null]);
+            $requeued++;
+        }
+    }
 }
 
 // Fetch a scan window of unsynced FINAL Single-type entries with the metadata needed
@@ -158,7 +195,9 @@ foreach ($entries as $entry) {
     }
 
     $uploadAttempts++;
-    $driveFileId = $driveService->uploadFile($localPath, $driveFilename, 'application/pdf', $parentFolderId);
+    $driveFileId = $driveService->uploadFile($localPath, $driveFilename, 'application/pdf', $parentFolderId, [
+        'externalKey' => (string)$entryID,
+    ]);
 
     if ($driveFileId) {
         $reportArchiveEntryGateway->update($entryID, [
@@ -218,5 +257,8 @@ $URL .= '&processed=' . $scanned;
 $URL .= '&attempted=' . $uploadAttempts;
 $URL .= '&batch=' . $batchLimit;
 $URL .= '&requeued=' . $requeued;
+$URL .= '&checked=' . $remoteChecked;
 
+flock($lockHandle, LOCK_UN);
+fclose($lockHandle);
 header("Location: {$URL}");

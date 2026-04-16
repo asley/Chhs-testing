@@ -37,6 +37,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage.php
             'missing' => (int)($_GET['missing'] ?? 0),
         ]),
         'error3'   => __('Google Drive sync is not enabled or not configured. Please check Google Drive Settings.'),
+        'error4'   => __('A Google Drive sync job is already running. Please wait for it to finish and run again.'),
     ]);
 
     $driveService = $container->get(GoogleDriveService::class);
@@ -53,7 +54,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage.php
 
     // Count unsynced FINAL reports only (drafts are intentionally excluded from sync).
     $unsyncedCount = $pdo->selectOne(
-        "SELECT COUNT(*) FROM gibbonReportArchiveEntry WHERE status = 'Final' AND (googleDriveFileID IS NULL OR googleDriveFileID = '')"
+        "SELECT COUNT(*) FROM gibbonReportArchiveEntry WHERE status = 'Final' AND type = 'Single' AND (googleDriveFileID IS NULL OR googleDriveFileID = '')"
     );
 
     // Show last sync error if present
@@ -106,9 +107,9 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage.php
             . '<tbody>' . $rows . '</tbody>'
             . '</table></div></div>';
     }
-    $totalCount = $pdo->selectOne("SELECT COUNT(*) FROM gibbonReportArchiveEntry WHERE status = 'Final'");
-    $missingSkippedCount = $pdo->selectOne("SELECT COUNT(*) FROM gibbonReportArchiveEntry WHERE status = 'Final' AND googleDriveFileID LIKE 'missing_local:%'");
-    $unsyncedDraftCount = $pdo->selectOne("SELECT COUNT(*) FROM gibbonReportArchiveEntry WHERE status = 'Draft' AND (googleDriveFileID IS NULL OR googleDriveFileID = '')");
+    $totalCount = $pdo->selectOne("SELECT COUNT(*) FROM gibbonReportArchiveEntry WHERE status = 'Final' AND type = 'Single'");
+    $missingSkippedCount = $pdo->selectOne("SELECT COUNT(*) FROM gibbonReportArchiveEntry WHERE status = 'Final' AND type = 'Single' AND googleDriveFileID LIKE 'missing_local:%'");
+    $unsyncedDraftCount = $pdo->selectOne("SELECT COUNT(*) FROM gibbonReportArchiveEntry WHERE status = 'Draft' AND type = 'Single' AND (googleDriveFileID IS NULL OR googleDriveFileID = '')");
 
     $page->addAlert(
         __('There are <b>{unsynced}</b> unsynced final report(s) out of <b>{total}</b> total final archive entries.', [
@@ -137,10 +138,19 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage.php
     }
 
     $requeued = (int)($_GET['requeued'] ?? 0);
+    $checked = (int)($_GET['checked'] ?? 0);
     if ($requeued > 0) {
         $page->addAlert(
-            __('Re-queued <b>{count}</b> previously synced final report(s) for upload.', ['count' => $requeued]),
+            __('Checked <b>{checked}</b> existing Drive link(s) and re-queued <b>{count}</b> missing file(s) for upload.', [
+                'checked' => $checked,
+                'count' => $requeued,
+            ]),
             'message'
+        );
+    } elseif ($checked > 0) {
+        $page->addAlert(
+            __('Checked <b>{checked}</b> existing Drive link(s); no missing files needed re-queueing.', ['checked' => $checked]),
+            'success'
         );
     }
 
@@ -174,7 +184,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage.php
 
     $row = $form->addRow();
         $row->addLabel('forceResync', __('Force Re-sync Final Reports'))
-            ->description(__('Set to Yes to re-queue previously synced final reports. Use this after files are manually deleted from Google Drive.'));
+            ->description(__('Set to Yes to verify existing Drive IDs and re-queue only entries whose Drive file is missing. This does not wipe all synced IDs.'));
         $row->addYesNo('forceResync')->selected('N');
 
     $row = $form->addRow();

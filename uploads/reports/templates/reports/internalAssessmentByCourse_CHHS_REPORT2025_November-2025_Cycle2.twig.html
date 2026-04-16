@@ -11,10 +11,11 @@ config:
         label: Show Cycle Average?
         type: yesno
         default: Y
-    limitByReportingCycle:
-        label: Filter by Reporting Period?
-        type: yesno
-        default: N
+    cyclesToShow:
+        label: How many cycles to show? (1-4, most recent first)
+        type: select
+        options: ["1", "2", "3", "4"]
+        default: "2"
 -->#}
 
 <style>
@@ -77,30 +78,28 @@ config:
 </style>
 
 <table class="report-table">
+    {% set cyclesToShow = (config.cyclesToShow|default('2')) + 0 %}
+    {% if cyclesToShow < 1 %}{% set cyclesToShow = 1 %}{% endif %}
+    {% set endCycle = (reportingCycle.cycleNumber|default(reportingCycle.cycleTotal)) + 0 %}
+    {% set startCycle = endCycle - (cyclesToShow - 1) %}
+    {% if startCycle < 1 %}{% set startCycle = 1 %}{% endif %}
+    {% set visibleCycleCount = (endCycle - startCycle + 1) %}
+    {% set cycleLabels = reportingCycle.cycles|default({}) %}
+    {% if cycleLabels[endCycle] is not defined %}
+        {% set cycleLabels = cycleLabels|merge({ (endCycle): reportingCycle.nameShort|default(reportingCycle.name) }) %}
+    {% endif %}
+
     <tr class="header-row">
         <th rowspan="2">Subjects</th>
-        {% if config.limitByReportingCycle == 'Y' %}
-            {# Show only current cycle #}
-            <th colspan="2">{{ reportingCycle.cycles[reportingCycle.cycleNumber] }}</th>
-        {% else %}
-            {# Show all cycles #}
-            {% for cycleNum in 1..reportingCycle.cycleTotal %}
-            <th colspan="2">{{ reportingCycle.cycles[cycleNum] }}</th>
-            {% endfor %}
-        {% endif %}
+        {% for cycleNum in startCycle..endCycle %}
+            <th colspan="2">{{ cycleLabels[cycleNum]|default('Cycle ' ~ cycleNum) }}</th>
+        {% endfor %}
     </tr>
     <tr class="header-row">
-        {% if config.limitByReportingCycle == 'Y' %}
-            {# Show only current cycle headers #}
+        {% for cycleNum in startCycle..endCycle %}
             <th>Grade</th>
             <th>Conduct</th>
-        {% else %}
-            {# Show all cycle headers #}
-            {% for cycleNum in 1..reportingCycle.cycleTotal %}
-            <th>Grade</th>
-            <th>Conduct</th>
-            {% endfor %}
-        {% endif %}
+        {% endfor %}
     </tr>
 
     {# Initialize totalArray to store cleaned values #}
@@ -120,41 +119,12 @@ config:
         <tr>
             <td class="subject-cell">{{ course }}</td>
 
-            {% if config.limitByReportingCycle == 'Y' %}
-                {# Show only current cycle data #}
-                {% set cycleNum = reportingCycle.cycleNumber %}
-                {% set targetCycleName = reportingCycle.cycles[cycleNum] %}
-                {% set assessment = {} %}
-
-                {# Find assessment by cycle name with typo tolerance #}
-                {% for assessmentName, assessmentData in assessments %}
-                    {% if assessmentData.name|trim|lower == targetCycleName|trim|lower %}
-                        {% set assessment = assessmentData %}
-                    {% endif %}
-                {% endfor %}
-
-                <td style="text-align: center;">
-                    {% if assessment.attainmentActive == 'Y' and assessment.attainmentValue is not empty %}
-                        {{ assessment.attainmentValue|default('N/A') }}
-                        {% if config.includeAverage == 'Y' %}
-                            {% set cleanValue = assessment.attainmentValue|replace({'%':''})|trim %}
-                            {% if cleanValue matches '/^\\d+\\.?\\d*$/' %}
-                                {% set numericValue = cleanValue * 1 %}
-                                {% set totalArray = totalArray|merge([numericValue]) %}
-                            {% endif %}
-                        {% endif %}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                <td style="text-align: center;">{{ assessment.effortValue|default('N/A') }}</td>
-            {% else %}
-                {# Show all cycles data #}
-                {% for cycleNum in 1..reportingCycle.cycleTotal %}
-                    {% set targetCycleName = reportingCycle.cycles[cycleNum] %}
+                {# Show cycles from startCycle to endCycle #}
+                {% for cycleNum in startCycle..endCycle %}
+                    {% set targetCycleName = cycleLabels[cycleNum]|default('Cycle ' ~ cycleNum) %}
                     {% set assessment = {} %}
 
-                    {# Find assessment by cycle name with typo tolerance #}
+                    {# Find assessment by cycle name #}
                     {% for assessmentName, assessmentData in assessments %}
                         {% if assessmentData.name|trim|lower == targetCycleName|trim|lower %}
                             {% set assessment = assessmentData %}
@@ -164,7 +134,7 @@ config:
                     <td style="text-align: center;">
                         {% if assessment.attainmentActive == 'Y' and assessment.attainmentValue is not empty %}
                             {{ assessment.attainmentValue|default('N/A') }}
-                            {% if config.includeAverage == 'Y' and cycleNum == reportingCycle.cycleNumber %}
+                            {% if config.includeAverage == 'Y' and cycleNum == endCycle %}
                                 {% set cleanValue = assessment.attainmentValue|replace({'%':''})|trim %}
                                 {% if cleanValue matches '/^\\d+\\.?\\d*$/' %}
                                     {% set numericValue = cleanValue * 1 %}
@@ -177,11 +147,10 @@ config:
                     </td>
                     <td style="text-align: center;">{{ assessment.effortValue|default('N/A') }}</td>
                 {% endfor %}
-            {% endif %}
         </tr>
 
         {# Current Cycle Comments Section #}
-        {% set currentCycleName = reportingCycle.cycles[reportingCycle.cycleNumber] %}
+        {% set currentCycleName = cycleLabels[endCycle]|default(reportingCycle.nameShort|default(reportingCycle.name)) %}
         {% set currentAssessment = {} %}
         {% for assessmentName, assessmentData in assessments %}
             {% if assessmentData.name|trim|lower == currentCycleName|trim|lower %}
@@ -190,11 +159,7 @@ config:
         {% endfor %}
         {% if currentAssessment is not empty %}
         <tr class="comment-row">
-            {% if config.limitByReportingCycle == 'Y' %}
-            <td colspan="3">
-            {% else %}
-            <td colspan="{{ (reportingCycle.cycleTotal * 2) + 1 }}">
-            {% endif %}
+            <td colspan="{{ (visibleCycleCount * 2) + 1 }}">
                 <small>Teacher(s):</small>
                 <span style="font-size: 10px; color: #666;">{{ currentAssessment.teacherName|default('N/A') }}</span>
 
@@ -210,12 +175,8 @@ config:
     {# Cycle-Specific Average Section #}
     {% if config.includeAverage == 'Y' %}
     <tr class="average-cell">
-        {% if config.limitByReportingCycle == 'Y' %}
-        <td colspan="3">
-        {% else %}
-        <td colspan="{{ (reportingCycle.cycleTotal * 2) + 1 }}">
-        {% endif %}
-            <strong>Average ({{ reportingCycle.cycles[reportingCycle.cycleNumber] }}):</strong>
+        <td colspan="{{ (visibleCycleCount * 2) + 1 }}">
+            <strong>Average ({{ cycleLabels[endCycle]|default(reportingCycle.nameShort|default(reportingCycle.name)) }}):</strong>
             {% set total = 0 %}
             {% set count = 0 %}
             {% for value in totalArray %}

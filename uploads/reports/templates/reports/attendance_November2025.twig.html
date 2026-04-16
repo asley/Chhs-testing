@@ -28,20 +28,28 @@ config:
 
 
 {% if reportingCycle %}
+{% set count = config.includePresent == 'Y' ? 3 : 2 %}
+{% set endCycle = (reportingCycle.cycleNumber|default(reportingCycle.cycleTotal)) + 0 %}
+{% set startCycle = endCycle - 1 %}
+{% if startCycle < 1 %}{% set startCycle = 1 %}{% endif %}
+{% set visibleCycleCount = (endCycle - startCycle + 1) %}
+{% set cycleLabels = reportingCycle.cycles|default({}) %}
+{% if cycleLabels[endCycle] is not defined %}
+{% set cycleLabels = cycleLabels|merge({ (endCycle): reportingCycle.nameShort|default(reportingCycle.name) }) %}
+{% endif %}
 <table class="w-full table" cellspacing="0" cellpadding="4" nobr="true">
     <tr>
         {% if config.limitByReportingCycle == 'Y' %}
         {# Show only current cycle #}
-        {% set cycleName = reportingCycle.cycles[reportingCycle.cycleNumber] %}
+        {% set cycleName = cycleLabels[endCycle]|default(reportingCycle.nameShort|default(reportingCycle.name)) %}
         <td class="header bg-primary border" style="width:100%; line-height: 1.9; text-align: center;"
             colspan="{{ config.includePresent == 'Y' ? 3 : 2 }}">{{ cycleName }} Attendance</td>
         {% else %}
-        {# Show all cycles #}
-        {% set width = 100 / reportingCycle.cycleTotal %}
-        {% set count = config.includePresent == 'Y' ? 3 : 2 %}
+        {# Show only last two cycles up to the current cycle #}
+        {% set width = 100 / visibleCycleCount %}
 
-        {% for cycleNum in range(1, reportingCycle.cycleTotal|default(1)) %}
-        {% set cycleName = reportingCycle.cycles[cycleNum] %}
+        {% for cycleNum in startCycle..endCycle %}
+        {% set cycleName = cycleLabels[cycleNum]|default('Cycle ' ~ cycleNum) %}
         <td class="header bg-primary border" style="width:{{ width }}%; line-height: 1.9; text-align: center;"
             colspan="{{ count }}">{{ cycleName }} Attendance</td>
         {% endfor %}
@@ -50,7 +58,7 @@ config:
     <tr>
         {% if config.limitByReportingCycle == 'Y' %}
         {# Show only current cycle data #}
-        {% set cycleNum = reportingCycle.cycleNumber %}
+        {% set cycleNum = endCycle %}
         {% if config.includePresent == 'Y' %}
         <td class="border-bottom border-left attendance" style="width:33.33%">
             <div class="subheader">Present</div>
@@ -68,11 +76,10 @@ config:
             {{ attendance[cycleNum].late|default(0) }}
         </td>
         {% else %}
-        {# Show all cycles data #}
-        {% set width = 100 / reportingCycle.cycleTotal %}
-        {% set count = config.includePresent == 'Y' ? 3 : 2 %}
+        {# Show only last two cycles data #}
+        {% set width = 100 / visibleCycleCount %}
 
-        {% for cycleNum in range(1, reportingCycle.cycleTotal|default(1)) %}
+        {% for cycleNum in startCycle..endCycle %}
         {% if config.includePresent == 'Y' %}
         <td class="border-bottom border-left attendance" style="width:{{ width / count }}%">
             <div class="subheader">Present</div>

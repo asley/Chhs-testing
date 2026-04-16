@@ -128,7 +128,16 @@ if (isActionAccessible($guid, $connection2, '/modules/Reports/archive_manage_upl
         $driveFileId = null;
         if ($driveService->isEnabled()) {
             $localFilePath = $absolutePath.'/'.$archive['path'].'/'.$reportFolder.'/'.$report['filename'];
-            $driveFileId = $driveService->uploadFile($localFilePath, $report['filename']);
+            $uploadOptions = [];
+            $existingDriveFileId = trim((string)($existingReport['googleDriveFileID'] ?? ''));
+            if (!empty($existingDriveFileId) && strpos($existingDriveFileId, 'missing_local:') !== 0) {
+                $uploadOptions['existingFileId'] = $existingDriveFileId;
+            }
+            if (!empty($existingReport['gibbonReportArchiveEntryID'])) {
+                $uploadOptions['externalKey'] = (string)$existingReport['gibbonReportArchiveEntryID'];
+            }
+
+            $driveFileId = $driveService->uploadFile($localFilePath, $report['filename'], 'application/pdf', null, $uploadOptions);
         }
 
         // Create an archive entry for this file
