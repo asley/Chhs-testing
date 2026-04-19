@@ -228,22 +228,60 @@ function pdKpiChronicAbsenteeism(PDO $connection2, string $schoolYearID, string 
 
     $yearRange = pdGetSchoolYearDateRange($connection2, $schoolYearID);
     $params[':yearStart'] = $yearRange['firstDay'];
-    $params[':yearEnd'] = $yearRange['lastDay'];
+    $params[':yearEnd'] = pdGetAttendanceDateUpperBound($yearRange['lastDay']);
+    $attendanceContextFilter = pdGetAttendanceContextFilter($connection2, 'al');
 
-    // Count per-student absences vs a fixed threshold (18) within the selected school year.
-    $sqlChronicSimple = "SELECT COUNT(*) AS chronic FROM (
-        SELECT al.gibbonPersonID, COUNT(*) AS absences
-        FROM gibbonAttendanceLogPerson al
-        JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = al.gibbonPersonID
-        WHERE se.gibbonSchoolYearID = :yearID
-          AND al.direction = 'Out'
-          AND al.date BETWEEN :yearStart AND :yearEnd
-          {$filters}
-        GROUP BY al.gibbonPersonID
-        HAVING absences > 18
-    ) AS chronic_students";
+    // Use end-of-day status per student/day to match Student History attendance counts.
+    $sqlChronic = "WITH cohort AS (
+                        SELECT se.gibbonPersonID
+                        FROM gibbonStudentEnrolment se
+                        WHERE se.gibbonSchoolYearID = :yearID
+                          {$filters}
+                    ),
+                    last_log AS (
+                        SELECT
+                            al.gibbonPersonID,
+                            al.date,
+                            MAX(al.timestampTaken) AS maxTimestamp
+                        FROM gibbonAttendanceLogPerson al
+                        JOIN cohort co
+                            ON co.gibbonPersonID = al.gibbonPersonID
+                        WHERE al.date BETWEEN :yearStart AND :yearEnd
+                          {$attendanceContextFilter}
+                        GROUP BY al.gibbonPersonID, al.date
+                    ),
+                    last_log_row AS (
+                        SELECT
+                            al.gibbonPersonID,
+                            al.date,
+                            MAX(al.gibbonAttendanceLogPersonID) AS maxLogID
+                        FROM gibbonAttendanceLogPerson al
+                        JOIN last_log ll
+                            ON ll.gibbonPersonID = al.gibbonPersonID
+                           AND ll.date = al.date
+                           AND ll.maxTimestamp = al.timestampTaken
+                        WHERE al.date BETWEEN :yearStart AND :yearEnd
+                          {$attendanceContextFilter}
+                        GROUP BY al.gibbonPersonID, al.date
+                    ),
+                    attendance AS (
+                        SELECT
+                            al.gibbonPersonID,
+                            COUNT(*) AS absences
+                        FROM gibbonAttendanceLogPerson al
+                        JOIN gibbonAttendanceCode ac
+                            ON ac.name = al.type
+                        JOIN last_log_row llr
+                            ON llr.maxLogID = al.gibbonAttendanceLogPersonID
+                        WHERE ac.direction = 'Out'
+                          AND ac.scope = 'Offsite'
+                        GROUP BY al.gibbonPersonID
+                    )
+                    SELECT COUNT(*) AS chronic
+                    FROM attendance
+                    WHERE absences > 18";
 
-    $stmtC = $connection2->prepare($sqlChronicSimple);
+    $stmtC = $connection2->prepare($sqlChronic);
     $stmtC->execute($params);
     $chronic = (int) $stmtC->fetchColumn();
 
@@ -260,47 +298,90 @@ function pdKpiAtRiskCount(PDO $connection2, string $schoolYearID, string $yearGr
     $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
     $yearRange = pdGetSchoolYearDateRange($connection2, $schoolYearID);
     $params[':yearStart'] = $yearRange['firstDay'];
-    $params[':yearEnd'] = $yearRange['lastDay'];
+    $params[':yearEnd'] = pdGetAttendanceDateUpperBound($yearRange['lastDay']);
+    $attendanceContextFilter = pdGetAttendanceContextFilter($connection2, 'al');
 
-    $sql = "SELECT COUNT(*) AS cnt
-            FROM (
+    $sql = "WITH cohort AS (
                 SELECT
                     se.gibbonPersonID,
-                    mb.studentAvg AS avgGrade,
-                    COALESCE(att.absences, 0) AS absences
+                    se.gibbonYearGroupID,
+                    se.gibbonFormGroupID
                 FROM gibbonStudentEnrolment se
                 JOIN gibbonPerson p
                     ON p.gibbonPersonID = se.gibbonPersonID
-                LEFT JOIN (
-                    SELECT
-                        me.gibbonPersonIDStudent AS gibbonPersonID,
-                        AVG(me.attainmentValue) AS studentAvg
-                    FROM gibbonMarkbookEntry me
-                    JOIN gibbonMarkbookColumn mc
-                        ON mc.gibbonMarkbookColumnID = me.gibbonMarkbookColumnID
-                    JOIN gibbonCourseClass gc
-                        ON gc.gibbonCourseClassID = mc.gibbonCourseClassID
-                    JOIN gibbonCourse c
-                        ON c.gibbonCourseID = gc.gibbonCourseID
-                    WHERE c.gibbonSchoolYearID = :yearID
-                      AND me.attainmentValue IS NOT NULL
-                    GROUP BY me.gibbonPersonIDStudent
-                ) mb
-                    ON mb.gibbonPersonID = se.gibbonPersonID
-                LEFT JOIN (
-                    SELECT
-                        al.gibbonPersonID,
-                        COUNT(*) AS absences
-                    FROM gibbonAttendanceLogPerson al
-                    WHERE al.direction = 'Out'
-                      AND al.date BETWEEN :yearStart AND :yearEnd
-                    GROUP BY al.gibbonPersonID
-                ) att
-                    ON att.gibbonPersonID = se.gibbonPersonID
                 WHERE se.gibbonSchoolYearID = :yearID
                   AND p.status = 'Full'
                   {$filters}
-            ) AS risk
+            ),
+            markbook AS (
+                SELECT
+                    me.gibbonPersonIDStudent AS gibbonPersonID,
+                    AVG(me.attainmentValue) AS avgGrade
+                FROM gibbonMarkbookEntry me
+                JOIN cohort co
+                    ON co.gibbonPersonID = me.gibbonPersonIDStudent
+                JOIN gibbonMarkbookColumn mc
+                    ON mc.gibbonMarkbookColumnID = me.gibbonMarkbookColumnID
+                JOIN gibbonCourseClass gc
+                    ON gc.gibbonCourseClassID = mc.gibbonCourseClassID
+                JOIN gibbonCourse c
+                    ON c.gibbonCourseID = gc.gibbonCourseID
+                WHERE c.gibbonSchoolYearID = :yearID
+                  AND me.attainmentValue IS NOT NULL
+                GROUP BY me.gibbonPersonIDStudent
+            ),
+            last_log AS (
+                SELECT
+                    al.gibbonPersonID,
+                    al.date,
+                    MAX(al.timestampTaken) AS maxTimestamp
+                FROM gibbonAttendanceLogPerson al
+                JOIN cohort co
+                    ON co.gibbonPersonID = al.gibbonPersonID
+                WHERE al.date BETWEEN :yearStart AND :yearEnd
+                  {$attendanceContextFilter}
+                GROUP BY al.gibbonPersonID, al.date
+            ),
+            last_log_row AS (
+                SELECT
+                    al.gibbonPersonID,
+                    al.date,
+                    MAX(al.gibbonAttendanceLogPersonID) AS maxLogID
+                FROM gibbonAttendanceLogPerson al
+                JOIN last_log ll
+                    ON ll.gibbonPersonID = al.gibbonPersonID
+                   AND ll.date = al.date
+                   AND ll.maxTimestamp = al.timestampTaken
+                WHERE al.date BETWEEN :yearStart AND :yearEnd
+                  {$attendanceContextFilter}
+                GROUP BY al.gibbonPersonID, al.date
+            ),
+            attendance AS (
+                SELECT
+                    al.gibbonPersonID,
+                    COUNT(*) AS absences
+                FROM gibbonAttendanceLogPerson al
+                JOIN gibbonAttendanceCode ac
+                    ON ac.name = al.type
+                JOIN last_log_row llr
+                    ON llr.maxLogID = al.gibbonAttendanceLogPersonID
+                WHERE ac.direction = 'Out'
+                  AND ac.scope = 'Offsite'
+                GROUP BY al.gibbonPersonID
+            ),
+            risk AS (
+                SELECT
+                    co.gibbonPersonID,
+                    mb.avgGrade,
+                    COALESCE(att.absences, 0) AS absences
+                FROM cohort co
+                LEFT JOIN markbook mb
+                    ON mb.gibbonPersonID = co.gibbonPersonID
+                LEFT JOIN attendance att
+                    ON att.gibbonPersonID = co.gibbonPersonID
+            )
+            SELECT COUNT(*) AS cnt
+            FROM risk
             WHERE (risk.avgGrade IS NOT NULL AND risk.avgGrade < {$passMark})
                OR risk.absences > 18";
     $stmt = $connection2->prepare($sql);
@@ -346,6 +427,36 @@ function pdGetSchoolYearDateRange(PDO $connection2, string $schoolYearID): array
         'firstDay' => $row['firstDay'],
         'lastDay' => $row['lastDay'],
     ];
+}
+
+/**
+ * Attendance in student history is shown up to today for the current school year.
+ */
+function pdGetAttendanceDateUpperBound(string $schoolYearLastDay): string
+{
+    $today = date('Y-m-d');
+    return ($schoolYearLastDay < $today) ? $schoolYearLastDay : $today;
+}
+
+/**
+ * Build attendance context filter based on Attendance.countClassAsSchool.
+ * When countClassAsSchool = 'N', class logs are excluded from school attendance.
+ */
+function pdGetAttendanceContextFilter(PDO $connection2, string $alias = 'al'): string
+{
+    static $countClassAsSchool = null;
+
+    if ($countClassAsSchool === null) {
+        try {
+            $stmt = $connection2->prepare("SELECT value FROM gibbonSetting WHERE scope='Attendance' AND name='countClassAsSchool' LIMIT 1");
+            $stmt->execute();
+            $countClassAsSchool = strtoupper(trim((string) $stmt->fetchColumn()));
+        } catch (Exception $e) {
+            $countClassAsSchool = 'Y';
+        }
+    }
+
+    return ($countClassAsSchool === 'N') ? " AND {$alias}.context <> 'Class'" : '';
 }
 
 /**

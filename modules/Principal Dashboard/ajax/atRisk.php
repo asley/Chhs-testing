@@ -25,7 +25,8 @@ $params  = [':yearID' => $yearID];
 $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
 $yearRange = pdGetSchoolYearDateRange($connection2, $yearID);
 $params[':yearStart'] = $yearRange['firstDay'];
-$params[':yearEnd'] = $yearRange['lastDay'];
+$params[':yearEnd'] = pdGetAttendanceDateUpperBound($yearRange['lastDay']);
+$attendanceContextFilter = pdGetAttendanceContextFilter($connection2, 'al');
 $passMark = 65.0;
 
 $sql = "WITH cohort AS (
@@ -57,15 +58,44 @@ $sql = "WITH cohort AS (
               AND me.attainmentValue IS NOT NULL
             GROUP BY me.gibbonPersonIDStudent
         ),
+        last_log AS (
+            SELECT
+                al.gibbonPersonID,
+                al.date,
+                MAX(al.timestampTaken) AS maxTimestamp
+            FROM gibbonAttendanceLogPerson al
+            JOIN cohort co
+                ON co.gibbonPersonID = al.gibbonPersonID
+            WHERE al.date BETWEEN :yearStart AND :yearEnd
+              {$attendanceContextFilter}
+            GROUP BY al.gibbonPersonID, al.date
+        ),
+        last_log_row AS (
+            SELECT
+                al.gibbonPersonID,
+                al.date,
+                MAX(al.gibbonAttendanceLogPersonID) AS maxLogID
+            FROM gibbonAttendanceLogPerson al
+            JOIN last_log ll
+                ON ll.gibbonPersonID = al.gibbonPersonID
+               AND ll.date = al.date
+               AND ll.maxTimestamp = al.timestampTaken
+            WHERE al.date BETWEEN :yearStart AND :yearEnd
+              {$attendanceContextFilter}
+            GROUP BY al.gibbonPersonID, al.date
+        ),
         attendance AS (
             SELECT
                 al.gibbonPersonID,
                 COUNT(*) AS absences
             FROM gibbonAttendanceLogPerson al
-            JOIN cohort co
-                ON co.gibbonPersonID = al.gibbonPersonID
-            WHERE al.direction = 'Out'
-              AND al.date BETWEEN :yearStart AND :yearEnd
+            JOIN gibbonAttendanceCode ac
+                ON ac.name = al.type
+            JOIN last_log_row llr
+                ON llr.maxLogID = al.gibbonAttendanceLogPersonID
+            WHERE al.date BETWEEN :yearStart AND :yearEnd
+              AND ac.direction = 'Out'
+              AND ac.scope = 'Offsite'
             GROUP BY al.gibbonPersonID
         ),
         risk AS (
