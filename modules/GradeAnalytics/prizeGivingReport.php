@@ -53,6 +53,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
     $yearGroup = $_GET['yearGroup'] ?? '';
     $assessmentType = $_GET['assessmentType'] ?? '';
     $gradeThreshold = $_GET['gradeThreshold'] ?? '75';
+    $showAverage = $_GET['showAverage'] ?? 'N';
 
     // Handle operator - convert from safe keys to SQL operators
     $operatorKey = $_GET['operator'] ?? 'gt';
@@ -132,6 +133,12 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
             ->required();
 
     $row = $form->addRow();
+        $row->addLabel('showAverage', __('Show Average'));
+        $row->addSelect('showAverage')
+            ->fromArray(['N' => __('No'), 'Y' => __('Yes')])
+            ->selected($showAverage);
+
+    $row = $form->addRow();
         $row->addFooter();
         $row->addSubmit(__('Apply Filters'));
 
@@ -152,7 +159,9 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
         // Get students matching criteria
         $students = $gateway->selectPrizeGivingStudents($gibbonSchoolYearID, $filters);
 
-        if ($students->rowCount() > 0) {
+        $allStudents = $students->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (!empty($allStudents)) {
             echo '<h3>'. __('Results') .'</h3>';
 
             // Add print link
@@ -162,56 +171,100 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/prizeGiving
             echo '</a>';
             echo '</div>';
 
-            // Build data table with plain HTML for better control
-            echo '<div class="overflow-x-auto">';
-            echo '<table class="fullWidth colorOddEven" cellspacing="0" id="prizeGivingReportTable">';
-            echo '<thead>';
-            echo '<tr>';
-            echo '<th style="width: 25%;">'.__('Student Name').'</th>';
-            echo '<th style="width: 15%;">'.__('Form Group').'</th>';
-            echo '<th style="width: 20%;">'.__('Subject').'</th>';
-            echo '<th style="width: 20%;">'.__('Assessment').'</th>';
-            echo '<th style="width: 20%; text-align: center;">'.__('Grade').'</th>';
-            echo '</tr>';
-            echo '</thead>';
-            echo '<tbody>';
-
-            foreach ($students as $student) {
-                // Build student link to Internal Assessment page
-                $studentLink = $session->get('absoluteURL').'/index.php?q=/modules/Students/student_view_details.php';
-                $studentLink .= '&gibbonPersonID='.$student['gibbonPersonID'];
-                $studentLink .= '&search=&allStudents=&subpage=Internal%20Assessment';
-
-                // Format grade with color coding
-                $grade = $student['grade'];
-                $gradeDisplay = $grade;
-                $color = '';
-
-                if (is_numeric($grade)) {
-                    $gradeDisplay = number_format($grade, 2) . '%';
-                    if ($grade >= 85) {
-                        $color = 'color: #2ecc71; font-weight: bold;';
-                    } elseif ($grade >= 70) {
-                        $color = 'color: #3498db; font-weight: bold;';
-                    } elseif ($grade >= 60) {
-                        $color = 'color: #f39c12; font-weight: bold;';
-                    } else {
-                        $color = 'color: #e74c3c; font-weight: bold;';
-                    }
+            // Pre-compute per-student numeric averages (strip % before parsing)
+            $studentGrades = [];
+            foreach ($allStudents as $student) {
+                $pid = $student['gibbonPersonID'];
+                $rawGrade = trim(str_replace('%', '', $student['grade']));
+                if (is_numeric($rawGrade)) {
+                    $studentGrades[$pid][] = (float) $rawGrade;
                 }
-
-                echo '<tr>';
-                echo '<td><a href="'.$studentLink.'">'.Format::name('', $student['preferredName'], $student['surname'], 'Student', true).'</a></td>';
-                echo '<td>'.htmlspecialchars($student['formGroup']).'</td>';
-                echo '<td>'.htmlspecialchars($student['courseName']).'</td>';
-                echo '<td>'.htmlspecialchars($student['assessmentName']).'</td>';
-                echo '<td style="text-align: center;"><span style="'.$color.' font-size: 1.1em;">'.$gradeDisplay.'</span></td>';
-                echo '</tr>';
+            }
+            $studentAvg = [];
+            foreach ($studentGrades as $pid => $grades) {
+                $studentAvg[$pid] = array_sum($grades) / count($grades);
             }
 
-            echo '</tbody>';
-            echo '</table>';
-            echo '</div>';
+            $formatGrade = function($grade) {
+                if (!is_numeric($grade)) return ['', $grade];
+                $g = (float) $grade;
+                $display = number_format($g, 2) . '%';
+                if ($g >= 85) $color = 'color: #2ecc71; font-weight: bold;';
+                elseif ($g >= 70) $color = 'color: #3498db; font-weight: bold;';
+                elseif ($g >= 60) $color = 'color: #f39c12; font-weight: bold;';
+                else $color = 'color: #e74c3c; font-weight: bold;';
+                return [$color, $display];
+            };
+
+            echo '<div class="overflow-x-auto">';
+            echo '<table class="fullWidth colorOddEven" cellspacing="0" id="prizeGivingReportTable">';
+            echo '<thead><tr>';
+
+            if ($showAverage === 'Y') {
+                // Averaged view: one row per student
+                echo '<th style="width: 30%;">'.__('Student Name').'</th>';
+                echo '<th style="width: 20%;">'.__('Form Group').'</th>';
+                echo '<th style="width: 25%;">'.__('Subject').'</th>';
+                echo '<th style="width: 25%; text-align: center;">'.__('Average Grade').'</th>';
+            } else {
+                echo '<th style="width: 22%;">'.__('Student Name').'</th>';
+                echo '<th style="width: 13%;">'.__('Form Group').'</th>';
+                echo '<th style="width: 18%;">'.__('Subject').'</th>';
+                echo '<th style="width: 18%;">'.__('Assessment').'</th>';
+                echo '<th style="width: 20%; text-align: center;">'.__('Grade').'</th>';
+            }
+
+            echo '</tr></thead><tbody>';
+
+            if ($showAverage === 'Y') {
+                // Build one row per student, deduplicated and sorted by average descending
+                $uniqueStudents = [];
+                foreach ($allStudents as $student) {
+                    $pid = $student['gibbonPersonID'];
+                    if (!isset($uniqueStudents[$pid])) {
+                        $uniqueStudents[$pid] = $student;
+                    }
+                }
+                usort($uniqueStudents, function($a, $b) use ($studentAvg) {
+                    return ($studentAvg[$b['gibbonPersonID']] ?? 0) <=> ($studentAvg[$a['gibbonPersonID']] ?? 0);
+                });
+
+                foreach ($uniqueStudents as $student) {
+                    $pid = $student['gibbonPersonID'];
+
+                    $studentLink = $session->get('absoluteURL').'/index.php?q=/modules/Students/student_view_details.php';
+                    $studentLink .= '&gibbonPersonID='.$pid.'&search=&allStudents=&subpage=Internal%20Assessment';
+
+                    [$avgStyle, $avgDisplay] = isset($studentAvg[$pid])
+                        ? $formatGrade($studentAvg[$pid])
+                        : ['', '—'];
+
+                    echo '<tr>';
+                    echo '<td><a href="'.$studentLink.'">'.Format::name('', $student['preferredName'], $student['surname'], 'Student', true).'</a></td>';
+                    echo '<td>'.htmlspecialchars($student['formGroup']).'</td>';
+                    echo '<td>'.htmlspecialchars($student['courseName']).'</td>';
+                    echo '<td style="text-align: center;"><span style="'.$avgStyle.' font-size: 1.1em;">'.$avgDisplay.'</span></td>';
+                    echo '</tr>';
+                }
+            } else {
+                foreach ($allStudents as $student) {
+                    $pid = $student['gibbonPersonID'];
+                    $studentLink = $session->get('absoluteURL').'/index.php?q=/modules/Students/student_view_details.php';
+                    $studentLink .= '&gibbonPersonID='.$pid.'&search=&allStudents=&subpage=Internal%20Assessment';
+
+                    [$color, $gradeDisplay] = $formatGrade(trim(str_replace('%', '', $student['grade'])));
+
+                    echo '<tr>';
+                    echo '<td><a href="'.$studentLink.'">'.Format::name('', $student['preferredName'], $student['surname'], 'Student', true).'</a></td>';
+                    echo '<td>'.htmlspecialchars($student['formGroup']).'</td>';
+                    echo '<td>'.htmlspecialchars($student['courseName']).'</td>';
+                    echo '<td>'.htmlspecialchars($student['assessmentName']).'</td>';
+                    echo '<td style="text-align: center;"><span style="'.$color.' font-size: 1.1em;">'.$gradeDisplay.'</span></td>';
+                    echo '</tr>';
+                }
+            }
+
+            echo '</tbody></table></div>';
 
             // Add CSV export button
             echo '<div class="linkTop" style="margin-top: 20px;">';
