@@ -38,3 +38,60 @@ WHERE m.name = 'GradeAnalytics'
   );";
 
 $count++;
+
+// v1.0.3 - Add Bulk Broadsheet Export action and permissions
+$sql[$count][0] = '1.0.3';
+$sql[$count][1] = "-- Add Bulk Broadsheet Export action
+INSERT INTO gibbonAction (
+    gibbonModuleID,
+    name,
+    precedence,
+    category,
+    description,
+    URLList,
+    entryURL,
+    entrySidebar,
+    menuShow,
+    categoryPermissionStaff,
+    categoryPermissionStudent,
+    categoryPermissionParent,
+    categoryPermissionOther
+)
+SELECT
+    m.gibbonModuleID,
+    'Bulk Broadsheet Export',
+    4,
+    'Reports',
+    'Export multiple broadsheets at once as a ZIP file.',
+    'broadsheetBulkExport.php,broadsheetBulkExportProcess.php',
+    'broadsheetBulkExport.php',
+    'Y',
+    'Y',
+    'Y',
+    'N',
+    'N',
+    'N'
+FROM gibbonModule m
+WHERE m.name = 'GradeAnalytics'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM gibbonAction a
+    WHERE a.gibbonModuleID = m.gibbonModuleID
+      AND a.name = 'Bulk Broadsheet Export'
+  );end
+-- Add permissions for Bulk Broadsheet Export
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID)
+SELECT r.gibbonRoleID, a.gibbonActionID
+FROM gibbonRole r
+JOIN gibbonModule m ON m.name = 'GradeAnalytics'
+JOIN gibbonAction a ON a.gibbonModuleID = m.gibbonModuleID
+WHERE a.name = 'Bulk Broadsheet Export'
+  AND r.name IN ('Admin', 'Teacher', 'Principal', 'Vice Principal', 'Head of Department')
+  AND NOT EXISTS (
+    SELECT 1
+    FROM gibbonPermission p
+    WHERE p.gibbonRoleID = r.gibbonRoleID
+      AND p.gibbonActionID = a.gibbonActionID
+  );";
+
+$count++;
