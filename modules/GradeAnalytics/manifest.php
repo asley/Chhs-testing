@@ -23,7 +23,7 @@ $description = 'Internal Assessment Dashboard with dynamic charts and analytics'
 $entryURL = "gradeDashboard.php";
 $type = "Additional";
 $category = 'Dashboard';
-$version = '1.0.2';
+$version = '1.0.3';
 $author = 'Asley Smith';
 $url = 'https://gibbonedu.org';
 
@@ -88,6 +88,27 @@ $actionRows[] = [
     'description' => 'View student rankings based on their final average across all subjects.',
     'URLList' => 'studentAveragesRanking.php',
     'entryURL' => 'studentAveragesRanking.php',
+    'entrySidebar' => 'Y',
+    'menuShow' => 'Y',
+    'defaultPermissionAdmin' => 'Y',
+    'defaultPermissionTeacher' => 'Y',
+    'defaultPermissionStudent' => 'N',
+    'defaultPermissionParent' => 'N',
+    'defaultPermissionSupport' => 'N',
+    'categoryPermissionStaff' => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent' => 'N',
+    'categoryPermissionOther' => 'N'
+];
+
+// Add Bulk Broadsheet Export action
+$actionRows[] = [
+    'name' => 'Bulk Broadsheet Export',
+    'precedence' => '4',
+    'category' => 'Reports',
+    'description' => 'Export multiple broadsheets at once as a ZIP file — select any combination of form groups and assessments.',
+    'URLList' => 'broadsheetBulkExport.php,broadsheetBulkExportProcess.php',
+    'entryURL' => 'broadsheetBulkExport.php',
     'entrySidebar' => 'Y',
     'menuShow' => 'Y',
     'defaultPermissionAdmin' => 'Y',

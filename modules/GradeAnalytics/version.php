@@ -1,7 +1,7 @@
 <?php
-$moduleVersion = '1.0.2';
-$version = '1.0.2';
-$releaseDate = '2025-12-28';
+$moduleVersion = '1.0.3';
+$version = '1.0.3';
+$releaseDate = '2026-04-24';
 $minimumGibbonVersion = 'v24.0.00';
 $maximumGibbonVersion = 'v25.0.00';
 
