@@ -23,7 +23,7 @@ $description = 'Internal Assessment Dashboard with dynamic charts and analytics'
 $entryURL = "gradeDashboard.php";
 $type = "Additional";
 $category = 'Dashboard';
-$version = '1.0.3';
+$version = '1.0.4';
 $author = 'Asley Smith';
 $url = 'https://gibbonedu.org';
 
@@ -141,4 +141,25 @@ $actionRows[] = [
     'categoryPermissionStudent' => 'N',
     'categoryPermissionParent' => 'N',
     'categoryPermissionOther' => 'N'
-]; 
+];
+
+// Add Reporting Cycle Grade Report action
+$actionRows[] = [
+    'name' => 'Reporting Cycle Grade Report',
+    'precedence' => '5',
+    'category' => 'Reports',
+    'description' => 'Print or download student grades by reporting cycle and assessment.',
+    'URLList' => 'reportingCycleGradeReport.php,reportingCycleGradeReport_print.php',
+    'entryURL' => 'reportingCycleGradeReport.php',
+    'entrySidebar' => 'Y',
+    'menuShow' => 'Y',
+    'defaultPermissionAdmin' => 'Y',
+    'defaultPermissionTeacher' => 'Y',
+    'defaultPermissionStudent' => 'N',
+    'defaultPermissionParent' => 'N',
+    'defaultPermissionSupport' => 'N',
+    'categoryPermissionStaff' => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent' => 'N',
+    'categoryPermissionOther' => 'N'
+];

@@ -39,6 +39,64 @@ WHERE m.name = 'GradeAnalytics'
 
 $count++;
 
+// v1.0.4 - Add Reporting Cycle Grade Report action and permissions
+$sql[$count][0] = '1.0.4';
+$sql[$count][1] = "-- Add Reporting Cycle Grade Report action
+INSERT INTO gibbonAction (
+    gibbonModuleID,
+    name,
+    precedence,
+    category,
+    description,
+    URLList,
+    entryURL,
+    entrySidebar,
+    menuShow,
+    categoryPermissionStaff,
+    categoryPermissionStudent,
+    categoryPermissionParent,
+    categoryPermissionOther
+)
+SELECT
+    m.gibbonModuleID,
+    'Reporting Cycle Grade Report',
+    5,
+    'Reports',
+    'Print or download student grades by reporting cycle and assessment.',
+    'reportingCycleGradeReport.php,reportingCycleGradeReport_print.php',
+    'reportingCycleGradeReport.php',
+    'Y',
+    'Y',
+    'Y',
+    'N',
+    'N',
+    'N'
+FROM gibbonModule m
+WHERE m.name = 'GradeAnalytics'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM gibbonAction a
+    WHERE a.gibbonModuleID = m.gibbonModuleID
+      AND a.name = 'Reporting Cycle Grade Report'
+  );end
+
+-- Add permissions for Reporting Cycle Grade Report
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID)
+SELECT r.gibbonRoleID, a.gibbonActionID
+FROM gibbonRole r
+JOIN gibbonModule m ON m.name = 'GradeAnalytics'
+JOIN gibbonAction a ON a.gibbonModuleID = m.gibbonModuleID
+WHERE a.name = 'Reporting Cycle Grade Report'
+  AND r.name IN ('Admin', 'Teacher', 'Principal', 'Vice Principal', 'Head of Department')
+  AND NOT EXISTS (
+    SELECT 1
+    FROM gibbonPermission p
+    WHERE p.gibbonRoleID = r.gibbonRoleID
+      AND p.gibbonActionID = a.gibbonActionID
+  );";
+
+$count++;
+
 // v1.0.3 - Add Bulk Broadsheet Export action and permissions
 $sql[$count][0] = '1.0.3';
 $sql[$count][1] = "-- Add Bulk Broadsheet Export action

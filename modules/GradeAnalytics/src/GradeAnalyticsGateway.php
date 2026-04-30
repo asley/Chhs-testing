@@ -259,6 +259,18 @@ class GradeAnalyticsGateway extends QueryableGateway
     }
 
     /**
+     * Get all school years.
+     */
+    public function selectSchoolYears()
+    {
+        $sql = "SELECT gibbonSchoolYearID as value, name
+                FROM gibbonSchoolYear
+                ORDER BY sequenceNumber DESC";
+
+        return $this->db()->select($sql);
+    }
+
+    /**
      * Get distinct assessment names from internal assessments
      */
     public function selectAssessmentColumns($gibbonSchoolYearID)
@@ -923,6 +935,85 @@ class GradeAnalyticsGateway extends QueryableGateway
                 LEFT JOIN gibbonCourseClassPerson ct ON cc.gibbonCourseClassID = ct.gibbonCourseClassID
                 WHERE {$whereSQL}
                 ORDER BY s.surname, s.preferredName";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    /**
+     * Get grade export rows grouped by reporting cycle assessments.
+     * Returns one row per student + subject so duplicate assessment names across
+     * subjects are not collapsed into a single value.
+     */
+    public function selectReportingCycleGradeExport($gibbonSchoolYearID, $filters = [])
+    {
+        $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
+        $whereConditions = [
+            "s.status = 'Full'",
+            "se.gibbonSchoolYearID = :gibbonSchoolYearID",
+            "c.gibbonSchoolYearID = :gibbonSchoolYearID",
+            "ccp.role = 'Student'",
+            "ct.role = 'Teacher'",
+            "me.attainmentValue IS NOT NULL",
+            "TRIM(me.attainmentValue) != ''",
+        ];
+
+        if ($this->shouldRestrictToOwnClasses()) {
+            $data['currentTeacherID'] = $this->getCurrentPersonID();
+            $whereConditions[] = 'ct.gibbonPersonID = :currentTeacherID';
+        }
+
+        if (!empty($filters['formGroupID'])) {
+            $whereConditions[] = 'fg.gibbonFormGroupID = :formGroupID';
+            $data['formGroupID'] = $filters['formGroupID'];
+        }
+
+        if (!empty($filters['yearGroup'])) {
+            $whereConditions[] = 'se.gibbonYearGroupID = :yearGroup';
+            $data['yearGroup'] = $filters['yearGroup'];
+        }
+
+        $whereSQL = implode(' AND ', $whereConditions);
+
+        $sql = "SELECT
+                s.gibbonPersonID,
+                s.preferredName,
+                s.surname,
+                fg.name AS formGroup,
+                yg.name AS yearGroup,
+                c.name AS courseName,
+                c.nameShort AS courseNameShort,
+                iac.gibbonInternalAssessmentColumnID,
+                iac.name AS assessmentName,
+                rc.gibbonReportingCycleID,
+                COALESCE(rc.name, iac.name) AS reportingCycleName,
+                COALESCE(rc.nameShort, iac.name) AS reportingCycleShortName,
+                COALESCE(rc.cycleNumber, 9999) AS reportingCycleSequence,
+                me.attainmentValue AS grade
+            FROM gibbonPerson s
+            JOIN gibbonStudentEnrolment se
+                ON se.gibbonPersonID = s.gibbonPersonID
+            JOIN gibbonFormGroup fg
+                ON fg.gibbonFormGroupID = se.gibbonFormGroupID
+            JOIN gibbonYearGroup yg
+                ON yg.gibbonYearGroupID = se.gibbonYearGroupID
+            JOIN gibbonCourseClassPerson ccp
+                ON ccp.gibbonPersonID = s.gibbonPersonID
+            JOIN gibbonCourseClass cc
+                ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+            JOIN gibbonCourse c
+                ON c.gibbonCourseID = cc.gibbonCourseID
+            JOIN gibbonInternalAssessmentColumn iac
+                ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
+            LEFT JOIN gibbonReportingCycle rc
+                ON rc.gibbonSchoolYearID = c.gibbonSchoolYearID
+                AND (rc.name = iac.name OR rc.nameShort = iac.name)
+            JOIN gibbonInternalAssessmentEntry me
+                ON me.gibbonPersonIDStudent = s.gibbonPersonID
+                AND me.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
+            LEFT JOIN gibbonCourseClassPerson ct
+                ON ct.gibbonCourseClassID = cc.gibbonCourseClassID
+            WHERE {$whereSQL}
+            ORDER BY s.surname, s.preferredName, c.name, rc.sequenceNumber, iac.name";
 
         return $this->db()->select($sql, $data);
     }
