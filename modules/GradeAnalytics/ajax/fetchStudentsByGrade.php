@@ -41,6 +41,7 @@ $formGroupID = $_GET['formGroupID'] ?? '';
 $teacherID = $_GET['teacherID'] ?? '';
 $yearGroup = $_GET['yearGroup'] ?? '';
 $assessmentType = $_GET['assessmentType'] ?? '';
+$assessmentName = $_GET['assessmentName'] ?? '';
 $gibbonSchoolYearID = $_SESSION[$guid]['gibbonSchoolYearID'] ?? '';
 
 // Initialize response
@@ -70,6 +71,7 @@ try {
     if (!empty($teacherID)) $filters['teacherID'] = $teacherID;
     if (!empty($yearGroup)) $filters['yearGroup'] = $yearGroup;
     if (!empty($assessmentType)) $filters['assessmentType'] = $assessmentType;
+    if (!empty($assessmentName)) $filters['assessmentName'] = $assessmentName;
 
     // Fetch students
     $students = $gateway->selectStudentsByGrade($gibbonSchoolYearID, $grade, $filters);
@@ -87,7 +89,7 @@ try {
             'grade' => $student['grade'] ?? 'N/A',
             'courseName' => $student['courseName'] ?? 'N/A',
             'assessmentName' => $student['assessmentName'] ?? 'N/A',
-            'profileLink' => $absoluteURL . '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=' . $student['gibbonPersonID']
+            'profileLink' => $absoluteURL . '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=' . $student['gibbonPersonID'] . '&allStudents=on&subpage=Overview'
         ];
     }
 

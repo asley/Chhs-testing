@@ -98,17 +98,19 @@ $staffingHealth = $teacherCount > 0
     : 0.0;
 
 $kpiAttendanceRate = pdKpiAttendanceRate($connection2, $selectedYearID, $dateFrom, $dateTo, $selectedYearGrp, $selectedFormGrp);
-$kpiMarkbookAvg = pdKpiMarkbookAvg($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
-$kpiInternalAssessmentAvg = pdKpiInternalAssessmentAvg($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
-$kpiPassRate = pdKpiPassRate($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
-$kpiAbsenteeism = pdKpiChronicAbsenteeism($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
-$kpiAtRisk = pdKpiAtRiskCount($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
+//$markbookKpis = pdGetMarkbookKpiAggregate($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
+$attendanceRiskKpis = pdGetAttendanceRiskAggregate($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
+//$kpiMarkbookAvg = $markbookKpis['avg'] ?? 0.0;
+//$kpiInternalAssessmentAvg = pdKpiInternalAssessmentAvg($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
+//$kpiPassRate = $markbookKpis['passRate'] ?? 0.0;
+$kpiAbsenteeism = $attendanceRiskKpis['totalStudents'] > 0
+    ? round(($attendanceRiskKpis['chronicCount'] / $attendanceRiskKpis['totalStudents']) * 100, 1)
+    : 0.0;
+$kpiAtRisk = $attendanceRiskKpis['atRiskCount'];
 
 $behaviourSummary = pdKpiBehaviourSummary($connection2, $selectedYearID, $dateFrom, $dateTo, $selectedYearGrp, $selectedFormGrp);
-$behaviourStudentsAll = pdBehaviourIssueStudents($connection2, $selectedYearID, $dateFrom, $dateTo, $selectedYearGrp, $selectedFormGrp, 0);
-$behaviourStudents = array_slice($behaviourStudentsAll, 0, 8);
-
-$studentsFlaggedCount = count($behaviourStudentsAll);
+$behaviourStudents = pdBehaviourIssueStudents($connection2, $selectedYearID, $dateFrom, $dateTo, $selectedYearGrp, $selectedFormGrp, 8);
+$studentsFlaggedCount = pdCountBehaviourIssueStudents($connection2, $selectedYearID, $dateFrom, $dateTo, $selectedYearGrp, $selectedFormGrp);
 $behaviourTotal = (int) ($behaviourSummary['total'] ?? 0);
 $positiveCount = (int) ($behaviourSummary['positive'] ?? 0);
 $negativeCount = (int) ($behaviourSummary['negative'] ?? 0);
@@ -121,16 +123,10 @@ $observationShare = $behaviourTotal > 0 ? round(($observationCount / $behaviourT
 $behaviourFlagRate = $studentCount > 0 ? round(($studentsFlaggedCount / $studentCount) * 100, 1) : 0.0;
 
 $badgeSummary = pdKpiBadgeSummary($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
-$badgeStudentsAll = pdBadgeAwardedStudents($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp, 0);
-$badgeStudents = array_slice($badgeStudentsAll, 0, 8);
+$badgeStudents = pdBadgeAwardedStudents($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp, 8);
 
 $badgeReach = $studentCount > 0 ? round(((int) ($badgeSummary['recipients'] ?? 0) / $studentCount) * 100, 1) : 0.0;
-$repeatRecipients = 0;
-foreach ($badgeStudentsAll as $badgeStudent) {
-    if (((int) ($badgeStudent['awardCount'] ?? 0)) > 1) {
-        $repeatRecipients++;
-    }
-}
+$repeatRecipients = pdCountRepeatBadgeRecipients($connection2, $selectedYearID, $selectedYearGrp, $selectedFormGrp);
 
 $atRiskRate = $studentCount > 0 ? round(($kpiAtRisk / $studentCount) * 100, 1) : 0.0;
 $ratioHealth = $teacherCount > 0
@@ -165,8 +161,6 @@ $kpiRows = [
             'tone' => 'blue',
             'href' => $teachersDataURL,
         ],
-    ],
-    [
         [
             'title' => __('Student : Teacher'),
             'code' => 'RATIO',
@@ -177,6 +171,8 @@ $kpiRows = [
             'tone' => 'green',
             'href' => '#section-enrolment',
         ],
+    ],
+    [
         [
             'title' => __('Attendance Rate'),
             'code' => 'ATT',
@@ -186,40 +182,6 @@ $kpiRows = [
             'ringText' => number_format($kpiAttendanceRate, 1) . '%',
             'tone' => 'teal',
             'href' => '#panel-attendance-trend',
-        ],
-    ],
-    [
-        [
-            'title' => __('Markbook Average'),
-            'code' => 'ACA',
-            'value' => number_format($kpiMarkbookAvg, 1) . '%',
-            'sub' => __('Average of each student\'s markbook mean'),
-            'ring' => $clampPercent($kpiMarkbookAvg),
-            'ringText' => number_format($kpiMarkbookAvg, 1) . '%',
-            'tone' => 'blue',
-            'href' => '#panel-markbook-distribution',
-        ],
-        [
-            'title' => __('Internal Assessment Avg'),
-            'code' => 'IA',
-            'value' => number_format($kpiInternalAssessmentAvg, 1) . '%',
-            'sub' => __('Average of each student\'s IA mean'),
-            'ring' => $clampPercent($kpiInternalAssessmentAvg),
-            'ringText' => number_format($kpiInternalAssessmentAvg, 1) . '%',
-            'tone' => 'teal',
-            'href' => '#panel-ia-comparison',
-        ],
-    ],
-    [
-        [
-            'title' => __('Pass Rate'),
-            'code' => 'PASS',
-            'value' => number_format($kpiPassRate, 1) . '%',
-            'sub' => __('Students with markbook score 65% and above'),
-            'ring' => $clampPercent($kpiPassRate),
-            'ringText' => number_format($kpiPassRate, 1) . '%',
-            'tone' => 'green',
-            'href' => '#panel-markbook-distribution',
         ],
         [
             'title' => __('Chronic Absenteeism'),
@@ -231,8 +193,6 @@ $kpiRows = [
             'tone' => 'amber',
             'href' => '#panel-absence-heatmap',
         ],
-    ],
-    [
         [
             'title' => __('At-Risk Students'),
             'code' => 'ALERT',
@@ -312,7 +272,7 @@ $renderKpiCard = static function (array $card) use ($h): string {
     return $html;
 };
 
-$studentProfileBaseURL = $absoluteURL . '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=';
+$studentProfileBaseURL = $absoluteURL . '/index.php?q=/modules/Students/student_view_details.php&allStudents=on&subpage=Overview&gibbonPersonID=';
 
 echo "<script src='https://cdn.jsdelivr.net/npm/apexcharts@3.49.0/dist/apexcharts.min.js'></script>";
 echo "<script>window.PD = {$jsConfig};</script>";
@@ -338,10 +298,6 @@ echo "<script>window.PD = {$jsConfig};</script>";
     --cat-enrol: #2563eb;
     --cat-enrol-bg: #eff6ff;
     --cat-enrol-border: #bfdbfe;
-
-    --cat-academic: #0891b2;
-    --cat-academic-bg: #ecfeff;
-    --cat-academic-border: #a5f3fc;
 
     --cat-attend: #059669;
     --cat-attend-bg: #ecfdf5;
@@ -488,10 +444,6 @@ echo "<script>window.PD = {$jsConfig};</script>";
 .pd-section.enrol .pd-section-label { color: var(--cat-enrol); }
 .pd-section.enrol .pd-section-header { border-color: var(--cat-enrol-border); }
 
-.pd-section.academic .pd-section-dot   { background: var(--cat-academic); }
-.pd-section.academic .pd-section-label { color: var(--cat-academic); }
-.pd-section.academic .pd-section-header { border-color: var(--cat-academic-border); }
-
 .pd-section.attend .pd-section-dot   { background: var(--cat-attend); }
 .pd-section.attend .pd-section-label { color: var(--cat-attend); }
 .pd-section.attend .pd-section-header { border-color: var(--cat-attend-border); }
@@ -539,8 +491,6 @@ echo "<script>window.PD = {$jsConfig};</script>";
 /* Category accent per section */
 .pd-section.enrol   .pd-kpi-card::before { background: var(--cat-enrol); }
 .pd-section.enrol   .pd-kpi-card { border-color: var(--cat-enrol-border); background: linear-gradient(135deg, var(--cat-enrol-bg) 0%, #fff 60%); }
-.pd-section.academic .pd-kpi-card::before { background: var(--cat-academic); }
-.pd-section.academic .pd-kpi-card { border-color: var(--cat-academic-border); background: linear-gradient(135deg, var(--cat-academic-bg) 0%, #fff 60%); }
 .pd-section.attend  .pd-kpi-card::before { background: var(--cat-attend); }
 .pd-section.attend  .pd-kpi-card { border-color: var(--cat-attend-border); background: linear-gradient(135deg, var(--cat-attend-bg) 0%, #fff 60%); }
 .pd-section.risk    .pd-kpi-card::before { background: var(--cat-risk); }
@@ -1263,61 +1213,29 @@ article[id] {
             </form>
         </section>
 
-        <!-- ── ENROLMENT ─────────────────────────────────────── -->
+        <!-- ── ENROLMENT & STAFFING ──────────────────────────── -->
         <section class="pd-section enrol" id="section-enrolment">
             <div class="pd-section-header">
                 <span class="pd-section-dot"></span>
-                <span class="pd-section-label"><?= $h(__('Enrolment')) ?></span>
+                <span class="pd-section-label"><?= $h(__('Enrolment & Staffing')) ?></span>
             </div>
             <div class="pd-kpi-grid">
                 <?php foreach ($kpiRows[0] as $card): ?>
                     <?= $renderKpiCard($card) ?>
                 <?php endforeach; ?>
-                <?php foreach ($kpiRows[1] as $card): ?>
-                    <?= $renderKpiCard($card) ?>
-                <?php endforeach; ?>
             </div>
         </section>
 
-        <!-- ── ACADEMIC ──────────────────────────────────────── -->
-        <section class="pd-section academic" id="section-academic">
-            <div class="pd-section-header">
-                <span class="pd-section-dot"></span>
-                <span class="pd-section-label"><?= $h(__('Academic')) ?></span>
-            </div>
-            <div class="pd-kpi-grid">
-                <?php foreach ($kpiRows[2] as $card): ?>
-                    <?= $renderKpiCard($card) ?>
-                <?php endforeach; ?>
-                <?php foreach ($kpiRows[3] as $card): ?>
-                    <?= $renderKpiCard($card) ?>
-                <?php endforeach; ?>
-            </div>
-        </section>
-
-        <!-- ── ATTENDANCE ────────────────────────────────────── -->
+        <!-- ── SCHOOL HEALTH & SAFETY ────────────────────────── -->
         <section class="pd-section attend" id="section-attendance">
             <div class="pd-section-header">
                 <span class="pd-section-dot"></span>
-                <span class="pd-section-label"><?= $h(__('Attendance')) ?></span>
+                <span class="pd-section-label"><?= $h(__('School Health & Safety')) ?></span>
             </div>
-            <div class="pd-kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
-                <?php $attendCard = $kpiRows[1][1]; /* Attendance Rate */ ?>
-                <?= $renderKpiCard($attendCard) ?>
-            </div>
-        </section>
-
-        <!-- ── RISK & BEHAVIOUR ──────────────────────────────── -->
-        <section class="pd-section risk" id="section-risk">
-            <div class="pd-section-header">
-                <span class="pd-section-dot"></span>
-                <span class="pd-section-label"><?= $h(__('Risk &amp; Behaviour')) ?></span>
-            </div>
-            <div class="pd-kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin-bottom: 16px;">
-                <?php $atRiskCard = $kpiRows[4][0]; /* At-Risk Students */ ?>
-                <?= $renderKpiCard($atRiskCard) ?>
-                <?php $behaviourCard = $kpiRows[4][1]; /* Behaviour Flags */ ?>
-                <?= $renderKpiCard($behaviourCard) ?>
+            <div class="pd-kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));">
+                <?php foreach ($kpiRows[1] as $card): ?>
+                    <?= $renderKpiCard($card) ?>
+                <?php endforeach; ?>
             </div>
         </section>
 
@@ -1462,62 +1380,29 @@ article[id] {
             </article>
         </section>
 
-        <!-- ── Academic charts ──────────────────────────────── -->
+        <!-- ── Academic Overview ────────────────────────────── -->
         <div class="pd-panel-grid">
-            <article class="pd-panel" id="panel-markbook-distribution">
+            <article class="pd-panel" style="flex: 0 0 100%; width: 100%; max-width: 100%; min-height: auto; margin-bottom: 20px;">
                 <header class="pd-panel-head">
                     <div>
-                        <h2 class="pd-panel-title"><?= $h(__('Markbook Grade Distribution')) ?></h2>
-                        <p class="pd-panel-subtitle"><?= $h(__('Student count by each student\'s average markbook grade. Click a bar to view students in that band.')) ?></p>
+                        <h2 class="pd-panel-title"><?= $h(__('Academic Overview')) ?></h2>
+                        <p class="pd-panel-subtitle"><?= $h(__('Detailed academic performance, grade distributions, and internal assessment analytics are managed in the Grade Analytics module.')) ?></p>
                     </div>
                 </header>
-                <div id="chart-markbook-dist" class="pd-chart-host">
-                    <div class="pd-loading"><?= $h(__('Loading chart...')) ?></div>
-                </div>
-            </article>
-
-            <article class="pd-panel" id="panel-ia-comparison">
-                <header class="pd-panel-head">
-                    <div>
-                        <h2 class="pd-panel-title"><?= $h(__('IA vs Markbook — Class Averages')) ?></h2>
-                        <p class="pd-panel-subtitle"><?= $h(__('Student-weighted class averages, side-by-side. Use paging to review in chunks.')) ?></p>
+                <div style="display: flex; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; background: #f8fbff; border-radius: 12px; border: 1.5px dashed #dce5ef;">
+                    <div style="max-width: 500px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📊</div>
+                        <h3 style="font-size: 20px; font-weight: 700; color: #1a3450; margin-bottom: 12px;"><?= $h(__('In-depth Grade Analytics')) ?></h3>
+                        <p style="color: #526a82; margin-bottom: 24px; line-height: 1.6;"><?= $h(__('Access comprehensive visualizations of markbook progress, IA trends, and class-by-class comparisons directly in the dedicated Grade Analytics dashboard.')) ?></p>
+                        <a href="<?= $h($absoluteURL . '/index.php?q=/modules/GradeAnalytics/gradeDashboard.php') ?>" class="pd-btn apply" style="padding: 12px 24px; font-size: 15px; text-decoration: none;">
+                            <?= $h(__('Go to Grade Analytics Dashboard')) ?>
+                        </a>
                     </div>
-                </header>
-                <div class="pd-panel-tools" id="pd-comp-tools">
-                    <button type="button" class="pd-tool-btn" id="pd-comp-prev"><?= $h(__('Prev')) ?></button>
-                    <span class="pd-tool-range" id="pd-comp-range">0 of 0</span>
-                    <button type="button" class="pd-tool-btn" id="pd-comp-next"><?= $h(__('Next')) ?></button>
-                    <select id="pd-comp-size" class="pd-tool-select" aria-label="<?= $h(__('Classes per page')) ?>">
-                        <option value="12">12</option>
-                        <option value="21" selected>21</option>
-                        <option value="30">30</option>
-                    </select>
-                </div>
-                <div id="chart-comparison" class="pd-chart-host">
-                    <div class="pd-loading"><?= $h(__('Loading chart...')) ?></div>
                 </div>
             </article>
+        </div>
 
-            <article class="pd-panel" id="panel-ia-trends">
-                <header class="pd-panel-head">
-                    <div>
-                        <h2 class="pd-panel-title"><?= $h(__('Internal Assessment Representation')) ?></h2>
-                        <p class="pd-panel-subtitle"><?= $h(__('100% stacked distribution by performance band per assessment column. Use the assessment filter and click a column to drill down into student scores.')) ?></p>
-                    </div>
-                </header>
-                <div class="pd-panel-tools">
-                    <select id="pd-ia-assessment" class="pd-tool-select" aria-label="<?= $h(__('Filter by assessment')) ?>">
-                        <option value=""><?= $h(__('All Assessments')) ?></option>
-                    </select>
-                </div>
-                <div id="ia-insights" class="pd-insight-row">
-                    <div class="pd-insight-loading"><?= $h(__('Loading summary...')) ?></div>
-                </div>
-                <div id="chart-ia-trend" class="pd-chart-host">
-                    <div class="pd-loading"><?= $h(__('Loading chart...')) ?></div>
-                </div>
-            </article>
-
+        <div class="pd-panel-grid">
             <!-- ── Attendance charts ─────────────────────────── -->
             <article class="pd-panel" id="panel-attendance-trend">
                 <header class="pd-panel-head">
@@ -1553,6 +1438,8 @@ article[id] {
                         <h2 class="pd-panel-title"><?= $h(__('At-Risk Students')) ?></h2>
                         <p class="pd-panel-subtitle"><?= $h(__('Flagged by low markbook average (&lt;65%) or high absenteeism (&gt;18 days).')) ?></p>
                     </div>
+                    <button type="button" id="pd-at-risk-refresh" class="pd-btn" title="<?= $h(__('Refresh at-risk data')) ?>"
+                            style="margin-left:auto;white-space:nowrap;">&#8635; Refresh</button>
                 </header>
                 <div id="at-risk-container" class="pd-table-host">
                     <div class="pd-loading"><?= $h(__('Loading students...')) ?></div>
@@ -1583,16 +1470,13 @@ article[id] {
     'use strict';
 
     var chartRefs = {};
-    var comparisonState = {
-        labels: [],
-        ia: [],
-        markbook: [],
-        page: 0,
-        pageSize: 21
-    };
-    var iaTrendColumnIDs = [];
-    var iaTrendState = {
-        assessmentName: ''
+    var atRiskState = {
+        page: 1,
+        pageSize: 25,
+        total: 0,
+        rows: [],
+        hasMore: false,
+        loading: false
     };
 
     var moduleAjaxBase = '/modules/Principal%20Dashboard/ajax/';
@@ -1811,682 +1695,84 @@ article[id] {
         el.innerHTML = html;
     }
 
-    function populateIAAssessmentOptions(options) {
-        var select = document.getElementById('pd-ia-assessment');
-        if (!select) {
-            return;
-        }
-
-        var current = iaTrendState.assessmentName || '';
-        var list = Array.isArray(options)
-            ? options
-                .map(function (name) {
-                    return name === null || name === undefined ? '' : String(name).trim();
-                })
-                .filter(function (name, index, arr) {
-                    return name !== '' && arr.indexOf(name) === index;
-                })
-            : [];
-
-        var html = '<option value="">' + escHtml('All Assessments') + '</option>';
-        list.forEach(function (name) {
-            html += '<option value="' + escHtml(name) + '">' + escHtml(name) + '</option>';
-        });
-        select.innerHTML = html;
-
-        if (current !== '' && list.indexOf(current) !== -1) {
-            select.value = current;
-        } else {
-            iaTrendState.assessmentName = '';
-            select.value = '';
-        }
-    }
-
-    function pad2(value) {
-        var n = Number(value);
-        if (!isFinite(n)) {
-            return '00';
-        }
-        var intValue = Math.floor(Math.abs(n));
-        return intValue < 10 ? '0' + intValue : String(intValue);
-    }
-
-    function parseISODate(value) {
-        if (typeof value !== 'string') {
-            return null;
-        }
-
-        var parts = value.split('-');
-        if (parts.length !== 3) {
-            return null;
-        }
-
-        var year = Number(parts[0]);
-        var month = Number(parts[1]);
-        var day = Number(parts[2]);
-        if (!isFinite(year) || !isFinite(month) || !isFinite(day)) {
-            return null;
-        }
-
-        var dateObj = new Date(year, month - 1, day);
-        if (
-            dateObj.getFullYear() !== year ||
-            dateObj.getMonth() !== month - 1 ||
-            dateObj.getDate() !== day
-        ) {
-            return null;
-        }
-
-        return dateObj;
-    }
-
-    function weekStartDate(dateObj) {
-        var weekStart = new Date(dateObj.getTime());
-        var day = weekStart.getDay();
-        var diffToMonday = (day + 6) % 7;
-        weekStart.setDate(weekStart.getDate() - diffToMonday);
-        return weekStart;
-    }
-
-    function formatDateKey(dateObj) {
-        return dateObj.getFullYear() + '-' + pad2(dateObj.getMonth() + 1) + '-' + pad2(dateObj.getDate());
-    }
-
-    function formatWeekLabel(dateKey) {
-        var dateObj = parseISODate(dateKey);
-        if (!dateObj) {
-            return dateKey;
-        }
-
-        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return monthNames[dateObj.getMonth()] + ' ' + dateObj.getDate();
-    }
-
-    function round1(value) {
-        var n = Number(value);
-        if (!isFinite(n)) {
-            return 0;
-        }
-        return Math.round(n * 10) / 10;
-    }
-
     function buildWeeklyAttendanceBands(labels, values) {
-        var weeklyMap = {};
+        var weekly = {};
         var weeklyOrder = [];
         var totalDays = 0;
-        var totalValue = 0;
-        var daysBelow80 = 0;
-        var days8090 = 0;
-        var days90Plus = 0;
+        var below80Days = 0;
+        var warningDays = 0;
+        var onTargetDays = 0;
+        var attendanceSum = 0;
 
-        var maxLen = Math.max(
-            Array.isArray(labels) ? labels.length : 0,
-            Array.isArray(values) ? values.length : 0
-        );
+        (labels || []).forEach(function (label, index) {
+            var value = Number((values || [])[index]);
+            var date = new Date(label);
 
-        for (var i = 0; i < maxLen; i += 1) {
-            var attendanceValue = Number(values && values[i]);
-            if (!isFinite(attendanceValue)) {
-                continue;
+            if (!isFinite(value) || !(date instanceof Date) || isNaN(date.getTime())) {
+                return;
             }
 
-            var dateObj = parseISODate(labels && labels[i]);
-            if (!dateObj) {
-                continue;
-            }
-
-            var weekKey = formatDateKey(weekStartDate(dateObj));
-            if (!weeklyMap[weekKey]) {
-                weeklyMap[weekKey] = { low: 0, mid: 0, high: 0, total: 0 };
+            var weekKey = String(label).slice(0, 7);
+            if (!weekly[weekKey]) {
+                weekly[weekKey] = {
+                    label: weekKey,
+                    low: 0,
+                    warning: 0,
+                    onTarget: 0,
+                    total: 0
+                };
                 weeklyOrder.push(weekKey);
             }
 
-            var bucket = weeklyMap[weekKey];
-            if (attendanceValue < 80) {
-                bucket.low += 1;
-                daysBelow80 += 1;
-            } else if (attendanceValue < 90) {
-                bucket.mid += 1;
-                days8090 += 1;
-            } else {
-                bucket.high += 1;
-                days90Plus += 1;
-            }
-
-            bucket.total += 1;
+            weekly[weekKey].total += 1;
             totalDays += 1;
-            totalValue += attendanceValue;
-        }
+            attendanceSum += value;
 
-        var weekLabels = [];
+            if (value < 80) {
+                weekly[weekKey].low += 1;
+                below80Days += 1;
+            } else if (value < 90) {
+                weekly[weekKey].warning += 1;
+                warningDays += 1;
+            } else {
+                weekly[weekKey].onTarget += 1;
+                onTargetDays += 1;
+            }
+        });
+
+        var categories = [];
         var lowSeries = [];
-        var midSeries = [];
-        var highSeries = [];
+        var warningSeries = [];
+        var onTargetSeries = [];
 
         weeklyOrder.forEach(function (weekKey) {
-            var bucket = weeklyMap[weekKey];
-            if (!bucket || bucket.total <= 0) {
+            var bucket = weekly[weekKey];
+            if (!bucket || bucket.total === 0) {
                 return;
             }
 
-            weekLabels.push(formatWeekLabel(weekKey));
-            lowSeries.push(round1((bucket.low / bucket.total) * 100));
-            midSeries.push(round1((bucket.mid / bucket.total) * 100));
-            highSeries.push(round1((bucket.high / bucket.total) * 100));
+            categories.push(bucket.label);
+            lowSeries.push(Number(((bucket.low / bucket.total) * 100).toFixed(1)));
+            warningSeries.push(Number(((bucket.warning / bucket.total) * 100).toFixed(1)));
+            onTargetSeries.push(Number(((bucket.onTarget / bucket.total) * 100).toFixed(1)));
         });
 
         return {
-            labels: weekLabels,
+            labels: categories,
             series: [
-                { name: '< 80%', data: lowSeries },
-                { name: '80-89%', data: midSeries },
-                { name: '>= 90%', data: highSeries }
+                { name: 'Days < 80%', data: lowSeries },
+                { name: 'Days 80-89%', data: warningSeries },
+                { name: 'Days >= 90%', data: onTargetSeries }
             ],
             summary: {
-                avgDaily: totalDays > 0 ? round1(totalValue / totalDays) : 0,
-                below80Pct: totalDays > 0 ? round1((daysBelow80 / totalDays) * 100) : 0,
-                onTargetPct: totalDays > 0 ? round1((days90Plus / totalDays) * 100) : 0,
+                avgDaily: totalDays > 0 ? Number((attendanceSum / totalDays).toFixed(1)) : 0,
+                below80Pct: totalDays > 0 ? Number(((below80Days / totalDays) * 100).toFixed(1)) : 0,
+                warningPct: totalDays > 0 ? Number(((warningDays / totalDays) * 100).toFixed(1)) : 0,
+                onTargetPct: totalDays > 0 ? Number(((onTargetDays / totalDays) * 100).toFixed(1)) : 0,
                 totalDays: totalDays,
-                weeksTracked: weekLabels.length,
-                warningPct: totalDays > 0 ? round1((days8090 / totalDays) * 100) : 0
+                weeksTracked: categories.length
             }
         };
-    }
-
-    function loadMarkbookDistribution() {
-        setLoading('chart-markbook-dist', 'Loading chart...');
-
-        fetchJSON('markbookDistribution.php').then(function (res) {
-            if (!res.success || !res.data || !Array.isArray(res.data.labels)) {
-                setEmpty('chart-markbook-dist', 'No markbook distribution data available.');
-                return;
-            }
-
-            renderChart('chart-markbook-dist', {
-                chart: {
-                    type: 'bar',
-                    height: 320,
-                    toolbar: { show: true },
-                    events: {
-                        dataPointSelection: function (event, chartContext, config) {
-                            var pointIndex = config && typeof config.dataPointIndex === 'number' ? config.dataPointIndex : -1;
-                            if (pointIndex < 0 || !Array.isArray(res.data.labels) || !res.data.labels[pointIndex]) {
-                                return;
-                            }
-                            openGradeBandDrillDown(res.data.labels[pointIndex]);
-                        }
-                    }
-                },
-                series: [{
-                    name: 'Students',
-                    data: Array.isArray(res.data.values) ? res.data.values : []
-                }],
-                xaxis: {
-                    categories: res.data.labels,
-                    labels: {
-                        rotate: 0,
-                        style: {
-                            colors: '#4d6781',
-                            fontSize: '11px'
-                        }
-                    }
-                },
-                yaxis: {
-                    title: {
-                        text: 'Student Count'
-                    },
-                    labels: {
-                        style: {
-                            colors: '#4d6781'
-                        }
-                    }
-                },
-                colors: [palette.teal],
-                plotOptions: {
-                    bar: {
-                        borderRadius: 5,
-                        columnWidth: '56%'
-                    }
-                },
-                dataLabels: { enabled: false },
-                grid: {
-                    borderColor: '#dbe6f2',
-                    strokeDashArray: 3
-                },
-                tooltip: {
-                    y: {
-                        formatter: function (value) {
-                            return value + ' students';
-                        }
-                    }
-                },
-                states: {
-                    active: {
-                        filter: {
-                            type: 'none'
-                        }
-                    }
-                }
-            });
-        }).catch(function () {
-            setEmpty('chart-markbook-dist', 'Failed to load markbook distribution.');
-        });
-    }
-
-    function updateComparisonControls() {
-        var prevButton = document.getElementById('pd-comp-prev');
-        var nextButton = document.getElementById('pd-comp-next');
-        var rangeText = document.getElementById('pd-comp-range');
-
-        var total = comparisonState.labels.length;
-        var start = total === 0 ? 0 : (comparisonState.page * comparisonState.pageSize) + 1;
-        var end = Math.min(total, (comparisonState.page + 1) * comparisonState.pageSize);
-
-        if (rangeText) {
-            rangeText.textContent = total === 0 ? '0 of 0' : (start + '-' + end + ' of ' + total);
-        }
-
-        if (prevButton) {
-            prevButton.disabled = comparisonState.page <= 0;
-        }
-
-        if (nextButton) {
-            nextButton.disabled = end >= total;
-        }
-    }
-
-    function renderComparisonPage() {
-        var total = comparisonState.labels.length;
-
-        if (total === 0) {
-            setEmpty('chart-comparison', 'No class comparison data available.');
-            updateComparisonControls();
-            return;
-        }
-
-        var maxPage = Math.max(0, Math.ceil(total / comparisonState.pageSize) - 1);
-        if (comparisonState.page > maxPage) {
-            comparisonState.page = maxPage;
-        }
-
-        var start = comparisonState.page * comparisonState.pageSize;
-        var end = Math.min(total, start + comparisonState.pageSize);
-
-        var pageLabels = comparisonState.labels.slice(start, end).map(function (label) {
-            return truncateLabel(label, 22);
-        });
-
-        var pageIA = comparisonState.ia.slice(start, end);
-        var pageMarkbook = comparisonState.markbook.slice(start, end);
-
-        renderChart('chart-comparison', {
-            chart: {
-                type: 'bar',
-                height: 320,
-                toolbar: { show: true }
-            },
-            series: [
-                {
-                    name: 'Internal Assessment Avg %',
-                    data: pageIA
-                },
-                {
-                    name: 'Markbook Avg %',
-                    data: pageMarkbook
-                }
-            ],
-            colors: [palette.blue, palette.teal],
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    borderRadius: 4,
-                    columnWidth: '66%'
-                }
-            },
-            xaxis: {
-                categories: pageLabels,
-                labels: {
-                    rotate: -30,
-                    trim: true,
-                    style: {
-                        colors: '#4f6a83',
-                        fontSize: '11px'
-                    }
-                }
-            },
-            yaxis: {
-                min: 0,
-                max: 100,
-                tickAmount: 5,
-                title: {
-                    text: 'Average Score (%)'
-                },
-                labels: {
-                    style: {
-                        colors: '#4f6a83'
-                    }
-                }
-            },
-            legend: {
-                position: 'top'
-            },
-            dataLabels: {
-                enabled: false
-            },
-            grid: {
-                borderColor: '#dbe6f2',
-                strokeDashArray: 3
-            },
-            tooltip: {
-                y: {
-                    formatter: function (value) {
-                        return fmtPct(value);
-                    }
-                }
-            }
-        });
-
-        updateComparisonControls();
-    }
-
-    function loadComparison() {
-        setLoading('chart-comparison', 'Loading chart...');
-
-        fetchJSON('comparison.php').then(function (res) {
-            if (!res.success || !res.data || !Array.isArray(res.data.labels)) {
-                comparisonState.labels = [];
-                comparisonState.ia = [];
-                comparisonState.markbook = [];
-                renderComparisonPage();
-                return;
-            }
-
-            comparisonState.labels = res.data.labels;
-            comparisonState.ia = Array.isArray(res.data.ia) ? res.data.ia : [];
-            comparisonState.markbook = Array.isArray(res.data.markbook) ? res.data.markbook : [];
-            comparisonState.page = 0;
-
-            renderComparisonPage();
-        }).catch(function () {
-            setEmpty('chart-comparison', 'Failed to load class comparison.');
-            comparisonState.labels = [];
-            comparisonState.ia = [];
-            comparisonState.markbook = [];
-            updateComparisonControls();
-        });
-    }
-
-    function openDrillDown(columnID, columnName) {
-        var modal = document.getElementById('pd-modal');
-        var modalTitle = document.getElementById('pd-modal-title');
-        var modalSubtitle = document.getElementById('pd-modal-subtitle');
-        var modalBody = document.getElementById('pd-modal-body');
-
-        if (!modal || !modalTitle || !modalSubtitle || !modalBody) {
-            return;
-        }
-
-        modalTitle.textContent = columnName || 'Assessment Breakdown';
-        modalSubtitle.textContent = 'Individual student scores for this assessment column.';
-        modalBody.innerHTML = '<div class="pd-loading">Loading...</div>';
-        modal.classList.add('active');
-
-        fetchJSON('assessmentDrillDown.php', {
-            columnID: columnID
-        }).then(function (res) {
-            if (!res || res.success === false) {
-                var errorText = (res && res.message) ? String(res.message) : 'Failed to load drilldown data.';
-                modalBody.innerHTML = '<div class="pd-loading">' + escHtml(errorText) + '</div>';
-                return;
-            }
-
-            if (!Array.isArray(res.data) || res.data.length === 0) {
-                modalBody.innerHTML = '<div class="pd-loading">No student data found for this assessment.</div>';
-                return;
-            }
-
-            var html = '';
-            html += '<div class="pd-table-wrap">';
-            html += '<table class="pd-table">';
-            html += '<thead><tr>';
-            html += '<th>Rank</th><th>Student</th><th>Score</th><th>Status</th><th>Comment</th>';
-            html += '</tr></thead><tbody>';
-
-            res.data.forEach(function (student) {
-                var score = Number(student.scorePct);
-                var statusClass = 'red';
-                var statusLabel = 'Support';
-
-                if (isFinite(score) && score >= 65) {
-                    statusClass = 'green';
-                    statusLabel = 'Strong';
-                } else if (isFinite(score) && score >= 50) {
-                    statusClass = 'amber';
-                    statusLabel = 'Borderline';
-                }
-
-                var profileURL = PD.baseURL + '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=' + encodeURIComponent(student.personID);
-                var comment = student.comment ? escHtml(student.comment) : '&mdash;';
-
-                html += '<tr>';
-                html += '<td>' + escHtml(student.rank) + ' / ' + escHtml(student.classTotal) + '</td>';
-                html += '<td><a href="' + profileURL + '">' + escHtml(student.name) + '</a></td>';
-                html += '<td>' + escHtml(fmtPct(score)) + '</td>';
-                html += '<td><span class="pd-risk-badge ' + statusClass + '">' + statusLabel + '</span></td>';
-                html += '<td>' + comment + '</td>';
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            html += '</div>';
-            modalBody.innerHTML = html;
-        }).catch(function () {
-            modalBody.innerHTML = '<div class="pd-loading">Failed to load drilldown data.</div>';
-        });
-    }
-
-    function openGradeBandDrillDown(gradeBand) {
-        var modal = document.getElementById('pd-modal');
-        var modalTitle = document.getElementById('pd-modal-title');
-        var modalSubtitle = document.getElementById('pd-modal-subtitle');
-        var modalBody = document.getElementById('pd-modal-body');
-
-        if (!modal || !modalTitle || !modalSubtitle || !modalBody) {
-            return;
-        }
-
-        var gradeLabel = String(gradeBand || '').trim();
-        var gradeLetter = gradeLabel.charAt(0) || 'Grade';
-
-        modalTitle.textContent = 'Grade ' + gradeLetter + ' Students';
-        modalSubtitle.textContent = 'Students with markbook averages in ' + gradeLabel + '.';
-        modalBody.innerHTML = '<div class="pd-loading">Loading...</div>';
-        modal.classList.add('active');
-
-        fetchJSON('markbookBandDrillDown.php', {
-            gradeBand: gradeLabel
-        }).then(function (res) {
-            if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                modalBody.innerHTML = '<div class="pd-loading">No students found in this grade band.</div>';
-                return;
-            }
-
-            var html = '';
-            html += '<div class="pd-table-wrap">';
-            html += '<table class="pd-table">';
-            html += '<thead><tr>';
-            html += '<th>#</th><th>Student</th><th>Form Group</th><th>Year Group</th><th>Grade</th>';
-            html += '</tr></thead><tbody>';
-
-            res.data.forEach(function (student, index) {
-                var profileURL = PD.baseURL + '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=' + encodeURIComponent(student.personID);
-                html += '<tr>';
-                html += '<td>' + escHtml(index + 1) + '</td>';
-                html += '<td><a href="' + profileURL + '">' + escHtml(student.name) + '</a></td>';
-                html += '<td>' + escHtml(student.formGroup || '-') + '</td>';
-                html += '<td>' + escHtml(student.yearGroup || '-') + '</td>';
-                html += '<td><strong>' + escHtml(fmtPct(student.avgGrade)) + '</strong></td>';
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            html += '</div>';
-            modalBody.innerHTML = html;
-        }).catch(function () {
-            modalBody.innerHTML = '<div class="pd-loading">Failed to load grade band data.</div>';
-        });
-    }
-
-    function loadIATrend() {
-        setLoading('chart-ia-trend', 'Loading chart...');
-        setInsightLoading('ia-insights', 'Loading summary...');
-
-        var extraParams = {};
-        if (iaTrendState.assessmentName) {
-            extraParams.assessmentName = iaTrendState.assessmentName;
-        }
-
-        fetchJSON('assessmentTrend.php', extraParams).then(function (res) {
-            if (res && res.data) {
-                populateIAAssessmentOptions(res.data.assessmentOptions);
-            } else {
-                populateIAAssessmentOptions([]);
-            }
-
-            if (!res.success || !res.data || !Array.isArray(res.data.series) || res.data.series.length === 0) {
-                setEmpty('chart-ia-trend', 'No internal assessment trend data available.');
-                iaTrendColumnIDs = [];
-                setInsightLoading('ia-insights', 'No summary available for current filters.');
-                return;
-            }
-
-            iaTrendColumnIDs = Array.isArray(res.data.columnIDs) ? res.data.columnIDs : [];
-            var categories = Array.isArray(res.data.labels) ? res.data.labels.map(function (label) {
-                return truncateLabel(label, 18);
-            }) : [];
-            var fullLabels = Array.isArray(res.data.labels) ? res.data.labels : [];
-            var summary = (res.data.summary && typeof res.data.summary === 'object') ? res.data.summary : {};
-            var avgScore = Number(summary.avgScore);
-            var below65Pct = Number(summary.below65Pct);
-            var strongPct = Number(summary.strongPct);
-            var totalEntries = Number(summary.totalEntries);
-            var columnsTracked = Number(summary.columnsTracked);
-
-            if (!isFinite(avgScore)) {
-                avgScore = 0;
-            }
-            if (!isFinite(below65Pct)) {
-                below65Pct = 0;
-            }
-            if (!isFinite(strongPct)) {
-                strongPct = 0;
-            }
-            if (!isFinite(totalEntries) || totalEntries < 0) {
-                totalEntries = 0;
-            }
-            if (!isFinite(columnsTracked) || columnsTracked < 0) {
-                columnsTracked = 0;
-            }
-
-            renderInsightCards('ia-insights', [
-                {
-                    label: 'Average Score',
-                    gauge: avgScore,
-                    valueText: fmtPct(avgScore),
-                    subText: fmtInt(totalEntries) + ' scored entries'
-                },
-                {
-                    label: 'Below 65%',
-                    gauge: below65Pct,
-                    valueText: fmtPct(below65Pct),
-                    subText: 'Share requiring support',
-                    inverse: true
-                },
-                {
-                    label: 'Strong (80%+)',
-                    gauge: strongPct,
-                    valueText: fmtPct(strongPct),
-                    subText: fmtInt(columnsTracked) + ' assessment columns'
-                }
-            ]);
-
-            renderChart('chart-ia-trend', {
-                chart: {
-                    type: 'bar',
-                    height: 320,
-                    stacked: true,
-                    stackType: '100%',
-                    toolbar: { show: true },
-                    events: {
-                        dataPointSelection: function (event, chartContext, config) {
-                            var index = config && typeof config.dataPointIndex === 'number' ? config.dataPointIndex : -1;
-                            if (index < 0 || !iaTrendColumnIDs[index]) {
-                                return;
-                            }
-                            openDrillDown(iaTrendColumnIDs[index], fullLabels[index] || 'Assessment');
-                        }
-                    }
-                },
-                series: res.data.series,
-                colors: [palette.red, palette.amber, palette.green, palette.blue],
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        borderRadius: 3,
-                        columnWidth: '74%'
-                    }
-                },
-                xaxis: {
-                    categories: categories,
-                    labels: {
-                        rotate: -34,
-                        style: {
-                            colors: '#4f6a83',
-                            fontSize: '11px'
-                        }
-                    }
-                },
-                yaxis: {
-                    min: 0,
-                    max: 100,
-                    tickAmount: 5,
-                    title: {
-                        text: 'Distribution (%)'
-                    },
-                    labels: {
-                        style: {
-                            colors: '#4f6a83'
-                        }
-                    }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                legend: {
-                    position: 'top'
-                },
-                grid: {
-                    borderColor: '#dbe6f2',
-                    strokeDashArray: 3
-                },
-                tooltip: {
-                    shared: true,
-                    intersect: false,
-                    y: {
-                        formatter: function (value) {
-                            return fmtPct(value);
-                        }
-                    }
-                }
-            });
-        }).catch(function (error) {
-            if (window.console && typeof window.console.error === 'function') {
-                window.console.error('PD IA trend load error:', error);
-            }
-            populateIAAssessmentOptions([]);
-            setEmpty('chart-ia-trend', 'Failed to load internal assessment trend.');
-            setInsightLoading('ia-insights', 'Failed to load summary.');
-        });
     }
 
     function loadAttendanceTrend() {
@@ -2742,59 +2028,116 @@ article[id] {
         return 'green';
     }
 
-    function loadAtRiskStudents() {
-        setLoading('at-risk-container', 'Loading students...');
+    function renderAtRiskStudents() {
+        if (!Array.isArray(atRiskState.rows) || atRiskState.rows.length === 0) {
+            setEmpty('at-risk-container', 'No at-risk students found for the selected filters.');
+            return;
+        }
 
-        fetchJSON('atRisk.php').then(function (res) {
+        var totalAtRisk = Number(atRiskState.total);
+        if (!isFinite(totalAtRisk) || totalAtRisk < 0) {
+            totalAtRisk = atRiskState.rows.length;
+        }
+
+        var html = '';
+        if (totalAtRisk > atRiskState.rows.length) {
+            html += '<div class="pd-table-note">Showing ' + escHtml(atRiskState.rows.length) + ' of ' + escHtml(totalAtRisk) + ' at-risk students.</div>';
+        } else {
+            html += '<div class="pd-table-note">Showing ' + escHtml(totalAtRisk) + ' at-risk students.</div>';
+        }
+        html += '<div class="pd-table-wrap">';
+        html += '<table class="pd-table">';
+        html += '<thead><tr>';
+        html += '<th>#</th><th>Student</th><th>Year Group</th><th>Form Group</th><th>Avg Grade</th><th>Absences</th><th>Risk</th>';
+        html += '</tr></thead><tbody>';
+
+        atRiskState.rows.forEach(function (student, index) {
+            var gradeClass = gradeBadgeClass(student.avgGrade);
+            var absenceClass = absenceBadgeClass(student.absences);
+            var riskClass = (gradeClass === 'red' || absenceClass === 'red')
+                ? 'red'
+                : (gradeClass === 'amber' || absenceClass === 'amber' ? 'amber' : 'green');
+
+            var riskLabel = riskClass === 'red' ? 'High' : (riskClass === 'amber' ? 'Moderate' : 'Low');
+            var profileURL = PD.baseURL + '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=' + encodeURIComponent(student.personID) + '&allStudents=on&subpage=Overview';
+
+            html += '<tr>';
+            html += '<td>' + escHtml(index + 1) + '</td>';
+            html += '<td><a href="' + profileURL + '">' + escHtml(student.name) + '</a></td>';
+            html += '<td>' + escHtml(student.yearGroup || '-') + '</td>';
+            html += '<td>' + escHtml(student.formGroup || '-') + '</td>';
+            html += '<td><span class="pd-risk-badge ' + gradeClass + '">' + escHtml(fmtPct(student.avgGrade)) + '</span></td>';
+            html += '<td><span class="pd-risk-badge ' + absenceClass + '">' + escHtml(student.absences) + ' days</span></td>';
+            html += '<td><span class="pd-risk-badge ' + riskClass + '">' + riskLabel + '</span></td>';
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        html += '</div>';
+
+        if (atRiskState.hasMore) {
+            html += '<div class="pd-table-note" style="margin-top:12px;">';
+            html += '<button type="button" class="pd-btn apply" id="pd-at-risk-load-more"' + (atRiskState.loading ? ' disabled' : '') + '>';
+            html += atRiskState.loading ? 'Loading more...' : 'Load More';
+            html += '</button>';
+            html += '</div>';
+        }
+
+        document.getElementById('at-risk-container').innerHTML = html;
+
+        var loadMoreButton = document.getElementById('pd-at-risk-load-more');
+        if (loadMoreButton) {
+            loadMoreButton.addEventListener('click', function () {
+                loadAtRiskStudents(true);
+            });
+        }
+    }
+
+    function loadAtRiskStudents(append) {
+        if (atRiskState.loading) {
+            return Promise.resolve();
+        }
+
+        if (!append) {
+            atRiskState.page = 1;
+            atRiskState.total = 0;
+            atRiskState.rows = [];
+            atRiskState.hasMore = false;
+            setLoading('at-risk-container', 'Loading students...');
+        }
+
+        atRiskState.loading = true;
+
+        return fetchJSON('atRisk.php', {
+            page: atRiskState.page,
+            pageSize: atRiskState.pageSize
+        }).then(function (res) {
             if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                if (append && atRiskState.rows.length > 0) {
+                    atRiskState.hasMore = false;
+                    renderAtRiskStudents();
+                    return;
+                }
+
                 setEmpty('at-risk-container', 'No at-risk students found for the selected filters.');
                 return;
             }
 
             var totalAtRisk = Number(res.meta && res.meta.total);
             if (!isFinite(totalAtRisk) || totalAtRisk < 0) {
-                totalAtRisk = res.data.length;
+                totalAtRisk = (append ? atRiskState.rows.length : 0) + res.data.length;
             }
 
-            var html = '';
-            if (totalAtRisk > res.data.length) {
-                html += '<div class="pd-table-note">Showing first ' + escHtml(res.data.length) + ' of ' + escHtml(totalAtRisk) + ' at-risk students.</div>';
-            } else {
-                html += '<div class="pd-table-note">Showing ' + escHtml(totalAtRisk) + ' at-risk students.</div>';
-            }
-            html += '<div class="pd-table-wrap">';
-            html += '<table class="pd-table">';
-            html += '<thead><tr>';
-            html += '<th>#</th><th>Student</th><th>Year Group</th><th>Form Group</th><th>Avg Grade</th><th>Absences</th><th>Risk</th>';
-            html += '</tr></thead><tbody>';
+            atRiskState.total = totalAtRisk;
+            atRiskState.rows = append ? atRiskState.rows.concat(res.data) : res.data.slice();
+            atRiskState.hasMore = Boolean(res.meta && res.meta.hasMore);
+            atRiskState.page += 1;
 
-            res.data.forEach(function (student, index) {
-                var gradeClass = gradeBadgeClass(student.avgGrade);
-                var absenceClass = absenceBadgeClass(student.absences);
-                var riskClass = (gradeClass === 'red' || absenceClass === 'red')
-                    ? 'red'
-                    : (gradeClass === 'amber' || absenceClass === 'amber' ? 'amber' : 'green');
-
-                var riskLabel = riskClass === 'red' ? 'High' : (riskClass === 'amber' ? 'Moderate' : 'Low');
-                var profileURL = PD.baseURL + '/index.php?q=/modules/Students/student_view_details.php&gibbonPersonID=' + encodeURIComponent(student.personID);
-
-                html += '<tr>';
-                html += '<td>' + escHtml(index + 1) + '</td>';
-                html += '<td><a href="' + profileURL + '">' + escHtml(student.name) + '</a></td>';
-                html += '<td>' + escHtml(student.yearGroup || '-') + '</td>';
-                html += '<td>' + escHtml(student.formGroup || '-') + '</td>';
-                html += '<td><span class="pd-risk-badge ' + gradeClass + '">' + escHtml(fmtPct(student.avgGrade)) + '</span></td>';
-                html += '<td><span class="pd-risk-badge ' + absenceClass + '">' + escHtml(student.absences) + ' days</span></td>';
-                html += '<td><span class="pd-risk-badge ' + riskClass + '">' + riskLabel + '</span></td>';
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            html += '</div>';
-
-            document.getElementById('at-risk-container').innerHTML = html;
+            renderAtRiskStudents();
         }).catch(function () {
             setEmpty('at-risk-container', 'Failed to load at-risk student list.');
+        }).finally(function () {
+            atRiskState.loading = false;
         });
     }
 
@@ -2806,48 +2149,6 @@ article[id] {
     }
 
     function bindEvents() {
-        var prevButton = document.getElementById('pd-comp-prev');
-        var nextButton = document.getElementById('pd-comp-next');
-        var sizeSelect = document.getElementById('pd-comp-size');
-        var iaAssessmentSelect = document.getElementById('pd-ia-assessment');
-
-        if (prevButton) {
-            prevButton.addEventListener('click', function () {
-                if (comparisonState.page > 0) {
-                    comparisonState.page -= 1;
-                    renderComparisonPage();
-                }
-            });
-        }
-
-        if (nextButton) {
-            nextButton.addEventListener('click', function () {
-                var maxPage = Math.max(0, Math.ceil(comparisonState.labels.length / comparisonState.pageSize) - 1);
-                if (comparisonState.page < maxPage) {
-                    comparisonState.page += 1;
-                    renderComparisonPage();
-                }
-            });
-        }
-
-        if (sizeSelect) {
-            sizeSelect.addEventListener('change', function () {
-                var nextSize = Number(sizeSelect.value);
-                if (isFinite(nextSize) && nextSize > 0) {
-                    comparisonState.pageSize = nextSize;
-                    comparisonState.page = 0;
-                    renderComparisonPage();
-                }
-            });
-        }
-
-        if (iaAssessmentSelect) {
-            iaAssessmentSelect.addEventListener('change', function () {
-                iaTrendState.assessmentName = iaAssessmentSelect.value || '';
-                loadIATrend();
-            });
-        }
-
         var modal = document.getElementById('pd-modal');
         var modalClose = document.getElementById('pd-modal-close');
 
@@ -2868,19 +2169,28 @@ article[id] {
                 closeModal();
             }
         });
+
+        var refreshBtn = document.getElementById('pd-at-risk-refresh');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function () {
+                if (atRiskState.loading) { return; }
+                refreshBtn.disabled = true;
+                refreshBtn.textContent = 'Refreshing…';
+                loadAtRiskStudents(false).finally(function () {
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = '↻ Refresh';
+                });
+            });
+        }
     }
 
     function bootstrap() {
         bindEvents();
-        updateComparisonControls();
 
         loadAtRiskStudents();
 
         if (!hasApex()) {
             [
-                'chart-markbook-dist',
-                'chart-comparison',
-                'chart-ia-trend',
                 'chart-attendance',
                 'chart-heatmap'
             ].forEach(function (containerID) {
@@ -2889,9 +2199,6 @@ article[id] {
             return;
         }
 
-        loadMarkbookDistribution();
-        loadComparison();
-        loadIATrend();
         loadAttendanceTrend();
         loadHeatmap();
     }

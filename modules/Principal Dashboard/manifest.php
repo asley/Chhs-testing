@@ -23,7 +23,7 @@ $description = 'A central data hub for principals: markbook grades, internal ass
 $entryURL    = 'dashboard.php';
 $type        = 'Additional';
 $category    = 'Dashboard';
-$version     = '1.0.0';
+$version     = '1.0.1';
 $author      = 'Asley Smith';
 $url         = 'https://gibbonedu.org';
 

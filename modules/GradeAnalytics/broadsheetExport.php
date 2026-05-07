@@ -24,6 +24,21 @@ use Gibbon\Module\GradeAnalytics\GradeAnalyticsGateway;
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
+function mapOptionsByValueAndName(array $rows): array
+{
+    $options = [];
+
+    foreach ($rows as $row) {
+        if (!is_array($row) || !isset($row['value'], $row['name'])) {
+            continue;
+        }
+
+        $options[$row['value']] = $row['name'];
+    }
+
+    return $options;
+}
+
 if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/broadsheetExport.php') == false) {
     // Access denied
     $page->addError(__('You do not have access to this action.'));
@@ -60,7 +75,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/broadsheetE
 
     $row = $form->addRow();
         $row->addLabel('formGroupID', __('Form Group'));
-        $formGroups = $gateway->selectFormGroups($gibbonSchoolYearID)->fetchKeyPair();
+        $formGroups = mapOptionsByValueAndName($gateway->selectFormGroups($gibbonSchoolYearID)->fetchAll());
         $row->addSelect('formGroupID')
             ->fromArray($formGroups)
             ->placeholder(__('All Form Groups'))
@@ -68,7 +83,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/broadsheetE
 
     $row = $form->addRow();
         $row->addLabel('yearGroup', __('Year Group'));
-        $yearGroups = $gateway->selectYearGroups($gibbonSchoolYearID)->fetchKeyPair();
+        $yearGroups = mapOptionsByValueAndName($gateway->selectYearGroups($gibbonSchoolYearID)->fetchAll());
         $row->addSelect('yearGroup')
             ->fromArray($yearGroups)
             ->placeholder(__('All Year Groups'))
@@ -76,7 +91,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/broadsheetE
 
     $row = $form->addRow();
         $row->addLabel('teacherID', __('Teacher'));
-        $teachers = $gateway->selectTeachers($gibbonSchoolYearID)->fetchKeyPair();
+        $teachers = mapOptionsByValueAndName($gateway->selectTeachers($gibbonSchoolYearID)->fetchAll());
         $row->addSelect('teacherID')
             ->fromArray($teachers)
             ->placeholder(__('All Teachers'))
@@ -93,7 +108,7 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/broadsheetE
 
     $row = $form->addRow();
         $row->addLabel('assessmentName', __('Assessment'));
-        $assessmentColumns = $gateway->selectAssessmentColumns($gibbonSchoolYearID)->fetchKeyPair();
+        $assessmentColumns = mapOptionsByValueAndName($gateway->selectAssessmentColumns($gibbonSchoolYearID)->fetchAll());
         $row->addSelect('assessmentName')
             ->fromArray($assessmentColumns)
             ->placeholder(__('All Assessments'))

@@ -69,3 +69,4 @@ modules/Stream/
 /*.md
 !README.md
 agents/*.md
+.gstack/

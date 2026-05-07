@@ -88,50 +88,18 @@ function pdGetTeachers(PDO $connection2, string $schoolYearID): array
 }
 
 /**
- * KPI: overall markbook average percentage for the filtered cohort.
- * Student-weighted: average each student's markbook mean, then average across students.
+ * Shared markbook KPI aggregate for the filtered cohort.
+ *
+ * @return array{avg:float,passRate:float}
  */
-function pdKpiMarkbookAvg(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): float
-{
-    $params = [':yearID' => $schoolYearID];
-    $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
-
-    $sql = "SELECT ROUND(AVG(studentAvg), 1) AS avg
-            FROM (
-                SELECT
-                    se.gibbonPersonID,
-                    AVG(me.attainmentValue) AS studentAvg
-                FROM gibbonStudentEnrolment se
-                JOIN gibbonMarkbookEntry me
-                    ON me.gibbonPersonIDStudent = se.gibbonPersonID
-                JOIN gibbonMarkbookColumn mc
-                    ON mc.gibbonMarkbookColumnID = me.gibbonMarkbookColumnID
-                JOIN gibbonCourseClass gc
-                    ON gc.gibbonCourseClassID = mc.gibbonCourseClassID
-                JOIN gibbonCourse c
-                    ON c.gibbonCourseID = gc.gibbonCourseID
-                WHERE se.gibbonSchoolYearID = :yearID
-                  AND c.gibbonSchoolYearID = :yearID
-                  AND me.attainmentValue IS NOT NULL
-                  {$filters}
-                GROUP BY se.gibbonPersonID
-            ) AS studentAverages";
-    $stmt = $connection2->prepare($sql);
-    $stmt->execute($params);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return (float) ($row['avg'] ?? 0);
-}
-
-/**
- * KPI: pass rate percentage based on each student's mean markbook score (>= 65).
- */
-function pdKpiPassRate(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): float
+function pdGetMarkbookKpiAggregate(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): array
 {
     $passMark = 65.0;
     $params = [':yearID' => $schoolYearID];
     $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
 
     $sql = "SELECT
+                ROUND(AVG(studentAvg), 1) AS avg,
                 COUNT(CASE WHEN studentAvg >= {$passMark} THEN 1 END) AS passed,
                 COUNT(*) AS total
             FROM (
@@ -155,9 +123,36 @@ function pdKpiPassRate(PDO $connection2, string $schoolYearID, string $yearGroup
             ) AS studentAverages";
     $stmt = $connection2->prepare($sql);
     $stmt->execute($params);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (empty($row['total'])) return 0.0;
-    return round(($row['passed'] / $row['total']) * 100, 1);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    $total = (int) ($row['total'] ?? 0);
+    $passRate = $total > 0
+        ? round((((int) ($row['passed'] ?? 0)) / $total) * 100, 1)
+        : 0.0;
+
+    return [
+        'avg' => (float) ($row['avg'] ?? 0),
+        'passRate' => $passRate,
+    ];
+}
+
+/**
+ * KPI: overall markbook average percentage for the filtered cohort.
+ * Student-weighted: average each student's markbook mean, then average across students.
+ */
+function pdKpiMarkbookAvg(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): float
+{
+    $aggregate = pdGetMarkbookKpiAggregate($connection2, $schoolYearID, $yearGroupID, $formGroupID);
+    return $aggregate['avg'];
+}
+
+/**
+ * KPI: pass rate percentage based on each student's mean markbook score (>= 65).
+ */
+function pdKpiPassRate(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): float
+{
+    $aggregate = pdGetMarkbookKpiAggregate($connection2, $schoolYearID, $yearGroupID, $formGroupID);
+    return $aggregate['passRate'];
 }
 
 /**
@@ -208,90 +203,11 @@ function pdKpiInternalAssessmentAvg(PDO $connection2, string $schoolYearID, stri
 }
 
 /**
- * KPI: chronic absenteeism rate based on absences within the selected school year.
- * Returns percentage of enrolled students with more than 18 absences.
+ * Shared attendance and risk aggregate for the selected cohort.
+ *
+ * @return array{totalStudents:int,chronicCount:int,atRiskCount:int}
  */
-function pdKpiChronicAbsenteeism(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): float
-{
-    $params = [':yearID' => $schoolYearID];
-    $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
-
-    // Total enrolled students
-    $sqlTotal = "SELECT COUNT(DISTINCT se.gibbonPersonID) AS total
-                 FROM gibbonStudentEnrolment se
-                 WHERE se.gibbonSchoolYearID = :yearID
-                   {$filters}";
-    $stmt = $connection2->prepare($sqlTotal);
-    $stmt->execute($params);
-    $total = (int) $stmt->fetchColumn();
-    if ($total === 0) return 0.0;
-
-    $yearRange = pdGetSchoolYearDateRange($connection2, $schoolYearID);
-    $params[':yearStart'] = $yearRange['firstDay'];
-    $params[':yearEnd'] = pdGetAttendanceDateUpperBound($yearRange['lastDay']);
-    $attendanceContextFilter = pdGetAttendanceContextFilter($connection2, 'al');
-
-    // Use end-of-day status per student/day to match Student History attendance counts.
-    $sqlChronic = "WITH cohort AS (
-                        SELECT se.gibbonPersonID
-                        FROM gibbonStudentEnrolment se
-                        WHERE se.gibbonSchoolYearID = :yearID
-                          {$filters}
-                    ),
-                    last_log AS (
-                        SELECT
-                            al.gibbonPersonID,
-                            al.date,
-                            MAX(al.timestampTaken) AS maxTimestamp
-                        FROM gibbonAttendanceLogPerson al
-                        JOIN cohort co
-                            ON co.gibbonPersonID = al.gibbonPersonID
-                        WHERE al.date BETWEEN :yearStart AND :yearEnd
-                          {$attendanceContextFilter}
-                        GROUP BY al.gibbonPersonID, al.date
-                    ),
-                    last_log_row AS (
-                        SELECT
-                            al.gibbonPersonID,
-                            al.date,
-                            MAX(al.gibbonAttendanceLogPersonID) AS maxLogID
-                        FROM gibbonAttendanceLogPerson al
-                        JOIN last_log ll
-                            ON ll.gibbonPersonID = al.gibbonPersonID
-                           AND ll.date = al.date
-                           AND ll.maxTimestamp = al.timestampTaken
-                        WHERE al.date BETWEEN :yearStart AND :yearEnd
-                          {$attendanceContextFilter}
-                        GROUP BY al.gibbonPersonID, al.date
-                    ),
-                    attendance AS (
-                        SELECT
-                            al.gibbonPersonID,
-                            COUNT(*) AS absences
-                        FROM gibbonAttendanceLogPerson al
-                        JOIN gibbonAttendanceCode ac
-                            ON ac.name = al.type
-                        JOIN last_log_row llr
-                            ON llr.maxLogID = al.gibbonAttendanceLogPersonID
-                        WHERE ac.direction = 'Out'
-                          AND ac.scope = 'Offsite'
-                        GROUP BY al.gibbonPersonID
-                    )
-                    SELECT COUNT(*) AS chronic
-                    FROM attendance
-                    WHERE absences > 18";
-
-    $stmtC = $connection2->prepare($sqlChronic);
-    $stmtC->execute($params);
-    $chronic = (int) $stmtC->fetchColumn();
-
-    return round(($chronic / $total) * 100, 1);
-}
-
-/**
- * KPI: number of at-risk students (student average below 65 OR high absence).
- */
-function pdKpiAtRiskCount(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): int
+function pdGetAttendanceRiskAggregate(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): array
 {
     $passMark = 65.0;
     $params = [':yearID' => $schoolYearID];
@@ -301,6 +217,7 @@ function pdKpiAtRiskCount(PDO $connection2, string $schoolYearID, string $yearGr
     $params[':yearEnd'] = pdGetAttendanceDateUpperBound($yearRange['lastDay']);
     $attendanceContextFilter = pdGetAttendanceContextFilter($connection2, 'al');
 
+    // Use end-of-day status per student/day to match Student History attendance counts.
     $sql = "WITH cohort AS (
                 SELECT
                     se.gibbonPersonID,
@@ -380,13 +297,43 @@ function pdKpiAtRiskCount(PDO $connection2, string $schoolYearID, string $yearGr
                 LEFT JOIN attendance att
                     ON att.gibbonPersonID = co.gibbonPersonID
             )
-            SELECT COUNT(*) AS cnt
-            FROM risk
-            WHERE (risk.avgGrade IS NOT NULL AND risk.avgGrade < {$passMark})
-               OR risk.absences > 18";
+            SELECT
+                COUNT(*) AS totalStudents,
+                SUM(CASE WHEN risk.absences > 18 THEN 1 ELSE 0 END) AS chronicCount,
+                SUM(CASE WHEN (risk.avgGrade IS NOT NULL AND risk.avgGrade < {$passMark}) OR risk.absences > 18 THEN 1 ELSE 0 END) AS atRiskCount
+            FROM risk";
     $stmt = $connection2->prepare($sql);
     $stmt->execute($params);
-    return (int) $stmt->fetchColumn();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    return [
+        'totalStudents' => (int) ($row['totalStudents'] ?? 0),
+        'chronicCount' => (int) ($row['chronicCount'] ?? 0),
+        'atRiskCount' => (int) ($row['atRiskCount'] ?? 0),
+    ];
+}
+
+/**
+ * KPI: chronic absenteeism rate based on absences within the selected school year.
+ * Returns percentage of enrolled students with more than 18 absences.
+ */
+function pdKpiChronicAbsenteeism(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): float
+{
+    $aggregate = pdGetAttendanceRiskAggregate($connection2, $schoolYearID, $yearGroupID, $formGroupID);
+    if ($aggregate['totalStudents'] === 0) {
+        return 0.0;
+    }
+
+    return round(($aggregate['chronicCount'] / $aggregate['totalStudents']) * 100, 1);
+}
+
+/**
+ * KPI: number of at-risk students (student average below 65 OR high absence).
+ */
+function pdKpiAtRiskCount(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): int
+{
+    $aggregate = pdGetAttendanceRiskAggregate($connection2, $schoolYearID, $yearGroupID, $formGroupID);
+    return $aggregate['atRiskCount'];
 }
 
 /**
@@ -680,6 +627,39 @@ function pdBehaviourIssueStudents(PDO $connection2, string $schoolYearID, string
 }
 
 /**
+ * Count students with at least one negative behaviour record in the selected date range.
+ */
+function pdCountBehaviourIssueStudents(PDO $connection2, string $schoolYearID, string $dateFrom, string $dateTo, string $yearGroupID = '', string $formGroupID = ''): int
+{
+    if (!pdTableExists($connection2, 'gibbonBehaviour')) {
+        return 0;
+    }
+
+    $params = [
+        ':yearID' => $schoolYearID,
+        ':dateFrom' => $dateFrom,
+        ':dateTo' => $dateTo,
+    ];
+    $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
+
+    $sql = "SELECT COUNT(DISTINCT p.gibbonPersonID)
+            FROM gibbonBehaviour b
+            JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = b.gibbonPersonID
+            JOIN gibbonPerson p ON p.gibbonPersonID = b.gibbonPersonID
+            WHERE b.gibbonSchoolYearID = :yearID
+              AND se.gibbonSchoolYearID = :yearID
+              AND p.status = 'Full'
+              AND b.date BETWEEN :dateFrom AND :dateTo
+              AND b.type = 'Negative'
+              {$filters}";
+
+    $stmt = $connection2->prepare($sql);
+    $stmt->execute($params);
+
+    return (int) $stmt->fetchColumn();
+}
+
+/**
  * KPI: badge award summary for the selected cohort.
  *
  * @return array{
@@ -788,4 +768,39 @@ function pdBadgeAwardedStudents(PDO $connection2, string $schoolYearID, string $
     }
 
     return $result;
+}
+
+/**
+ * Count recipients with more than one badge award in the selected cohort.
+ */
+function pdCountRepeatBadgeRecipients(PDO $connection2, string $schoolYearID, string $yearGroupID = '', string $formGroupID = ''): int
+{
+    $hasBadgeStudents = pdTableExists($connection2, 'badgesBadgeStudent');
+    $hasBadges = pdTableExists($connection2, 'badgesBadge');
+    if (!$hasBadgeStudents || !$hasBadges) {
+        return 0;
+    }
+
+    $params = [':yearID' => $schoolYearID];
+    $filters = pdBuildEnrolmentFilters($yearGroupID, $formGroupID, $params);
+
+    $sql = "SELECT COUNT(*) AS repeatRecipients
+            FROM (
+                SELECT bss.gibbonPersonID
+                FROM badgesBadgeStudent bss
+                JOIN badgesBadge bb ON bb.badgesBadgeID = bss.badgesBadgeID
+                JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = bss.gibbonPersonID
+                JOIN gibbonPerson p ON p.gibbonPersonID = bss.gibbonPersonID
+                WHERE bss.gibbonSchoolYearID = :yearID
+                  AND se.gibbonSchoolYearID = :yearID
+                  AND p.status = 'Full'
+                  {$filters}
+                GROUP BY bss.gibbonPersonID
+                HAVING COUNT(DISTINCT bss.badgesBadgeStudentID) > 1
+            ) AS repeatAwardRecipients";
+
+    $stmt = $connection2->prepare($sql);
+    $stmt->execute($params);
+
+    return (int) $stmt->fetchColumn();
 }

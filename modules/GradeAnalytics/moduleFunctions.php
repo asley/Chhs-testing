@@ -78,11 +78,12 @@ function getFormGroups($connection2) {
  * @phpstan-ignore-next-line
  */
 function getTeachers($connection2) {
-    global $container;
+    global $guid, $container;
     unset($connection2); // Suppress unused parameter warning
     try {
         $gateway = $container->get(\Gibbon\Module\GradeAnalytics\GradeAnalyticsGateway::class);
-        $result = $gateway->selectTeachers();
+        $schoolYearID = $_SESSION[$guid]['gibbonSchoolYearID'] ?? null;
+        $result = $gateway->selectTeachers($schoolYearID);
 
         return $result->fetchAll();
     } catch (Exception $e) {
@@ -223,10 +224,11 @@ function getInternalAssessmentTypes($connection2) {
  * @param string $yearGroup
  * @param string $assessmentType
  * @param string $classID
+ * @param string $assessmentName
  * @return array
  * @phpstan-ignore-next-line
  */
-function getGradeDistribution($connection2, $courseID = null, $formGroupID = null, $teacherID = null, $yearGroup = null, $assessmentType = null, $classID = null) {
+function getGradeDistribution($connection2, $courseID = null, $formGroupID = null, $teacherID = null, $yearGroup = null, $assessmentType = null, $classID = null, $assessmentName = null) {
     global $guid, $container;
     unset($connection2); // Suppress unused parameter warning
     try {
@@ -242,7 +244,8 @@ function getGradeDistribution($connection2, $courseID = null, $formGroupID = nul
             'formGroupID' => $formGroupID,
             'teacherID' => $teacherID,
             'yearGroup' => $yearGroup,
-            'assessmentType' => $assessmentType
+            'assessmentType' => $assessmentType,
+            'assessmentName' => $assessmentName
         ];
 
         $result = $gateway->selectGradeDistribution($_SESSION[$guid]['gibbonSchoolYearID'], $filters);

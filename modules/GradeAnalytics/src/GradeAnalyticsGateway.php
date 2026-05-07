@@ -102,6 +102,14 @@ class GradeAnalyticsGateway extends QueryableGateway
     }
 
     /**
+     * Public accessor so UI code can use the same restriction rule as the gateway.
+     */
+    public function isRestrictedToOwnClasses()
+    {
+        return $this->shouldRestrictToOwnClasses();
+    }
+
+    /**
      * Get current user's person ID
      */
     private function getCurrentPersonID()
@@ -158,7 +166,7 @@ class GradeAnalyticsGateway extends QueryableGateway
      * Get all teaching staff
      * Teachers only see themselves, Admin/Principal/HOD see all
      */
-    public function selectTeachers()
+    public function selectTeachers($gibbonSchoolYearID = null)
     {
         if ($this->shouldRestrictToOwnClasses()) {
             // Teacher: Only show themselves
@@ -169,15 +177,25 @@ class GradeAnalyticsGateway extends QueryableGateway
                     WHERE p.gibbonPersonID = :gibbonPersonID
                     AND p.status = 'Full'";
         } else {
-            // Admin/Principal/HOD: Show all teachers
-            $sql = "SELECT DISTINCT p.gibbonPersonID as value,
-                    CONCAT(p.preferredName, ' ', p.surname) as name
-                    FROM gibbonPerson p
-                    JOIN gibbonStaff s ON p.gibbonPersonID = s.gibbonPersonID
-                    WHERE p.status = 'Full'
-                    AND s.type = 'Teaching'
-                    ORDER BY p.surname, p.preferredName";
+            // Admin/Principal/HOD: Show all teachers assigned to classes in the current school year.
             $data = [];
+            $sql = "SELECT DISTINCT p.gibbonPersonID as value,
+                    CONCAT(p.preferredName, ' ', p.surname) as name,
+                    p.surname,
+                    p.preferredName
+                    FROM gibbonPerson p
+                    JOIN gibbonCourseClassPerson ccp ON p.gibbonPersonID = ccp.gibbonPersonID
+                    JOIN gibbonCourseClass cc ON ccp.gibbonCourseClassID = cc.gibbonCourseClassID
+                    JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
+                    WHERE p.status = 'Full'
+                    AND ccp.role = 'Teacher'";
+
+            if (!empty($gibbonSchoolYearID)) {
+                $sql .= " AND c.gibbonSchoolYearID = :gibbonSchoolYearID";
+                $data['gibbonSchoolYearID'] = $gibbonSchoolYearID;
+            }
+
+            $sql .= " ORDER BY p.surname, p.preferredName";
         }
 
         return $this->db()->select($sql, $data);
@@ -297,7 +315,11 @@ class GradeAnalyticsGateway extends QueryableGateway
     public function selectGradeDistribution($gibbonSchoolYearID, $filters = [])
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
-        $whereConditions = ['c.gibbonSchoolYearID = :gibbonSchoolYearID', "ct.role = 'Teacher'", 'e.attainmentValue IS NOT NULL'];
+        $whereConditions = [
+            'c.gibbonSchoolYearID = :gibbonSchoolYearID',
+            "ct.role = 'Teacher'",
+            'e.attainmentValue IS NOT NULL',
+        ];
 
         // Restrict to teacher's own classes if applicable
         if ($this->shouldRestrictToOwnClasses()) {
@@ -342,6 +364,11 @@ class GradeAnalyticsGateway extends QueryableGateway
         if (!empty($filters['assessmentType'])) {
             $data['assessmentType'] = $filters['assessmentType'];
             $whereConditions[] = 'iac.type = :assessmentType';
+        }
+
+        if (!empty($filters['assessmentName'])) {
+            $data['assessmentName'] = $filters['assessmentName'];
+            $whereConditions[] = 'iac.name = :assessmentName';
         }
 
         $whereSQL = implode(' AND ', $whereConditions);
@@ -844,7 +871,11 @@ class GradeAnalyticsGateway extends QueryableGateway
     public function selectStudentsByGrade($gibbonSchoolYearID, $grade, $filters = [])
     {
         $data = ['gibbonSchoolYearID' => $gibbonSchoolYearID];
-        $whereConditions = ['c.gibbonSchoolYearID = :gibbonSchoolYearID', "ct.role = 'Teacher'", 'e.attainmentValue IS NOT NULL'];
+        $whereConditions = [
+            'c.gibbonSchoolYearID = :gibbonSchoolYearID',
+            "ct.role = 'Teacher'",
+            'e.attainmentValue IS NOT NULL',
+        ];
 
         // Restrict to teacher's own classes if applicable
         if ($this->shouldRestrictToOwnClasses()) {
@@ -912,6 +943,11 @@ class GradeAnalyticsGateway extends QueryableGateway
             $whereConditions[] = 'iac.type = :assessmentType';
         }
 
+        if (!empty($filters['assessmentName'])) {
+            $data['assessmentName'] = $filters['assessmentName'];
+            $whereConditions[] = 'iac.name = :assessmentName';
+        }
+
         $whereSQL = implode(' AND ', $whereConditions);
 
         $sql = "SELECT DISTINCT
@@ -932,7 +968,9 @@ class GradeAnalyticsGateway extends QueryableGateway
                 JOIN gibbonInternalAssessmentColumn iac ON e.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
                 JOIN gibbonCourseClass cc ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
                 JOIN gibbonCourse c ON cc.gibbonCourseID = c.gibbonCourseID
-                LEFT JOIN gibbonCourseClassPerson ct ON cc.gibbonCourseClassID = ct.gibbonCourseClassID
+                LEFT JOIN gibbonCourseClassPerson ct
+                    ON cc.gibbonCourseClassID = ct.gibbonCourseClassID
+                    AND ct.role = 'Teacher'
                 WHERE {$whereSQL}
                 ORDER BY s.surname, s.preferredName";
 

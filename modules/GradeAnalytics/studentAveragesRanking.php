@@ -148,7 +148,9 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
         }
 
         echo '<div id="chartContainer" style="display: none; margin: 20px 0; padding: 20px; background: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-        echo '<canvas id="studentRankingChart" style="max-height: 400px;"></canvas>';
+        echo '<div class="chart-wrapper chart-wrapper--compact">';
+        echo '<canvas id="studentRankingChart"></canvas>';
+        echo '</div>';
         echo '</div>';
 
         // Build data table with ranking
@@ -248,12 +250,50 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
             }]
         };
 
+        function buildNiceScale(values, minTicks = 5, maxTicks = 6) {
+            const numericValues = (values || []).map(Number).filter(Number.isFinite);
+            const maxValue = numericValues.length ? Math.max(...numericValues) : 0;
+            const safeMax = Math.max(maxValue, 0);
+            const headroomRatio = safeMax <= 10 ? 0.12 : 0.08;
+            const paddedMax = safeMax === 0 ? 1 : safeMax * (1 + headroomRatio);
+            const roughStep = paddedMax / Math.max(maxTicks - 1, 1);
+            const magnitude = roughStep > 0 ? Math.pow(10, Math.floor(Math.log10(roughStep))) : 1;
+            const candidates = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20]
+                .map(multiplier => multiplier * magnitude)
+                .filter(step => step > 0)
+                .sort((a, b) => a - b);
+            let tickStep = candidates[candidates.length - 1];
+            let axisMax = Math.ceil(paddedMax / tickStep) * tickStep;
+            let tickCount = Math.round(axisMax / tickStep) + 1;
+
+            for (const candidate of candidates) {
+                const candidateAxisMax = Math.ceil(paddedMax / candidate) * candidate;
+                const candidateTickCount = Math.round(candidateAxisMax / candidate) + 1;
+
+                if (candidateTickCount <= maxTicks && candidateTickCount >= minTicks) {
+                    tickStep = candidate;
+                    axisMax = candidateAxisMax;
+                    tickCount = candidateTickCount;
+                    break;
+                }
+            }
+
+            return {
+                axisMax: axisMax,
+                tickStep: tickStep,
+                tickCount: tickCount,
+                maxValue: safeMax
+            };
+        }
+
+        const yScale = buildNiceScale(chartData.datasets[0].data);
+
         const config = {
             type: "bar",
             data: chartData,
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false
@@ -277,11 +317,18 @@ if (isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/studentAver
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 100,
+                        max: yScale.axisMax,
                         ticks: {
+                            stepSize: yScale.tickStep,
+                            maxTicksLimit: yScale.tickCount + 1,
+                            autoSkip: false,
+                            padding: 10,
                             callback: function(value) {
                                 return value + "%";
                             }
+                        },
+                        grid: {
+                            drawBorder: false
                         },
                         title: {
                             display: true,
