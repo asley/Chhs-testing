@@ -77,7 +77,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     $page->stylesheets->add('gradeAnalytics', '/modules/GradeAnalytics/assets/css/gradeAnalytics.css?v='.$cssVersion);
 
     // Add jQuery for dynamic filtering
-    echo "<script src='".$session->get('absoluteURL')."/lib/jquery/jquery.min.js'></script>";
+    echo "<script src='".$session->get('absoluteURL')."/lib/jquery/jquery.js'></script>";
 
     // Add interactive charts JavaScript
     echo "<script src='".$session->get('absoluteURL')."/modules/GradeAnalytics/assets/js/interactive-charts.js?v=".$jsVersion."'></script>";
