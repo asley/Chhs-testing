@@ -13,9 +13,9 @@ class DeepSeekAPI {
         $this->apiKey = $apiKey;
     }
 
-    public function generateResponse(string $prompt, string $model = 'deepseek-chat', float $temperature = 0.7, int $maxTokens = 1024): ?string {
+    public function generateResponse(string $prompt, string $model = 'deepseek-v4-flash', float $temperature = 0.7, int $maxTokens = 1024): ?string {
         $data = [
-            'model' => 'deepseek-chat',
+            'model' => 'deepseek-v4-flash',
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ],
