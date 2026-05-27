@@ -104,7 +104,7 @@ CREATE TABLE `gibbonChatBotInterventions` (
 // Module settings
 $gibbonSetting = array();
 $gibbonSetting[] = "INSERT INTO gibbonSetting (scope, name, nameDisplay, description, value) VALUES ('ChatBot', 'deepseek_api_key', 'DeepSeek API Key', 'API key for DeepSeek AI service', '');";
-$gibbonSetting[] = "INSERT INTO gibbonSetting (scope, name, nameDisplay, description, value) VALUES ('ChatBot', 'model_name', 'Model Name', 'DeepSeek model name (e.g., deepseek-chat)', 'deepseek-chat');";
+$gibbonSetting[] = "INSERT INTO gibbonSetting (scope, name, nameDisplay, description, value) VALUES ('ChatBot', 'model_name', 'Model Name', 'DeepSeek model name', 'deepseek-v4-flash');";
 $gibbonSetting[] = "INSERT INTO gibbonSetting (scope, name, nameDisplay, description, value) VALUES ('ChatBot', 'max_tokens', 'Max Tokens', 'Maximum number of tokens to generate in responses', '4000');";
 
 // Action rows

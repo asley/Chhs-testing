@@ -8,7 +8,7 @@ class DeepSeekAPI
 {
     private $apiKey;
     private $apiEndpoint = 'https://api.deepseek.com/v1/chat/completions';
-    private $modelName = 'deepseek-chat';
+    private $modelName = 'deepseek-v4-flash';
     private $maxTokens = 1000;
     private $maxRetries = 3;
     private $timeout = 60;

@@ -18,7 +18,7 @@ class DeepSeekService
         $this->container = $container;
         $settingGateway = $container->get(\Gibbon\Domain\System\SettingGateway::class);
         $this->apiKey = $settingGateway->getSettingByScope('ChatBot', 'deepseek_api_key');
-        $this->modelName = $settingGateway->getSettingByScope('ChatBot', 'model_name') ?? 'deepseek-chat';
+        $this->modelName = 'deepseek-v4-flash';
         $this->maxTokens = $settingGateway->getSettingByScope('ChatBot', 'max_tokens') ?? 4000;
     }
 

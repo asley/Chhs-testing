@@ -46,7 +46,7 @@ if (isset($_POST['submit'])) {
 try {
     $sql = "INSERT IGNORE INTO gibbonSetting (scope, name, nameDisplay, description, value) VALUES 
             ('ChatBot', 'deepseek_api_key', 'DeepSeek API Key', 'API key for DeepSeek AI service', ''),
-            ('ChatBot', 'model_name', 'Model Name', 'DeepSeek model name', 'deepseek-chat'),
+            ('ChatBot', 'model_name', 'Model Name', 'DeepSeek model name', 'deepseek-v4-flash'),
             ('ChatBot', 'max_tokens', 'Maximum Tokens', 'Maximum number of tokens for AI responses', '2000')";
     $connection2->query($sql);
 } catch (PDOException $e) {
@@ -57,7 +57,7 @@ try {
 if (isset($_POST['submit'])) {
     // Get form values
     $apiKey = $_POST['deepseek_api_key'] ?? '';
-    $modelName = $_POST['model_name'] ?? 'deepseek-chat';
+    $modelName = 'deepseek-v4-flash';
     $maxTokens = $_POST['max_tokens'] ?? '2000';
     
     // Debug log for API key
@@ -101,12 +101,9 @@ if (isset($_POST['submit'])) {
             error_log('ChatBot Settings - API Key verification: ' . print_r($verifyData, true));
         }
 
-        // Update model name
-        $sql = "UPDATE gibbonSetting SET value = :value 
-               WHERE scope = 'ChatBot' AND name = 'model_name'";
-        $stmt = $connection2->prepare($sql);
-        $stmt->bindValue(':value', $modelName);
-        $stmt->execute();
+        // Lock model to deepseek-v4-flash
+        $sql = "UPDATE gibbonSetting SET value = 'deepseek-v4-flash' WHERE scope = 'ChatBot' AND name = 'model_name'";
+        $connection2->query($sql);
 
         // Update max tokens
         $sql = "UPDATE gibbonSetting SET value = :value 
@@ -150,7 +147,7 @@ try {
     $modelQuery = $connection2->prepare("SELECT value FROM gibbonSetting WHERE scope='ChatBot' AND name='model_name'");
     $modelQuery->execute();
     $modelResult = $modelQuery->fetch(PDO::FETCH_ASSOC);
-    $modelName = $modelResult ? $modelResult['value'] : 'deepseek-chat';
+    $modelName = 'deepseek-v4-flash';
     
     // Get max tokens
     $tokensQuery = $connection2->prepare("SELECT value FROM gibbonSetting WHERE scope='ChatBot' AND name='max_tokens'");
@@ -161,7 +158,7 @@ try {
 } catch (PDOException $e) {
     error_log('ChatBot Settings - Error retrieving settings: ' . $e->getMessage());
     $apiKey = '';
-    $modelName = 'deepseek-chat';
+    $modelName = 'deepseek-v4-flash';
     $maxTokens = '2000';
 }
 
@@ -190,15 +187,6 @@ if (!empty($_POST['deepseek_api_key'])) {
     $apiKey = $_POST['deepseek_api_key'];
     $settingGateway->updateSettingByScope('ChatBot', 'deepseek_api_key', $apiKey);
 }
-
-// Model Name field
-$row = $form->addRow();
-$row->addLabel('model_name', __('Model Name'));
-$row->addTextField('model_name')
-    ->setValue($modelName)
-    ->required()
-    ->maxLength(100)
-    ->setTitle(__('The DeepSeek model to use for AI responses'));
 
 // Max Tokens field
 $row = $form->addRow();
