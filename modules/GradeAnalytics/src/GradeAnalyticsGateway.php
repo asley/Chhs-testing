@@ -738,9 +738,9 @@ class GradeAnalyticsGateway extends QueryableGateway
         // Build the WHERE clause
         $whereConditions = [
             "s.status = 'Full'",
-            "ccp.role = 'Student'",
             "se.gibbonSchoolYearID = :gibbonSchoolYearID",
             "c.gibbonSchoolYearID = :gibbonSchoolYearID",
+            "(iac.completeDate IS NULL OR iac.completeDate BETWEEN sy.firstDay AND sy.lastDay)",
             "me.attainmentValue IS NOT NULL",
             "TRIM(me.attainmentValue) != ''",
             "TRIM(me.attainmentValue) REGEXP '^[0-9]+(\\.[0-9]+)?%?$'"
@@ -767,7 +767,13 @@ class GradeAnalyticsGateway extends QueryableGateway
         }
 
         if (!empty($filters['teacherID'])) {
-            $whereConditions[] = "ct.gibbonPersonID = :teacherID";
+            $whereConditions[] = "EXISTS (
+                SELECT 1
+                FROM gibbonCourseClassPerson teacher
+                WHERE teacher.gibbonCourseClassID = cc.gibbonCourseClassID
+                AND teacher.role = 'Teacher'
+                AND teacher.gibbonPersonID = :teacherID
+            )";
             $data['teacherID'] = $filters['teacherID'];
         }
 
@@ -796,15 +802,14 @@ class GradeAnalyticsGateway extends QueryableGateway
                 ) as grade
             FROM gibbonPerson s
             JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = s.gibbonPersonID
+                AND se.gibbonSchoolYearID = :gibbonSchoolYearID
             JOIN gibbonFormGroup fg ON fg.gibbonFormGroupID = se.gibbonFormGroupID
             JOIN gibbonYearGroup yg ON yg.gibbonYearGroupID = se.gibbonYearGroupID
-            JOIN gibbonCourseClassPerson ccp ON ccp.gibbonPersonID = s.gibbonPersonID
-            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
-            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
-            LEFT JOIN gibbonCourseClassPerson ct ON ct.gibbonCourseClassID = cc.gibbonCourseClassID AND ct.role = 'Teacher'
-            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
             JOIN gibbonInternalAssessmentEntry me ON me.gibbonPersonIDStudent = s.gibbonPersonID
-                AND me.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
+            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonInternalAssessmentColumnID = me.gibbonInternalAssessmentColumnID
+            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = iac.gibbonCourseClassID
+            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
+            JOIN gibbonSchoolYear sy ON sy.gibbonSchoolYearID = c.gibbonSchoolYearID
             WHERE {$whereClause}
             ORDER BY s.surname, s.preferredName, c.name";
 
@@ -989,15 +994,20 @@ class GradeAnalyticsGateway extends QueryableGateway
             "s.status = 'Full'",
             "se.gibbonSchoolYearID = :gibbonSchoolYearID",
             "c.gibbonSchoolYearID = :gibbonSchoolYearID",
-            "ccp.role = 'Student'",
-            "ct.role = 'Teacher'",
+            "(iac.completeDate IS NULL OR iac.completeDate BETWEEN sy.firstDay AND sy.lastDay)",
             "me.attainmentValue IS NOT NULL",
             "TRIM(me.attainmentValue) != ''",
         ];
 
         if ($this->shouldRestrictToOwnClasses()) {
             $data['currentTeacherID'] = $this->getCurrentPersonID();
-            $whereConditions[] = 'ct.gibbonPersonID = :currentTeacherID';
+            $whereConditions[] = "EXISTS (
+                SELECT 1
+                FROM gibbonCourseClassPerson teacher
+                WHERE teacher.gibbonCourseClassID = cc.gibbonCourseClassID
+                AND teacher.role = 'Teacher'
+                AND teacher.gibbonPersonID = :currentTeacherID
+            )";
         }
 
         if (!empty($filters['formGroupID'])) {
@@ -1030,26 +1040,24 @@ class GradeAnalyticsGateway extends QueryableGateway
             FROM gibbonPerson s
             JOIN gibbonStudentEnrolment se
                 ON se.gibbonPersonID = s.gibbonPersonID
+                AND se.gibbonSchoolYearID = :gibbonSchoolYearID
             JOIN gibbonFormGroup fg
                 ON fg.gibbonFormGroupID = se.gibbonFormGroupID
             JOIN gibbonYearGroup yg
                 ON yg.gibbonYearGroupID = se.gibbonYearGroupID
-            JOIN gibbonCourseClassPerson ccp
-                ON ccp.gibbonPersonID = s.gibbonPersonID
+            JOIN gibbonInternalAssessmentEntry me
+                ON me.gibbonPersonIDStudent = s.gibbonPersonID
+            JOIN gibbonInternalAssessmentColumn iac
+                ON iac.gibbonInternalAssessmentColumnID = me.gibbonInternalAssessmentColumnID
             JOIN gibbonCourseClass cc
-                ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+                ON cc.gibbonCourseClassID = iac.gibbonCourseClassID
             JOIN gibbonCourse c
                 ON c.gibbonCourseID = cc.gibbonCourseID
-            JOIN gibbonInternalAssessmentColumn iac
-                ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
+            JOIN gibbonSchoolYear sy
+                ON sy.gibbonSchoolYearID = c.gibbonSchoolYearID
             LEFT JOIN gibbonReportingCycle rc
                 ON rc.gibbonSchoolYearID = c.gibbonSchoolYearID
                 AND (rc.name = iac.name OR rc.nameShort = iac.name)
-            JOIN gibbonInternalAssessmentEntry me
-                ON me.gibbonPersonIDStudent = s.gibbonPersonID
-                AND me.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
-            LEFT JOIN gibbonCourseClassPerson ct
-                ON ct.gibbonCourseClassID = cc.gibbonCourseClassID
             WHERE {$whereSQL}
             ORDER BY s.surname, s.preferredName, c.name, rc.sequenceNumber, iac.name";
 
