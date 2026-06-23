@@ -188,9 +188,7 @@ class StudentTranscript extends DataSource
                 JOIN gibbonSchoolYearTerm syt ON syt.gibbonSchoolYearID = sy.gibbonSchoolYearID
                 JOIN gibbonInternalAssessmentEntry iae ON iae.gibbonPersonIDStudent = se.gibbonPersonID
                 JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonInternalAssessmentColumnID = iae.gibbonInternalAssessmentColumnID
-                JOIN gibbonCourseClassPerson ccp ON ccp.gibbonCourseClassID = iac.gibbonCourseClassID
-                    AND ccp.gibbonPersonID = se.gibbonPersonID AND ccp.role = 'Student'
-                JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+                JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = iac.gibbonCourseClassID
                 JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID AND c.gibbonSchoolYearID = sy.gibbonSchoolYearID
                 LEFT JOIN gibbonCourseClassPerson tccp ON tccp.gibbonCourseClassID = cc.gibbonCourseClassID
                     AND tccp.role = 'Teacher'
@@ -271,9 +269,7 @@ class StudentTranscript extends DataSource
                 JOIN gibbonSchoolYearTerm syt ON syt.gibbonSchoolYearID = sy.gibbonSchoolYearID
                 JOIN gibbonInternalAssessmentEntry iae ON iae.gibbonPersonIDStudent = se.gibbonPersonID
                 JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonInternalAssessmentColumnID = iae.gibbonInternalAssessmentColumnID
-                JOIN gibbonCourseClassPerson ccp ON ccp.gibbonCourseClassID = iac.gibbonCourseClassID
-                    AND ccp.gibbonPersonID = se.gibbonPersonID AND ccp.role = 'Student'
-                JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
+                JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = iac.gibbonCourseClassID
                 JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID AND c.gibbonSchoolYearID = sy.gibbonSchoolYearID
                 LEFT JOIN gibbonCourseClassPerson tccp ON tccp.gibbonCourseClassID = cc.gibbonCourseClassID
                     AND tccp.role = 'Teacher'
