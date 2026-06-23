@@ -71,12 +71,10 @@ class InternalAssessment extends DataSource
                 FROM gibbonStudentEnrolment
                 JOIN gibbonInternalAssessmentEntry ON (gibbonInternalAssessmentEntry.gibbonPersonIDStudent=gibbonStudentEnrolment.gibbonPersonID)
                 JOIN gibbonInternalAssessmentColumn ON (gibbonInternalAssessmentEntry.gibbonInternalAssessmentColumnID=gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID) 
-                JOIN gibbonCourseClassPerson ON (gibbonInternalAssessmentColumn.gibbonCourseClassID=gibbonCourseClassPerson.gibbonCourseClassID) 
-                JOIN gibbonCourseClass ON (gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID) 
+                JOIN gibbonCourseClass ON (gibbonInternalAssessmentColumn.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID)
                 JOIN gibbonCourse ON (gibbonCourseClass.gibbonCourseID=gibbonCourse.gibbonCourseID) 
                 WHERE gibbonStudentEnrolment.gibbonStudentEnrolmentID=:gibbonStudentEnrolmentID
                 AND gibbonCourse.gibbonSchoolYearID=gibbonStudentEnrolment.gibbonSchoolYearID
-                AND gibbonCourseClassPerson.gibbonPersonID=gibbonStudentEnrolment.gibbonPersonID
                 AND gibbonInternalAssessmentColumn.complete='Y'
                 AND gibbonInternalAssessmentColumn.completeDate<=:today 
                 ORDER BY gibbonInternalAssessmentColumn.completeDate DESC, gibbonCourse.nameShort, gibbonCourseClass.nameShort";

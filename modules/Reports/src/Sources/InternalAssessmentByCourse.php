@@ -151,11 +151,6 @@ class InternalAssessmentByCourse extends DataSource
             ON gibbonInternalAssessmentColumn.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID
         JOIN gibbonCourse
             ON gibbonCourseClass.gibbonCourseID = gibbonCourse.gibbonCourseID
-        JOIN gibbonCourseClassPerson
-            ON gibbonCourseClass.gibbonCourseClassID = gibbonCourseClassPerson.gibbonCourseClassID
-            AND gibbonCourseClassPerson.gibbonPersonID = gibbonStudentEnrolment.gibbonPersonID
-            AND gibbonCourseClassPerson.role = 'Student'
-
         WHERE gibbonReport.gibbonReportID = :gibbonReportID
         AND gibbonStudentEnrolment.gibbonStudentEnrolmentID = :gibbonStudentEnrolmentID
         AND FIND_IN_SET(gibbonStudentEnrolment.gibbonYearGroupID, gibbonReport.gibbonYearGroupIDList)
@@ -174,6 +169,15 @@ class InternalAssessmentByCourse extends DataSource
         $values = ['assessments' => [], 'courses' => []];
 
         foreach ($results as $result) {
+            $values['assessments'][$result['name']] = [
+                'name'             => $result['name'],
+                'description'      => $result['description'],
+                'type'             => $result['type'],
+                'attainmentActive' => $result['attainmentActive'],
+                'effortActive'     => $result['effortActive'],
+                'completeDate'     => $result['completeDate'],
+            ];
+
             $values['courses'][$result['courseNameShort']][$result['name']] = [
                 'name'                 => $result['name'],
                 'description'          => $result['description'],
