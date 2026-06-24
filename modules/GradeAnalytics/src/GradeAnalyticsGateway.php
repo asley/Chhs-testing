@@ -640,20 +640,21 @@ class GradeAnalyticsGateway extends QueryableGateway
                 ), 2) as finalAverage
             FROM gibbonPerson s
             JOIN gibbonStudentEnrolment se ON se.gibbonPersonID = s.gibbonPersonID
+                AND se.gibbonSchoolYearID = :gibbonSchoolYearID
             JOIN gibbonFormGroup fg ON fg.gibbonFormGroupID = se.gibbonFormGroupID
             JOIN gibbonYearGroup yg ON yg.gibbonYearGroupID = se.gibbonYearGroupID
-            JOIN gibbonCourseClassPerson ccp ON ccp.gibbonPersonID = s.gibbonPersonID
-            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
-            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
-            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
             JOIN gibbonInternalAssessmentEntry me ON me.gibbonPersonIDStudent = s.gibbonPersonID
-                AND me.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
+            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonInternalAssessmentColumnID = me.gibbonInternalAssessmentColumnID
+            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = iac.gibbonCourseClassID
+            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
+            JOIN gibbonSchoolYear sy ON sy.gibbonSchoolYearID = c.gibbonSchoolYearID
             WHERE s.status = 'Full'
-            AND ccp.role = 'Student'
             AND se.gibbonSchoolYearID = :gibbonSchoolYearID
             AND c.gibbonSchoolYearID = :gibbonSchoolYearID
+            AND (iac.completeDate IS NULL OR iac.completeDate BETWEEN sy.firstDay AND sy.lastDay)
             AND me.attainmentValue IS NOT NULL
-            AND TRIM(me.attainmentValue) != ''";
+            AND TRIM(me.attainmentValue) != ''
+            AND TRIM(me.attainmentValue) REGEXP '^[0-9]+(\\.[0-9]+)?%?$'";
 
         if (!empty($filters['formGroupID'])) {
             if (\is_array($filters['formGroupID'])) {
@@ -712,17 +713,17 @@ class GradeAnalyticsGateway extends QueryableGateway
                     AS DECIMAL(10,2)
                 ) as numericGrade
             FROM gibbonPerson s
-            JOIN gibbonCourseClassPerson ccp ON ccp.gibbonPersonID = s.gibbonPersonID
-            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = ccp.gibbonCourseClassID
-            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
-            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonCourseClassID = cc.gibbonCourseClassID
             JOIN gibbonInternalAssessmentEntry me ON me.gibbonPersonIDStudent = s.gibbonPersonID
-                AND me.gibbonInternalAssessmentColumnID = iac.gibbonInternalAssessmentColumnID
+            JOIN gibbonInternalAssessmentColumn iac ON iac.gibbonInternalAssessmentColumnID = me.gibbonInternalAssessmentColumnID
+            JOIN gibbonCourseClass cc ON cc.gibbonCourseClassID = iac.gibbonCourseClassID
+            JOIN gibbonCourse c ON c.gibbonCourseID = cc.gibbonCourseID
+            JOIN gibbonSchoolYear sy ON sy.gibbonSchoolYearID = c.gibbonSchoolYearID
             WHERE s.gibbonPersonID = :gibbonPersonID
             AND c.gibbonSchoolYearID = :gibbonSchoolYearID
-            AND ccp.role = 'Student'
+            AND (iac.completeDate IS NULL OR iac.completeDate BETWEEN sy.firstDay AND sy.lastDay)
             AND me.attainmentValue IS NOT NULL
             AND TRIM(me.attainmentValue) != ''
+            AND TRIM(me.attainmentValue) REGEXP '^[0-9]+(\\.[0-9]+)?%?$'
             ORDER BY c.name, iac.name";
 
         return $this->db()->select($sql, $data);
