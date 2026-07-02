@@ -306,7 +306,10 @@ if (isActionAccessible($guid, $connection2, '/modules/Markbook/markbook_view.php
                     $terms = $markbook->getCurrentTerms();
                     if ($markbook->getSetting('enableGroupByTerm') == 'Y' && !empty($terms)) {
                         foreach ($terms as $termCount => $term) {
-                            $termAverage = number_format(round($markbook->getTermAverage($rowStudents['gibbonPersonID'], $term['gibbonSchoolYearTermID']), 2), 2).$markSuffix;
+                            $termAverage = $markbook->getTermAverage($rowStudents['gibbonPersonID'], $term['gibbonSchoolYearTermID']);
+                            $termAverage = is_numeric($termAverage)
+                                ? number_format(round($termAverage, 2), 2).$markSuffix
+                                : $termAverage.$markSuffix;
                             $excel->getActiveSheet()->setCellValueByColumnAndRow( $finalColumnNum, $r, $termAverage);
                             $excel->getActiveSheet()->getStyleByColumnAndRow($finalColumnNum, $r)->applyFromArray($style_border);
                             $excel->getActiveSheet()->getStyleByColumnAndRow($finalColumnNum, $r)->getNumberFormat()->setFormatCode($markFormat);
