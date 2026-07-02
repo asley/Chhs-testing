@@ -29,8 +29,6 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Cell\AdvancedValueBinder;
 
-include __DIR__ . '/../../config.php';
-
 //Module includes
 include __DIR__ . '/moduleFunctions.php';
 

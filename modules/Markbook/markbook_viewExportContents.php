@@ -26,8 +26,6 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-include '../../config.php';
-
 //Module includes
 include './moduleFunctions.php';
 
