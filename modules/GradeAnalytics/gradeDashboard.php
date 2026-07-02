@@ -225,8 +225,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/GradeAnalytics/gradeDashb
     echo '</select>';
     echo '</div>';
 
-    // Apply Filters button
-    echo '<div class="ga-filter-actions" style="grid-column:1 / -1;display:flex;justify-content:flex-end;align-items:center;margin-top:0.5rem;padding-top:0.25rem;">';
+    // Apply Filters / Download CSV buttons
+    echo '<div class="ga-filter-actions" style="grid-column:1 / -1;display:flex;justify-content:flex-end;align-items:center;gap:0.75rem;margin-top:0.5rem;padding-top:0.25rem;">';
+    echo '<button type="button" onclick="downloadGradeAnalyticsCSV()" class="ga-btn-csv" style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;min-width:170px;padding:0.75rem 1.4rem;color:#1f2937;background:#fff;border:1px solid #d8e0ef;border-radius:10px;font-weight:600;cursor:pointer;">';
+    echo '<i class="fas fa-file-csv" style="margin-right: 0.5rem;"></i>' . __('Download CSV');
+    echo '</button>';
     echo '<button type="submit" class="ga-btn-apply" style="display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;min-width:170px;padding:0.75rem 1.4rem;color:#fff;background:linear-gradient(90deg,#4e73df,#375ad3);border:none;border-radius:10px;font-weight:600;box-shadow:0 10px 20px rgba(78,115,223,0.2);cursor:pointer;">';
     echo '<i class="fas fa-filter" style="margin-right: 0.5rem;"></i>' . __('Apply Filters');
     echo '</button>';

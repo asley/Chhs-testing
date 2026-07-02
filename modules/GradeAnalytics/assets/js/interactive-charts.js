@@ -206,6 +206,29 @@ function showStudentsByGrade(grade) {
         });
 }
 
+function downloadGradeAnalyticsCSV() {
+    const courseID = document.getElementById("courseID")?.value || "";
+    const classID = document.getElementById("classID")?.value || "";
+    const formGroupID = document.getElementById("formGroupID")?.value || "";
+    const yearGroup = document.getElementById("yearGroup")?.value || "";
+    const assessmentType = document.getElementById("assessmentType")?.value || "";
+    const assessmentName = document.getElementById("assessmentName")?.value || "";
+    const teacherID = document.getElementById("teacherID")?.value || "";
+
+    const params = new URLSearchParams({
+        courseID: courseID,
+        classID: classID,
+        formGroupID: formGroupID,
+        yearGroup: yearGroup,
+        assessmentType: assessmentType,
+        assessmentName: assessmentName,
+        teacherID: teacherID
+    });
+
+    const baseURL = document.body.getAttribute('data-absolute-url') || window.location.origin;
+    window.location.href = baseURL + "/modules/GradeAnalytics/gradeDashboard_exportCSV.php?" + params.toString();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     ensureStudentModal();
 });
