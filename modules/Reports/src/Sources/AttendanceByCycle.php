@@ -31,19 +31,28 @@ class AttendanceByCycle extends DataSource
     {
         return [
             1 => [
-                'present' => ['randomDigit'],
-                'absent' => ['randomDigit'],
-                'late'   => ['randomDigit'],
+                'present'      => ['randomDigit'],
+                'absent'       => ['randomDigit'],
+                'late'         => ['randomDigit'],
+                'presentClass' => ['randomDigit'],
+                'absentClass'  => ['randomDigit'],
+                'lateClass'    => ['randomDigit'],
             ],
             2 => [
-                'present' => ['randomDigit'],
-                'absent' => ['randomDigit'],
-                'late'   => ['randomDigit'],
+                'present'      => ['randomDigit'],
+                'absent'       => ['randomDigit'],
+                'late'         => ['randomDigit'],
+                'presentClass' => ['randomDigit'],
+                'absentClass'  => ['randomDigit'],
+                'lateClass'    => ['randomDigit'],
             ],
             3 => [
-                'present' => ['randomDigit'],
-                'absent'  => ['randomDigit'],
-                'late'    => ['randomDigit'],
+                'present'      => ['randomDigit'],
+                'absent'       => ['randomDigit'],
+                'late'         => ['randomDigit'],
+                'presentClass' => ['randomDigit'],
+                'absentClass'  => ['randomDigit'],
+                'lateClass'    => ['randomDigit'],
             ],
         ];
     }
@@ -58,7 +67,7 @@ class AttendanceByCycle extends DataSource
             'gibbonStudentEnrolmentID' => $ids['gibbonStudentEnrolmentID'],
             'gibbonReportID'       => $ids['gibbonReportID']
         ];
-        $sql = "SELECT DISTINCT MAX(gibbonReportingCycle.cycleNumber), gibbonReport.gibbonReportID, gibbonAttendanceLogPerson.gibbonCourseClassID, gibbonAttendanceLogPerson.date, gibbonAttendanceLogPerson.timestampTaken, gibbonAttendanceLogPerson.type, gibbonAttendanceLogPerson.context, gibbonAttendanceCode.scope, gibbonAttendanceCode.direction
+        $sql = "SELECT DISTINCT gibbonReportingCycle.cycleNumber, gibbonAttendanceLogPerson.gibbonAttendanceLogPersonID, gibbonReport.gibbonReportID, gibbonAttendanceLogPerson.gibbonCourseClassID, gibbonAttendanceLogPerson.date, gibbonAttendanceLogPerson.timestampTaken, gibbonAttendanceLogPerson.type, gibbonAttendanceLogPerson.context, gibbonAttendanceCode.scope, gibbonAttendanceCode.direction
                 FROM gibbonReport
                 JOIN gibbonStudentEnrolment ON (gibbonStudentEnrolment.gibbonSchoolYearID=gibbonReport.gibbonSchoolYearID)
                 JOIN gibbonSchoolYear ON (gibbonSchoolYear.gibbonSchoolYearID=gibbonStudentEnrolment.gibbonSchoolYearID)
@@ -75,8 +84,7 @@ class AttendanceByCycle extends DataSource
                 AND gibbonAttendanceLogPerson.date>=gibbonSchoolYear.firstDay
                 AND gibbonAttendanceLogPerson.date<=CURDATE()
                 AND (gibbonReport.accessDate IS NULL OR gibbonReportingCycle.dateStart<=gibbonReport.accessDate)
-                GROUP BY gibbonAttendanceLogPerson.gibbonAttendanceLogPersonID
-                ORDER BY gibbonAttendanceLogPerson.date, gibbonAttendanceLogPerson.timestampTaken";
+                ORDER BY gibbonReportingCycle.cycleNumber, gibbonAttendanceLogPerson.date, gibbonAttendanceLogPerson.timestampTaken";
 
         $result = $this->db()->select($sql, $data);
 
