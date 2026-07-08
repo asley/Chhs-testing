@@ -106,16 +106,22 @@ config:
     {% set totalArray = [] %}
 
     {% for course, assessments in internalAssessmentByCourse.courses %}
-        {# Check if the course has active assessments #}
-        {% set isCourseActive = false %}
-        {% for assessmentName, assessmentData in assessments %}
-            {% if assessmentData.attainmentActive == 'Y' or assessmentData.effortActive == 'Y' %}
-                {% set isCourseActive = true %}
-            {% endif %}
+        {% set hasVisibleValues = false %}
+        {% for cycleNum in startCycle..endCycle %}
+            {% set targetCycleName = cycleLabels[cycleNum]|default('Cycle ' ~ cycleNum) %}
+            {% for assessmentName, assessmentData in assessments %}
+                {% if assessmentData.name|trim|lower == targetCycleName|trim|lower %}
+                    {% set attainmentValue = assessmentData.attainmentValue|default('')|trim %}
+                    {% set effortValue = assessmentData.effortValue|default('')|trim %}
+                    {% if (assessmentData.attainmentActive == 'Y' and attainmentValue is not empty and attainmentValue|upper != 'N/A')
+                        or (assessmentData.effortActive == 'Y' and effortValue is not empty and effortValue|upper != 'N/A') %}
+                        {% set hasVisibleValues = true %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
         {% endfor %}
 
-        {# Only display the course if it is active #}
-        {% if isCourseActive %}
+        {% if hasVisibleValues %}
         <tr>
             <td class="subject-cell">{{ course }}</td>
 

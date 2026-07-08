@@ -149,12 +149,18 @@ class InternalAssessmentByCourse extends DataSource
             ON gibbonInternalAssessmentEntry.gibbonInternalAssessmentColumnID = gibbonInternalAssessmentColumn.gibbonInternalAssessmentColumnID 
         JOIN gibbonCourseClass
             ON gibbonInternalAssessmentColumn.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID
+        JOIN gibbonCourseClassPerson
+            ON gibbonCourseClassPerson.gibbonCourseClassID = gibbonCourseClass.gibbonCourseClassID
+            AND gibbonCourseClassPerson.gibbonPersonID = gibbonStudentEnrolment.gibbonPersonID
         JOIN gibbonCourse
             ON gibbonCourseClass.gibbonCourseID = gibbonCourse.gibbonCourseID
         WHERE gibbonReport.gibbonReportID = :gibbonReportID
         AND gibbonStudentEnrolment.gibbonStudentEnrolmentID = :gibbonStudentEnrolmentID
         AND FIND_IN_SET(gibbonStudentEnrolment.gibbonYearGroupID, gibbonReport.gibbonYearGroupIDList)
         AND gibbonCourse.gibbonSchoolYearID = gibbonStudentEnrolment.gibbonSchoolYearID
+        AND gibbonCourseClass.reportable = 'Y'
+        AND gibbonCourseClassPerson.role = 'Student'
+        AND gibbonCourseClassPerson.reportable = 'Y'
         AND gibbonInternalAssessmentColumn.complete = 'Y'
         AND gibbonInternalAssessmentColumn.completeDate <= :today 
 
