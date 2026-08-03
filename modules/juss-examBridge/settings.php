@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Forms\Form;
 
+require_once __DIR__ . '/moduleFunctions.php';
+
 if (isActionAccessible($guid, $connection2, '/modules/juss-examBridge/settings.php') == false) {
     $page->addError(__('You do not have access to this action.'));
 } else {
@@ -109,7 +111,9 @@ if (isActionAccessible($guid, $connection2, '/modules/juss-examBridge/settings.p
     $setting = $getSetting($settingGateway, $settingDefinitions, 'bridgeSharedSecret');
     $row = $form->addRow();
     $row->addLabel($setting['name'], __($setting['nameDisplay']))->description(__($setting['description']));
-    $row->addPassword($setting['name'])->setValue($setting['value'])->maxLength(255);
+    $row->addPassword($setting['name'])
+        ->placeholder(getJussExamBridgeMaskedSecret(getJussExamBridgeSetting($settingGateway, 'bridgeSharedSecret')))
+        ->maxLength(255);
 
     $setting = $getSetting($settingGateway, $settingDefinitions, 'bridgeServicePersonID');
     $row = $form->addRow();

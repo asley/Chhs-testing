@@ -351,6 +351,11 @@ paths:
                   value:
                     ok: false
                     error: missing_records
+                tooManyRecords:
+                  value:
+                    ok: false
+                    error: too_many_records
+                    maxRecords: 200
         "401":
           $ref: "#/components/responses/Common401"
         "403":
@@ -912,6 +917,7 @@ components:
         records:
           type: array
           minItems: 1
+          maxItems: 200
           items:
             $ref: "#/components/schemas/GradeRecord"
 

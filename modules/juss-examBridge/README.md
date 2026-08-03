@@ -103,7 +103,7 @@ Required JSON fields:
 
 - `idempotencyKey` (request-level, max 128 chars)
 - `sourceSystem`
-- `records[]` with:
+- `records[]` (1-200 records) with:
 - `examId`
 - `classExternalId`
 - `studentExternalId`
@@ -122,6 +122,11 @@ Behavior:
 - Dry-run support via `dryRunEnabled=Y`.
 - Uses `bridgeServicePersonID` (or System `organisationAdministrator`) for `gibbonPersonIDLastEdit`.
 - Per-record accepted/rejected result list.
+
+Security notes:
+
+- The settings page never renders the stored `bridgeSharedSecret` value. Leaving the field blank preserves the existing secret; entering a value rotates it.
+- For deployments that should avoid storing the HMAC secret in `gibbonSetting`, define `JUSS_EXAM_BRIDGE_SHARED_SECRET` in server configuration or as an environment variable. That value takes precedence over the database setting.
 
 ## Mapping Admin UI
 - `index.php?q=/modules/juss-examBridge/mappings.php`

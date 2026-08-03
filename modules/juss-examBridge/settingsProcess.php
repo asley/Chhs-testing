@@ -111,6 +111,13 @@ foreach ($settingsToUpdate as $name => $property) {
         }
     }
 
+    if ($name === 'bridgeSharedSecret') {
+        $value = trim((string) $value);
+        if ($value === '') {
+            continue;
+        }
+    }
+
     if ($settingGateway->getSettingByScope('juss-examBridge', $name, true) === false) {
         $definition = $settingDefinitions[$name] ?? ['nameDisplay' => $name, 'description' => '', 'default' => ''];
 

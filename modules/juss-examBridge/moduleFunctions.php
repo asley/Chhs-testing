@@ -21,6 +21,17 @@ use Gibbon\Domain\System\SettingGateway;
 
 function getJussExamBridgeSetting(SettingGateway $settingGateway, $name, $default = '')
 {
+    if ($name === 'bridgeSharedSecret') {
+        if (defined('JUSS_EXAM_BRIDGE_SHARED_SECRET') && JUSS_EXAM_BRIDGE_SHARED_SECRET !== '') {
+            return (string) JUSS_EXAM_BRIDGE_SHARED_SECRET;
+        }
+
+        $envSecret = getenv('JUSS_EXAM_BRIDGE_SHARED_SECRET');
+        if (is_string($envSecret) && $envSecret !== '') {
+            return $envSecret;
+        }
+    }
+
     $value = $settingGateway->getSettingByScope('juss-examBridge', $name);
 
     if ($value === false || $value === null || $value === '') {
@@ -140,7 +151,7 @@ function verifyJussExamBridgeSignedRequest($container, $connection2, $rawBody, $
         return ['ok' => false, 'status' => 503, 'error' => 'bridge_not_configured'];
     }
 
-    if ($keyId !== $configuredKeyId) {
+    if (!hash_equals((string) $configuredKeyId, (string) $keyId)) {
         return ['ok' => false, 'status' => 401, 'error' => 'invalid_key_id'];
     }
 

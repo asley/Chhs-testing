@@ -2,6 +2,8 @@
 
 function processJussExamBridgeGradesUpsert(PDO $connection2, array $payload, string $rawBody, bool $gradeSyncEnabled, bool $dryRunEnabled, int $servicePersonID)
 {
+    $maxRecords = 200;
+
     if (!$gradeSyncEnabled) {
         return [
             'httpStatus' => 403,
@@ -42,6 +44,17 @@ function processJussExamBridgeGradesUpsert(PDO $connection2, array $payload, str
             'payload' => [
                 'ok' => false,
                 'error' => 'missing_records',
+            ],
+        ];
+    }
+
+    if (count($records) > $maxRecords) {
+        return [
+            'httpStatus' => 400,
+            'payload' => [
+                'ok' => false,
+                'error' => 'too_many_records',
+                'maxRecords' => $maxRecords,
             ],
         ];
     }

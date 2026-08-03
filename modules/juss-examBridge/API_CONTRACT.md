@@ -275,6 +275,7 @@ Top-level validation errors:
 - `400` `invalid_idempotency_key`
 - `400` `missing_source_system`
 - `400` `missing_records`
+- `400` `too_many_records` (maximum 200 records per request)
 - `409` `idempotency_conflict`
 - `500` `sync_log_query_failed`
 - `500` `sync_log_insert_failed`
@@ -283,6 +284,7 @@ Top-level validation errors:
 Idempotency behavior:
 1. Same `idempotencyKey` with identical request body hash returns `200` with `idempotentReplay: true`.
 2. Same `idempotencyKey` with different request body hash returns `409` with `error: idempotency_conflict`.
+3. Oversized requests are rejected before the idempotency log is written.
 
 Success or mixed result `200` shape:
 ```json

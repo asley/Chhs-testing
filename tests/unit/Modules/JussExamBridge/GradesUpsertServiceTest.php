@@ -113,6 +113,21 @@ class GradesUpsertServiceTest extends TestCase
         $this->assertSame(0, $count);
     }
 
+    public function testRejectsOversizedRecordBatchBeforeWritingSyncLog(): void
+    {
+        $payload = $this->buildPayload('case-too-many-records', 88);
+        $payload['records'] = array_fill(0, 201, $payload['records'][0]);
+
+        $result = processJussExamBridgeGradesUpsert($this->pdo, $payload, json_encode($payload), true, true, 999);
+
+        $this->assertSame(400, $result['httpStatus']);
+        $this->assertSame('too_many_records', $result['payload']['error']);
+        $this->assertSame(200, $result['payload']['maxRecords']);
+
+        $count = (int) $this->pdo->query('SELECT COUNT(*) FROM gibbonJussExamBridgeSyncLog')->fetchColumn();
+        $this->assertSame(0, $count);
+    }
+
     private function buildPayload(string $idempotencyKey, float $percentage): array
     {
         return [
