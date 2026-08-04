@@ -156,3 +156,51 @@ WHERE m.name='juss-examBridge'
         AND p.gibbonActionID=a.gibbonActionID
   );end
 ";
+
+$count++;
+$sql[$count][0] = '0.5.2';
+$sql[$count][1] = "
+INSERT INTO gibbonAction
+(gibbonModuleID, name, precedence, category, description, helpURL, URLList, entryURL, entrySidebar, menuShow, defaultPermissionAdmin, defaultPermissionTeacher, defaultPermissionStudent, defaultPermissionParent, defaultPermissionSupport, categoryPermissionStaff, categoryPermissionStudent, categoryPermissionParent, categoryPermissionOther)
+SELECT
+    m.gibbonModuleID,
+    'Pull Grades from TCExam',
+    3,
+    'Assessment',
+    'Manually pull TCExam results into mapped Internal Assessment columns.',
+    NULL,
+    'internalAssessment_write_pullProcess.php',
+    'internalAssessment_write_pullProcess.php',
+    'N',
+    'N',
+    'Y',
+    'Y',
+    'N',
+    'N',
+    'N',
+    'Y',
+    'N',
+    'N',
+    'N'
+FROM gibbonModule m
+WHERE m.name='juss-examBridge'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM gibbonAction a
+      WHERE a.gibbonModuleID = m.gibbonModuleID
+        AND a.name = 'Pull Grades from TCExam'
+  );end
+
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID)
+SELECT '001', a.gibbonActionID
+FROM gibbonAction a
+INNER JOIN gibbonModule m ON m.gibbonModuleID = a.gibbonModuleID
+WHERE m.name='juss-examBridge'
+  AND a.name='Pull Grades from TCExam'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM gibbonPermission p
+      WHERE p.gibbonRoleID='001'
+        AND p.gibbonActionID=a.gibbonActionID
+  );end
+";

@@ -2,6 +2,12 @@
 
 This guide explains how TCExam should integrate with Gibbon `juss-examBridge` in production-safe steps.
 
+Current grade flows are:
+- TCExam can push grades to Gibbon's grades upsert endpoint.
+- Gibbon can manually pull TCExam results from the Write Internal Assessments screen.
+
+The manual pull v1 target is Internal Assessment only. Markbook write-back is not part of the first pull implementation.
+
 ## 1) Prerequisites
 Before TCExam starts jobs, ensure in Gibbon:
 - `bridgeKeyId` is set.
@@ -9,6 +15,7 @@ Before TCExam starts jobs, ensure in Gibbon:
 - `signatureMaxSkewSeconds` is agreed with TCExam clock behavior.
 - `enrollmentSyncEnabled` is `Y` for enrollment pull use cases.
 - `gradeSyncEnabled` is `Y` for grade pushes.
+- `gradeSyncEnabled` is `Y` for manual TCExam results pulls.
 - `dryRunEnabled` is set intentionally (`Y` for pilot, `N` for live writes).
 - `bridgeServicePersonID` is configured to a service/admin account.
 
@@ -16,6 +23,7 @@ Mapping prerequisites for grades:
 - Populate Person mappings.
 - Populate Class mappings.
 - Populate Assessment mappings.
+- For manual pulls, the Assessment mapping must point to a Gibbon Internal Assessment column with `syncMode` of `internal_assessment` or `both`.
 
 Admin pages:
 - `index.php?q=/modules/juss-examBridge/mappings.php`
@@ -48,12 +56,13 @@ Critical details:
 Recommended schedule:
 - Enrollment pull job: every 5 to 15 minutes.
 - Grade push job: near real-time queue consumer with retries.
+- Manual TCExam result pull: user-triggered only from the mapped Internal Assessment write screen.
 
 Suggested flow:
 1. Validate signature setup using `authProbe`.
 2. Pull classes and enrollments from Gibbon.
 3. Resolve and maintain TCExam internal mapping references.
-4. Push grades with idempotent keys.
+4. Push grades with idempotent keys, or pull final TCExam results manually for a mapped Internal Assessment column.
 
 ## 4) Idempotency Key Strategy
 Use deterministic unique keys per logical batch write.
@@ -106,6 +115,9 @@ Do not auto-retry indefinitely for:
 ## 8) Hand-off Package for TCExam Team
 Provide these files:
 - `modules/juss-examBridge/API_CONTRACT.md`
+- `modules/juss-examBridge/TCEXAM_PULL_CONTRACT.md`
+- `modules/juss-examBridge/PULL_IMPLEMENTATION_PLAN.md`
+- `modules/juss-examBridge/PULL_PHASES.md`
 - `modules/juss-examBridge/openapi.yaml`
 - `modules/juss-examBridge/postman_collection.json`
 - `modules/juss-examBridge/TCEXAM_INTEGRATION_GUIDE.md`

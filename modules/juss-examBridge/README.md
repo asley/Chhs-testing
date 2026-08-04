@@ -1,6 +1,6 @@
 # juss-examBridge
 
-Week 1 to Week 5 scaffold for TCExam integration in Gibbon.
+TCExam integration bridge module for Gibbon.
 
 ## Current capabilities
 - Module installation metadata and permissions.
@@ -13,9 +13,13 @@ Week 1 to Week 5 scaffold for TCExam integration in Gibbon.
 - Week 4 enrollment endpoint: `modules/juss-examBridge/api/v1/enrollments.php`.
 - Week 5 grades upsert endpoint: `modules/juss-examBridge/api/v1/grades/upsert.php`.
 - Mapping admin UI for person/class/assessment mapping maintenance.
+- Manual TCExam results pull into mapped Internal Assessment columns.
 
 ## Integration docs
 - API contract: `modules/juss-examBridge/API_CONTRACT.md`
+- TCExam pull contract: `modules/juss-examBridge/TCEXAM_PULL_CONTRACT.md`
+- TCExam pull implementation plan: `modules/juss-examBridge/PULL_IMPLEMENTATION_PLAN.md`
+- TCExam pull phase tracker: `modules/juss-examBridge/PULL_PHASES.md`
 - TCExam integration guide: `modules/juss-examBridge/TCEXAM_INTEGRATION_GUIDE.md`
 - OpenAPI spec: `modules/juss-examBridge/openapi.yaml`
 - Postman collection: `modules/juss-examBridge/postman_collection.json`
@@ -23,9 +27,10 @@ Week 1 to Week 5 scaffold for TCExam integration in Gibbon.
 - Setup checklist: `modules/juss-examBridge/SETUP_CHECKLIST.md`
 
 ## Phase boundary
-Week 1 does not include:
+Current phase does not include:
 - Queue/scheduler jobs
 - Markbook write-back logic
+- Scheduled/background pulls from TCExam.
 
 ## Settings
 Scope: `juss-examBridge`
@@ -122,6 +127,25 @@ Behavior:
 - Dry-run support via `dryRunEnabled=Y`.
 - Uses `bridgeServicePersonID` (or System `organisationAdministrator`) for `gibbonPersonIDLastEdit`.
 - Per-record accepted/rejected result list.
+
+## TCExam Results Pull
+Gibbon can manually call TCExam for results for a selected mapped class and Internal Assessment column from the Write Internal Assessments screen.
+
+Pull v1 is Internal Assessment only. Markbook write-back is reserved for a later phase.
+
+Related docs:
+
+- `modules/juss-examBridge/TCEXAM_PULL_CONTRACT.md`
+- `modules/juss-examBridge/PULL_IMPLEMENTATION_PLAN.md`
+- `modules/juss-examBridge/PULL_PHASES.md`
+
+Implementation prerequisites:
+
+- Shared grade-record write service extracted from the current grades upsert path.
+- TCExam results endpoint with stable result identity or batch identity.
+- Manual POST action in Gibbon with CSRF protection.
+- UI button shown only for mapped Internal Assessment columns.
+- TCExam attempt-selection rule: latest final attempt.
 
 Security notes:
 

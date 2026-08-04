@@ -1,4 +1,4 @@
-# juss-examBridge API Contract (v0.5.1)
+# juss-examBridge API Contract (v0.5.2)
 
 This document is the integration contract for TCExam to consume and push data with the Gibbon `juss-examBridge` module.
 
@@ -6,11 +6,18 @@ Machine-readable spec:
 - `modules/juss-examBridge/openapi.yaml`
 - `modules/juss-examBridge/postman_collection.json`
 
+Related outbound contract:
+- `modules/juss-examBridge/TCEXAM_PULL_CONTRACT.md` defines the Gibbon-to-TCExam results pull contract.
+
 ## Scope
 - Signed API authentication (HMAC-SHA256)
 - Classes roster pull
 - Enrollment pull
 - Grades upsert push (idempotent)
+- Manual Gibbon-initiated results pull from TCExam
+
+Not currently implemented:
+- Scheduled/background results pull from TCExam.
 
 ## Base URL
 - Example: `http://localhost`

@@ -114,12 +114,97 @@ if (isActionAccessible($guid, $connection2, '/modules/Formal Assessment/internal
                         ->add(__('Write {courseClass} Internal Assessments', ['courseClass' => $class['course'].'.'.$class['class']]), 'internalAssessment_write.php', ['gibbonCourseClassID' => $gibbonCourseClassID])
                         ->add(__('Enter Internal Assessment Results'));
 
-                    $page->return->addReturns(['error3' => __('Your request failed due to an attachment error.'), 'success0' => __('Your request was completed successfully.')]);
+                    $page->return->addReturns([
+                        'error3' => __('Your request failed due to an attachment error.'),
+                        'success0' => __('Your request was completed successfully.'),
+                        'warning1' => __('Your request was successful, but some data was not properly saved.'),
+                    ]);
+
+                    if (isset($_GET['pullAccepted']) || isset($_GET['pullError'])) {
+                        $pullAccepted = (int) ($_GET['pullAccepted'] ?? 0);
+                        $pullRejected = (int) ($_GET['pullRejected'] ?? 0);
+                        $pullSkipped = (int) ($_GET['pullSkipped'] ?? 0);
+                        $pullMessage = sprintf(
+                            __('TCExam sync: %1$s accepted, %2$s rejected, %3$s skipped.'),
+                            $pullAccepted,
+                            $pullRejected,
+                            $pullSkipped
+                        );
+
+                        if (($_GET['pullDryRun'] ?? 'N') === 'Y') {
+                            $pullMessage .= ' ' . __('Dry run mode is enabled, so no grades were written.');
+                        }
+
+                        if (!empty($_GET['pullError'])) {
+                            $pullMessage .= ' ' . __('Error') . ': ' . htmlspecialchars((string) $_GET['pullError']);
+                            $page->addWarning($pullMessage);
+                        } else {
+                            $page->addSuccess($pullMessage);
+                        }
+                    }
 
                     $hasAttainment = $values['attainment'] == 'Y';
                     $hasEffort = $values['effort'] == 'Y';
                     $hasComment = $values['comment'] == 'Y';
                     $hasUpload = $values['uploadedResponse'] == 'Y';
+
+                    $pullMapping = null;
+                    $pullClassMapExists = false;
+                    try {
+                        $pullMappingStmt = $connection2->prepare("
+                            SELECT externalExamId, syncMode
+                            FROM gibbonJussExamBridgeAssessmentMap
+                            WHERE gibbonInternalAssessmentColumnID = :columnID
+                              AND syncMode IN ('internal_assessment', 'both')
+                            LIMIT 1
+                        ");
+                        $pullMappingStmt->execute(['columnID' => $gibbonInternalAssessmentColumnID]);
+                        $pullMapping = $pullMappingStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+                        $pullClassMapStmt = $connection2->prepare("
+                            SELECT gibbonJussExamBridgeClassMapID
+                            FROM gibbonJussExamBridgeClassMap
+                            WHERE gibbonCourseClassID = :classID
+                            LIMIT 1
+                        ");
+                        $pullClassMapStmt->execute(['classID' => $gibbonCourseClassID]);
+                        $pullClassMapExists = (bool) $pullClassMapStmt->fetchColumn();
+                    } catch (PDOException $e) {
+                        $pullMapping = null;
+                        $pullClassMapExists = false;
+                    }
+
+                    $gradeSyncEnabled = $settingGateway->getSettingByScope('juss-examBridge', 'gradeSyncEnabled') === 'Y';
+                    $dryRunEnabled = $settingGateway->getSettingByScope('juss-examBridge', 'dryRunEnabled') === 'Y';
+                    $tcexamBaseUrl = trim((string) $settingGateway->getSettingByScope('juss-examBridge', 'tcexamBaseUrl'));
+                    $bridgeKeyId = trim((string) $settingGateway->getSettingByScope('juss-examBridge', 'bridgeKeyId'));
+                    require_once __DIR__ . '/../juss-examBridge/moduleFunctions.php';
+                    $bridgeSharedSecret = trim((string) getJussExamBridgeSetting($settingGateway, 'bridgeSharedSecret'));
+                    $canPullFromTcExam = isActionAccessible($guid, $connection2, '/modules/juss-examBridge/internalAssessment_write_pullProcess.php')
+                        && !empty($pullMapping)
+                        && $pullClassMapExists
+                        && $gradeSyncEnabled
+                        && $tcexamBaseUrl !== ''
+                        && $bridgeKeyId !== ''
+                        && $bridgeSharedSecret !== '';
+
+                    if ($canPullFromTcExam) {
+                        $pullURL = $session->get('absoluteURL')
+                            . '/modules/juss-examBridge/internalAssessment_write_pullProcess.php'
+                            . '?gibbonCourseClassID=' . urlencode((string) $gibbonCourseClassID)
+                            . '&gibbonInternalAssessmentColumnID=' . urlencode((string) $gibbonInternalAssessmentColumnID)
+                            . '&gibbonPersonID=' . urlencode((string) $gibbonPersonID);
+                        $pullForm = Form::createBlank('jussExamBridgePull', $pullURL);
+                        $pullForm->addHiddenValue('action', 'pull');
+                        if ($dryRunEnabled) {
+                            $pullForm->addRow()->addAlert(__('Dry run mode is enabled, so TCExam sync will validate results without writing grades.'), 'warning');
+                        }
+                        $pullForm->addRow()
+                            ->addContent(sprintf(__('Mapped TCExam exam: %1$s'), htmlspecialchars((string) $pullMapping['externalExamId'], ENT_QUOTES, 'UTF-8')))
+                            ->append('<div class="text-right mt-2"><button type="submit" class="button">' . __('Sync from TCExam') . '</button></div>');
+
+                        echo $pullForm->getOutput();
+                    }
 
                     if ($hasComment) {
                         // Define categorized comments for dropdown

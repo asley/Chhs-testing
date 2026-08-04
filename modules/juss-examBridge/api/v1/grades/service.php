@@ -120,6 +120,69 @@ function processJussExamBridgeGradesUpsert(PDO $connection2, array $payload, str
         ];
     }
 
+    $writeResult = applyJussExamBridgeInternalAssessmentGradeRecords(
+        $connection2,
+        $records,
+        $sourceSystem,
+        $dryRunEnabled,
+        $servicePersonID
+    );
+
+    $results = $writeResult['results'];
+    $acceptedCount = $writeResult['acceptedCount'];
+    $rejectedCount = $writeResult['rejectedCount'];
+    $hasConflict = $writeResult['hasConflict'];
+
+    $syncStatus = $acceptedCount > 0 ? 'accepted' : 'rejected';
+    $errorCode = $acceptedCount > 0 ? null : ($hasConflict ? 'mapping_conflict' : 'validation_failed');
+    $errorDetail = $acceptedCount > 0 ? null : 'All records were rejected.';
+
+    try {
+        $updateSyncSql = "
+            UPDATE gibbonJussExamBridgeSyncLog
+            SET status = :status,
+                errorCode = :errorCode,
+                errorDetail = :errorDetail
+            WHERE idempotencyKey = :idempotencyKey
+        ";
+        $updateSyncStmt = $connection2->prepare($updateSyncSql);
+        $updateSyncStmt->execute([
+            'status' => $syncStatus,
+            'errorCode' => $errorCode,
+            'errorDetail' => $errorDetail,
+            'idempotencyKey' => $idempotencyKey,
+        ]);
+    } catch (PDOException $e) {
+        return [
+            'httpStatus' => 500,
+            'payload' => [
+                'ok' => false,
+                'error' => 'sync_log_update_failed',
+            ],
+        ];
+    }
+
+    $httpStatus = ($acceptedCount === 0 && $hasConflict) ? 409 : 200;
+
+    return [
+        'httpStatus' => $httpStatus,
+        'payload' => [
+            'ok' => $acceptedCount > 0,
+            'idempotencyKey' => $idempotencyKey,
+            'sourceSystem' => $sourceSystem,
+            'dryRun' => $dryRunEnabled,
+            'summary' => [
+                'total' => count($records),
+                'accepted' => $acceptedCount,
+                'rejected' => $rejectedCount,
+            ],
+            'results' => $results,
+        ],
+    ];
+}
+
+function applyJussExamBridgeInternalAssessmentGradeRecords(PDO $connection2, array $records, string $sourceSystem, bool $dryRunEnabled, int $servicePersonID)
+{
     $results = [];
     $acceptedCount = 0;
     $rejectedCount = 0;
@@ -470,50 +533,10 @@ function processJussExamBridgeGradesUpsert(PDO $connection2, array $payload, str
         }
     }
 
-    $syncStatus = $acceptedCount > 0 ? 'accepted' : 'rejected';
-    $errorCode = $acceptedCount > 0 ? null : ($hasConflict ? 'mapping_conflict' : 'validation_failed');
-    $errorDetail = $acceptedCount > 0 ? null : 'All records were rejected.';
-
-    try {
-        $updateSyncSql = "
-            UPDATE gibbonJussExamBridgeSyncLog
-            SET status = :status,
-                errorCode = :errorCode,
-                errorDetail = :errorDetail
-            WHERE idempotencyKey = :idempotencyKey
-        ";
-        $updateSyncStmt = $connection2->prepare($updateSyncSql);
-        $updateSyncStmt->execute([
-            'status' => $syncStatus,
-            'errorCode' => $errorCode,
-            'errorDetail' => $errorDetail,
-            'idempotencyKey' => $idempotencyKey,
-        ]);
-    } catch (PDOException $e) {
-        return [
-            'httpStatus' => 500,
-            'payload' => [
-                'ok' => false,
-                'error' => 'sync_log_update_failed',
-            ],
-        ];
-    }
-
-    $httpStatus = ($acceptedCount === 0 && $hasConflict) ? 409 : 200;
-
     return [
-        'httpStatus' => $httpStatus,
-        'payload' => [
-            'ok' => $acceptedCount > 0,
-            'idempotencyKey' => $idempotencyKey,
-            'sourceSystem' => $sourceSystem,
-            'dryRun' => $dryRunEnabled,
-            'summary' => [
-                'total' => count($records),
-                'accepted' => $acceptedCount,
-                'rejected' => $rejectedCount,
-            ],
-            'results' => $results,
-        ],
+        'results' => $results,
+        'acceptedCount' => $acceptedCount,
+        'rejectedCount' => $rejectedCount,
+        'hasConflict' => $hasConflict,
     ];
 }

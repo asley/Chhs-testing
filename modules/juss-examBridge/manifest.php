@@ -22,7 +22,7 @@ $description = 'Integration bridge module for Gibbon and TCExam.';
 $entryURL = 'index.php';
 $type = 'Additional';
 $category = 'Assessment';
-$version = '0.5.1';
+$version = '0.5.2';
 $author = 'CHHS';
 $url = 'https://gibbonedu.org';
 
@@ -156,6 +156,26 @@ $actionRows[] = [
     'menuShow' => 'Y',
     'defaultPermissionAdmin' => 'Y',
     'defaultPermissionTeacher' => 'N',
+    'defaultPermissionStudent' => 'N',
+    'defaultPermissionParent' => 'N',
+    'defaultPermissionSupport' => 'N',
+    'categoryPermissionStaff' => 'Y',
+    'categoryPermissionStudent' => 'N',
+    'categoryPermissionParent' => 'N',
+    'categoryPermissionOther' => 'N',
+];
+
+$actionRows[] = [
+    'name' => 'Pull Grades from TCExam',
+    'precedence' => '3',
+    'category' => 'Assessment',
+    'description' => 'Manually pull TCExam results into mapped Internal Assessment columns.',
+    'URLList' => 'internalAssessment_write_pullProcess.php',
+    'entryURL' => 'internalAssessment_write_pullProcess.php',
+    'entrySidebar' => 'N',
+    'menuShow' => 'N',
+    'defaultPermissionAdmin' => 'Y',
+    'defaultPermissionTeacher' => 'Y',
     'defaultPermissionStudent' => 'N',
     'defaultPermissionParent' => 'N',
     'defaultPermissionSupport' => 'N',
