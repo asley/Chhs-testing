@@ -1056,4 +1056,5 @@ ALTER TABLE `gibbonInternalAssessmentColumn` ADD COLUMN IF NOT EXISTS `locked` E
 ++$count;
 $sql[$count][0] = '30.0.01';
 $sql[$count][1] = "
-UPDATE `gibbonAction` SET URLList='calendar_view.php,calendar_event_view.php' WHERE name='View Calendar' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Calendar');end";
+UPDATE `gibbonAction` SET URLList='calendar_view.php,calendar_event_view.php' WHERE name='View Calendar' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Calendar');end
+UPDATE `gibbonAction` SET URLList=CONCAT(URLList, ',markbook_import_tcexam.php,markbook_import_tcexamProcess.php') WHERE name LIKE 'Edit Markbook%' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='Markbook') AND URLList NOT LIKE '%markbook_import_tcexam.php%';end";

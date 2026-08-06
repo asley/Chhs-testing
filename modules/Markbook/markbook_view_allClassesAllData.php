@@ -482,6 +482,7 @@ require_once __DIR__ . '/src/MarkbookColumn.php';
 
                 echo "</a>";
                 echo "<a class='thickbox inline-block text-gray-600 hover:text-gray-800' title='".__('Delete')."' href='".$session->get('absoluteURL').'/fullscreen.php?q=/modules/'.$session->get('module')."/markbook_edit_delete.php&gibbonCourseClassID=$gibbonCourseClassID&gibbonMarkbookColumnID=".$column->gibbonMarkbookColumnID."&width=650&height=135'>".icon('solid', 'delete', 'size-6')."</a> ";
+                echo "<a class='inline-block text-gray-600 hover:text-gray-800' title='".__('Import TCExam CSV')."' href='".$session->get('absoluteURL').'/index.php?q=/modules/'.$session->get('module')."/markbook_import_tcexam.php&gibbonCourseClassID=$gibbonCourseClassID&gibbonMarkbookColumnID=".$column->gibbonMarkbookColumnID."'>".icon('solid', 'upload', 'size-6')."</a>";
                 echo "<a class='inline-block text-gray-600 hover:text-gray-800' title='".__('Export to Excel')."' href='".$session->get('absoluteURL').'/modules/Markbook/markbook_viewExport.php?gibbonMarkbookColumnID='.$column->gibbonMarkbookColumnID."&gibbonCourseClassID=$gibbonCourseClassID&return=markbook_view.php'>".icon('solid', 'download', 'size-6')."</a>";
                 echo '</div>';
             }
