@@ -208,14 +208,18 @@ function generateAssessment($pdo, $subject, $topic, $assessmentType, $customInst
     $api = new \Gibbon\Module\aiTeacher\DeepSeekAPI($apiKey); 
     
     error_log("[moduleFunctions - generateAssessment] Prompt sent to DeepSeekAPI: " . $prompt);
-    $generatedContent = $api->generateResponse($prompt);
+    $generatedContent = $api->generateResponse($prompt, 'deepseek-v4-flash', 0.5, 4096);
+    if (is_string($generatedContent) && trim($generatedContent) === '') {
+        error_log("[moduleFunctions - generateAssessment] Empty response from DeepSeekAPI; retrying with lower temperature.");
+        $generatedContent = $api->generateResponse($prompt, 'deepseek-v4-flash', 0.2, 4096);
+    }
     error_log("[moduleFunctions - generateAssessment] Raw response from DeepSeekAPI: " . print_r($generatedContent, true));
 
-    if ($generatedContent === null) {
+    if ($generatedContent === null || trim((string) $generatedContent) === '') {
         // The generateResponse method in DeepSeekAPI now returns null on failure
         // and logs errors internally. You might want to throw an exception here
         // or return a specific error indicator.
-        throw new \Exception("Failed to get a valid response from the AI service. Check API logs.");
+        throw new \Exception("The AI service returned an empty response. Please try again with fewer questions or simpler instructions.");
     }
 
     error_log("[moduleFunctions - generateAssessment] Content returned by generateAssessment: " . print_r($generatedContent, true));
