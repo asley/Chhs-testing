@@ -301,6 +301,14 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_view_full.
                                     ->addParams($params)
                                     ->displayLabel();
                             }
+
+                            if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_generator.php')) {
+                                $table->addHeaderAction('questions', __('Generate TCExam Questions'))
+                                    ->setURL('/modules/aiTeacher/resource_generator.php')
+                                    ->addParam('gibbonPlannerEntryID', $gibbonPlannerEntryID)
+                                    ->setIcon('question-mark')
+                                    ->displayLabel();
+                            }
                         }
 
                         $col = $table->addColumn('Basic Information');

@@ -1,6 +1,7 @@
 <?php
 // Ensure proper Gibbon environment
 require_once __DIR__ . '/../../gibbon.php';
+require_once __DIR__ . '/moduleFunctions.php';
 
 // Page setup
 $page->title = __('AI Resource Generator');
@@ -12,6 +13,32 @@ if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_genera
     $page->addMessage(__('You do not have access to this action.'));
     return;
 }
+
+$gibbonPlannerEntryID = $_GET['gibbonPlannerEntryID'] ?? '';
+$lessonContext = null;
+if (!empty($gibbonPlannerEntryID)) {
+    $canViewAllPlannerLessons = isActionAccessible(
+        $guid,
+        $connection2,
+        '/modules/Planner/planner_view_full.php',
+        'Lesson Planner_viewEditAllClasses'
+    );
+
+    try {
+        $lessonContext = getAITeacherLessonContext($pdo, $gibbonPlannerEntryID, $session->get('gibbonPersonID'), $canViewAllPlannerLessons);
+    } catch (Throwable $e) {
+        error_log('[AI Resource Generator] Lesson context load failed: ' . $e->getMessage());
+        $lessonContext = null;
+    }
+
+    if (empty($lessonContext)) {
+        $page->addMessage(__('The selected lesson could not be loaded, or you do not have access to it.'));
+        $gibbonPlannerEntryID = '';
+    }
+}
+
+$prefillSubject = $lessonContext['subject'] ?? '';
+$prefillTopic = $lessonContext['lessonName'] ?? '';
 ?>
 <style>
     /* Remove the style that hides the form */
@@ -19,31 +46,62 @@ if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_genera
 <!-- Resource Generator (Updated Layout Like Curriculum Support) -->
 <form id="assessmentForm" class="w-full bg-white px-6 py-6 rounded shadow-md space-y-6">
     <h2 class="text-2xl font-semibold text-indigo-700">Assessment Generator</h2>
+    <input type="hidden" name="gibbonPlannerEntryID" id="gibbonPlannerEntryID" value="<?php echo htmlPrep($gibbonPlannerEntryID) ?>" />
+
+    <?php if (!empty($lessonContext)) { ?>
+        <div style="padding:12px 14px; border:1px solid #bfdbfe; background:#eff6ff; color:#1e3a8a; border-radius:4px;">
+            <?php echo __('Linked lesson') ?>:
+            <strong><?php echo htmlPrep($lessonContext['lessonName']) ?></strong>
+            <?php if (!empty($lessonContext['course'])) { ?>
+                <span style="font-size:90%;">(<?php echo htmlPrep($lessonContext['course']) ?>)</span>
+            <?php } ?>
+        </div>
+    <?php } ?>
+
+    <!-- Output Format -->
+    <div>
+        <label for="mode" class="block text-sm font-medium text-gray-700">Output Format <span class="text-red-600">*</span></label>
+        <select name="mode" id="mode" class="form-control w-full mt-1" required>
+            <option value="assessment">Readable Assessment</option>
+            <option value="tcexam_csv" <?php echo !empty($lessonContext) ? 'selected' : '' ?>>TCExam Question CSV</option>
+        </select>
+    </div>
 
     <!-- Subject -->
     <div>
         <label for="subject" class="block text-sm font-medium text-gray-700">Subject <span class="text-red-600">*</span></label>
         <select name="subject" id="subject" class="form-control w-full mt-1" required>
             <option value="">Please select...</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="English A">English A</option>
-            <option value="English B">English B (Literature)</option>
-            <option value="Information Technology">Information Technology</option>
-            <option value="Biology">Biology</option>
-            <option value="Chemistry">Chemistry</option>
-            <option value="Physics">Physics</option>
-            <option value="Social Studies">Social Studies</option>
-            <option value="Geography">Geography</option>
-            <option value="Spanish">Spanish</option>
-            <option value="Caribbean History">Caribbean History</option>
-            <option value="Principles of Business">Principles of Business</option>
-            <option value="Principles of Accounts">Principles of Accounts</option>
-            <option value="EDPM">EDPM</option>
-            <option value="Food and Nutrition">Food and Nutrition</option>
-            <option value="Data Operations">Data Ops</option>
-            <option value="Technical Drawing">Technical Drawing</option>
-            <option value="Visual Arts">Visual Arts</option>
-            <option value="Clothing and Textile">Clothing and Textile</option>
+            <?php
+            $subjects = [
+                'Mathematics' => 'Mathematics',
+                'English A' => 'English A',
+                'English B' => 'English B (Literature)',
+                'Information Technology' => 'Information Technology',
+                'Biology' => 'Biology',
+                'Chemistry' => 'Chemistry',
+                'Physics' => 'Physics',
+                'Social Studies' => 'Social Studies',
+                'Geography' => 'Geography',
+                'Spanish' => 'Spanish',
+                'Caribbean History' => 'Caribbean History',
+                'Principles of Business' => 'Principles of Business',
+                'Principles of Accounts' => 'Principles of Accounts',
+                'EDPM' => 'EDPM',
+                'Food and Nutrition' => 'Food and Nutrition',
+                'Data Operations' => 'Data Ops',
+                'Technical Drawing' => 'Technical Drawing',
+                'Visual Arts' => 'Visual Arts',
+                'Clothing and Textile' => 'Clothing and Textile',
+            ];
+            if (!empty($prefillSubject) && !isset($subjects[$prefillSubject])) {
+                $subjects = [$prefillSubject => $prefillSubject] + $subjects;
+            }
+            foreach ($subjects as $value => $label) {
+                $selected = $value === $prefillSubject ? ' selected' : '';
+                echo '<option value="'.htmlPrep($value).'"'.$selected.'>'.htmlPrep($label).'</option>';
+            }
+            ?>
             <!-- Add more CSEC subjects as needed -->
         </select>
     </div>
@@ -51,11 +109,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_genera
     <!-- Topic -->
     <div>
         <label for="topic" class="block text-sm font-medium text-gray-700">Topic <span class="text-red-600">*</span></label>
-        <input type="text" id="topic" name="topic" class="form-control w-full mt-1" placeholder="e.g., Input Devices" required />
+        <input type="text" id="topic" name="topic" class="form-control w-full mt-1" placeholder="e.g., Input Devices" value="<?php echo htmlPrep($prefillTopic) ?>" required />
     </div>
 
     <!-- Assessment Type -->
-    <div>
+    <div id="assessmentTypeWrap">
         <label for="assessmentType" class="block text-sm font-medium text-gray-700">Assessment Type <span class="text-red-600">*</span></label>
         <select name="assessmentType" id="assessmentType" class="form-control w-full mt-1" required>
             <option value="">Please select...</option>
@@ -70,6 +128,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_genera
         </select>
     </div>
 
+    <!-- Question Count -->
+    <div id="questionCountWrap">
+        <label for="questionType" class="block text-sm font-medium text-gray-700">Question Type</label>
+        <select name="questionType" id="questionType" class="form-control w-full mt-1">
+            <option value="multiple_choice_single">Multiple Choice - Single Answer</option>
+            <option value="multiple_choice_multiple">Multiple Choice - Multiple Answers</option>
+            <option value="true_false">True / False</option>
+        </select>
+
+        <label for="questionCount" class="block text-sm font-medium text-gray-700">Question Count</label>
+        <input type="number" id="questionCount" name="questionCount" class="form-control w-full mt-1" min="1" max="50" value="10" />
+    </div>
+
     <!-- Custom Instructions -->
     <div>
         <label for="customInstructions" class="block text-sm font-medium text-gray-700">Custom Instructions (Optional)</label>
@@ -78,7 +149,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_genera
 
     <!-- Submit Button -->
     <div class="text-right">
-        <button type="button" id="generateAssessment" class="button" onclick="handleGenerateClick(event)">Generate Assessment</button>
+        <button type="button" id="generateAssessment" class="button" onclick="handleGenerateClick(event)">Generate</button>
         <div id="readyIndicator" style="display:none; color:#10b981; font-size:0.85em; margin-top:8px;">✓ Ready to generate</div>
     </div>
 </form>
@@ -107,6 +178,10 @@ function initResourceGenerator() {
     const generateBtn = document.getElementById("generateAssessment");
     const outputDiv = document.getElementById("assessmentOutput");
     const form = document.getElementById("assessmentForm");
+    const modeSelect = document.getElementById("mode");
+    const assessmentType = document.getElementById("assessmentType");
+    const assessmentTypeWrap = document.getElementById("assessmentTypeWrap");
+    const questionCountWrap = document.getElementById("questionCountWrap");
 
     if (!generateBtn) {
         console.error("Generate Assessment button not found!");
@@ -126,6 +201,40 @@ function initResourceGenerator() {
 
     console.log("Resource Generator: All dependencies loaded, attaching event listener...");
 
+    function updateModeDisplay() {
+        const isTCExam = modeSelect && modeSelect.value === "tcexam_csv";
+        if (assessmentTypeWrap) assessmentTypeWrap.style.display = isTCExam ? "none" : "block";
+        if (questionCountWrap) questionCountWrap.style.display = isTCExam ? "block" : "none";
+        if (assessmentType) assessmentType.required = !isTCExam;
+        generateBtn.textContent = isTCExam ? "Generate TCExam CSV" : "Generate Assessment";
+    }
+
+    function downloadCsv(filename, csv) {
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename || "tcexam-questions.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    if (modeSelect) {
+        modeSelect.addEventListener("change", updateModeDisplay);
+    }
+    updateModeDisplay();
+
     // Override the inline handler
     window.handleGenerateClick = async function(event) {
         event.preventDefault(); // Prevent any default behavior
@@ -135,17 +244,20 @@ function initResourceGenerator() {
         // Validate required fields
         const subject = document.getElementById("subject").value;
         const topic = document.getElementById("topic").value;
-        const assessmentType = document.getElementById("assessmentType").value;
+        const mode = document.getElementById("mode").value;
+        const assessmentTypeValue = document.getElementById("assessmentType").value;
 
-        if (!subject || !topic || !assessmentType) {
-            alert("Please fill in all required fields (Subject, Topic, and Assessment Type)");
+        if (!subject || !topic || (mode !== "tcexam_csv" && !assessmentTypeValue)) {
+            alert(mode === "tcexam_csv"
+                ? "Please fill in Subject and Topic."
+                : "Please fill in all required fields (Subject, Topic, and Assessment Type)");
             return;
         }
 
         // Disable button and show loading
         generateBtn.disabled = true;
         generateBtn.textContent = "Generating...";
-        outputDiv.innerHTML = '<div class="loading" style="text-align:center; padding:20px; color:#667eea; font-size:1.1em;">⏳ Generating your assessment... This may take up to 2 minutes.</div>';
+        outputDiv.innerHTML = '<div class="loading" style="text-align:center; padding:20px; color:#667eea; font-size:1.1em;">Generating... This may take up to 2 minutes.</div>';
         outputDiv.style.display = "block";
 
         const controller = new AbortController();
@@ -169,26 +281,57 @@ function initResourceGenerator() {
             const result = await response.json();
 
             if (result.success) {
-                const html = marked.parse(result.formatted_assessment || '');
-                outputDiv.innerHTML = `
-                    <div style="color:#2a7a2a;font-weight:bold;font-size:1.1em;margin-bottom:1em;">✅ ${result.message}</div>
-                    <div>${html}</div>
-                `;
+                if (mode === "tcexam_csv") {
+                    const rows = Array.isArray(result.questions) ? result.questions : [];
+                    const previewRows = rows.slice(0, 10).map((question, index) => `
+                        <tr>
+                            <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${index + 1}</td>
+                            <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${escapeHtml(question.question_type)}</td>
+                            <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${escapeHtml(question.question_text)}</td>
+                        </tr>
+                    `).join("");
+
+                    outputDiv.innerHTML = `
+                        <div style="color:#2a7a2a;font-weight:bold;font-size:1.1em;margin-bottom:1em;">${result.message}</div>
+                        <button type="button" id="downloadTCExamCsv" class="button" style="margin-bottom:14px;">Download TCExam CSV</button>
+                        <table style="width:100%;border-collapse:collapse;background:#fff;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left;padding:6px;border-bottom:1px solid #d1d5db;">#</th>
+                                    <th style="text-align:left;padding:6px;border-bottom:1px solid #d1d5db;">Type</th>
+                                    <th style="text-align:left;padding:6px;border-bottom:1px solid #d1d5db;">Question</th>
+                                </tr>
+                            </thead>
+                            <tbody>${previewRows}</tbody>
+                        </table>
+                    `;
+
+                    document.getElementById("downloadTCExamCsv").addEventListener("click", () => {
+                        downloadCsv(result.filename, result.csv || "");
+                    });
+                    downloadCsv(result.filename, result.csv || "");
+                } else {
+                    const html = marked.parse(result.formatted_assessment || '');
+                    outputDiv.innerHTML = `
+                        <div style="color:#2a7a2a;font-weight:bold;font-size:1.1em;margin-bottom:1em;">${result.message}</div>
+                        <div>${html}</div>
+                    `;
+                }
                 outputDiv.scrollIntoView({ behavior: "smooth" });
             } else {
-                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">❌ ${result.message || result.error}</div>`;
+                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">${result.message || result.error}</div>`;
             }
         } catch (error) {
             clearTimeout(timeout);
             if (error.name === 'AbortError') {
-                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">⏱️ The AI service is taking too long to respond. Please try again later.</div>`;
+                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">The AI service is taking too long to respond. Please try again later.</div>`;
             } else {
                 console.error("Error generating assessment:", error);
-                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">❌ ${error.message}</div>`;
+                outputDiv.innerHTML = `<div class="error" style="color:#b00;font-weight:bold;padding:15px;background:#ffe6e6;border-radius:6px;">${error.message}</div>`;
             }
         } finally {
             generateBtn.disabled = false;
-            generateBtn.textContent = "Generate Assessment";
+            updateModeDisplay();
             outputDiv.style.display = "block";
         }
     };

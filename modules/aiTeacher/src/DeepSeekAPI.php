@@ -15,12 +15,12 @@ class DeepSeekAPI {
 
     public function generateResponse(string $prompt, string $model = 'deepseek-v4-flash', float $temperature = 0.7, int $maxTokens = 1024): ?string {
         $data = [
-            'model' => 'deepseek-v4-flash',
+            'model' => $model,
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ],
-            'temperature' => 0.7,
-            'max_tokens' => 1024
+            'temperature' => $temperature,
+            'max_tokens' => $maxTokens
         ];
 
         error_log("[DeepSeek] Request Data: " . json_encode($data));

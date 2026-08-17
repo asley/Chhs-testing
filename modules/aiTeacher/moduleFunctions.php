@@ -222,6 +222,311 @@ function generateAssessment($pdo, $subject, $topic, $assessmentType, $customInst
     return $generatedContent;
 }
 
+function aiTeacherPlainText($value) {
+    $value = html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $value = strip_tags($value);
+    $value = preg_replace('/\s+/', ' ', $value);
+
+    return trim($value);
+}
+
+function getAITeacherLessonContext($pdo, $gibbonPlannerEntryID, $gibbonPersonID = null, $canViewAll = false) {
+    if (empty($gibbonPlannerEntryID) || !ctype_digit((string) $gibbonPlannerEntryID)) {
+        return null;
+    }
+
+    $data = ['gibbonPlannerEntryID' => $gibbonPlannerEntryID];
+    $sql = "SELECT gibbonPlannerEntry.gibbonPlannerEntryID, gibbonPlannerEntry.name AS lessonName,
+                   gibbonPlannerEntry.summary, gibbonPlannerEntry.description, gibbonPlannerEntry.teachersNotes,
+                   gibbonPlannerEntry.date, gibbonCourse.name AS courseName, gibbonCourse.nameShort AS courseNameShort,
+                   gibbonCourseClass.nameShort AS classNameShort, gibbonUnit.name AS unitName
+            FROM gibbonPlannerEntry
+            JOIN gibbonCourseClass ON (gibbonPlannerEntry.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID)
+            JOIN gibbonCourse ON (gibbonCourse.gibbonCourseID=gibbonCourseClass.gibbonCourseID)
+            LEFT JOIN gibbonUnit ON (gibbonUnit.gibbonUnitID=gibbonPlannerEntry.gibbonUnitID)
+            WHERE gibbonPlannerEntry.gibbonPlannerEntryID=:gibbonPlannerEntryID";
+
+    if (!$canViewAll) {
+        if (empty($gibbonPersonID)) {
+            return null;
+        }
+
+        $data['gibbonPersonID'] = $gibbonPersonID;
+        $sql .= " AND EXISTS (
+                    SELECT 1
+                    FROM gibbonCourseClassPerson
+                    WHERE gibbonCourseClassPerson.gibbonCourseClassID=gibbonCourseClass.gibbonCourseClassID
+                    AND gibbonCourseClassPerson.gibbonPersonID=:gibbonPersonID
+                    AND gibbonCourseClassPerson.role IN ('Teacher', 'Assistant', 'Technician')
+                    AND gibbonCourseClassPerson.role NOT LIKE '%Left'
+                )";
+    }
+
+    $result = $pdo->executeQuery($data, $sql);
+    if ($result->rowCount() !== 1) {
+        return null;
+    }
+
+    $lesson = $result->fetch();
+
+    $blocksResult = $pdo->executeQuery(
+        ['gibbonPlannerEntryID' => $gibbonPlannerEntryID],
+        "SELECT title, type, contents
+         FROM gibbonUnitClassBlock
+         WHERE gibbonPlannerEntryID=:gibbonPlannerEntryID
+         ORDER BY sequenceNumber"
+    );
+    $blocks = [];
+    while ($block = $blocksResult->fetch()) {
+        $blocks[] = [
+            'title' => aiTeacherPlainText($block['title'] ?? ''),
+            'type' => aiTeacherPlainText($block['type'] ?? ''),
+            'contents' => aiTeacherPlainText($block['contents'] ?? ''),
+        ];
+    }
+
+    $outcomesResult = $pdo->executeQuery(
+        ['gibbonPlannerEntryID' => $gibbonPlannerEntryID],
+        "SELECT gibbonOutcome.name, gibbonOutcome.nameShort, gibbonOutcome.category, gibbonPlannerEntryOutcome.content
+         FROM gibbonPlannerEntryOutcome
+         JOIN gibbonOutcome ON (gibbonPlannerEntryOutcome.gibbonOutcomeID=gibbonOutcome.gibbonOutcomeID)
+         WHERE gibbonPlannerEntryOutcome.gibbonPlannerEntryID=:gibbonPlannerEntryID
+         AND gibbonOutcome.active='Y'
+         ORDER BY (sequenceNumber='') ASC, sequenceNumber, category, name"
+    );
+    $outcomes = [];
+    while ($outcome = $outcomesResult->fetch()) {
+        $outcomes[] = trim(implode(' - ', array_filter([
+            aiTeacherPlainText($outcome['category'] ?? ''),
+            aiTeacherPlainText($outcome['nameShort'] ?? ''),
+            aiTeacherPlainText($outcome['name'] ?? ''),
+            aiTeacherPlainText($outcome['content'] ?? ''),
+        ])));
+    }
+
+    return [
+        'id' => $lesson['gibbonPlannerEntryID'],
+        'lessonName' => aiTeacherPlainText($lesson['lessonName'] ?? ''),
+        'subject' => aiTeacherPlainText($lesson['courseName'] ?: ($lesson['courseNameShort'] ?? '')),
+        'course' => aiTeacherPlainText(trim(($lesson['courseNameShort'] ?? '') . '.' . ($lesson['classNameShort'] ?? ''), '.')),
+        'unit' => aiTeacherPlainText($lesson['unitName'] ?? ''),
+        'date' => $lesson['date'] ?? '',
+        'summary' => aiTeacherPlainText($lesson['summary'] ?? ''),
+        'description' => aiTeacherPlainText($lesson['description'] ?? ''),
+        'teachersNotes' => aiTeacherPlainText($lesson['teachersNotes'] ?? ''),
+        'blocks' => $blocks,
+        'outcomes' => $outcomes,
+    ];
+}
+
+function buildAITeacherLessonPromptContext(?array $lessonContext = null) {
+    if (empty($lessonContext)) {
+        return '';
+    }
+
+    $lines = [
+        'Lesson title: ' . ($lessonContext['lessonName'] ?? ''),
+        'Subject/course: ' . ($lessonContext['subject'] ?? ''),
+        'Class: ' . ($lessonContext['course'] ?? ''),
+        'Unit: ' . ($lessonContext['unit'] ?? ''),
+        'Summary: ' . ($lessonContext['summary'] ?? ''),
+        'Description: ' . ($lessonContext['description'] ?? ''),
+    ];
+
+    if (!empty($lessonContext['teachersNotes'])) {
+        $lines[] = 'Teacher notes: ' . $lessonContext['teachersNotes'];
+    }
+
+    if (!empty($lessonContext['outcomes'])) {
+        $lines[] = 'Learning outcomes: ' . implode(' | ', $lessonContext['outcomes']);
+    }
+
+    if (!empty($lessonContext['blocks'])) {
+        $blockLines = [];
+        foreach ($lessonContext['blocks'] as $block) {
+            $blockLines[] = trim(($block['title'] ?? '') . ' (' . ($block['type'] ?? '') . '): ' . ($block['contents'] ?? ''));
+        }
+        $lines[] = 'Lesson content blocks: ' . implode(' | ', array_filter($blockLines));
+    }
+
+    return implode("\n", array_filter($lines));
+}
+
+function getTCExamQuestionCsvHeaders() {
+    return [
+        'question_type', 'question_text', 'explanation', 'media', 'difficulty', 'usage_scope', 'default_points', 'category', 'tags',
+        'option_1', 'option_1_correct', 'option_1_media',
+        'option_2', 'option_2_correct', 'option_2_media',
+        'option_3', 'option_3_correct', 'option_3_media',
+        'option_4', 'option_4_correct', 'option_4_media',
+        'option_5', 'option_5_correct', 'option_5_media',
+        'option_6', 'option_6_correct', 'option_6_media',
+    ];
+}
+
+function normalizeTCExamQuestions($generatedContent, $defaultQuestionType = 'multiple_choice_single') {
+    $content = trim((string) $generatedContent);
+    $content = preg_replace('/^```(?:json)?\s*/i', '', $content);
+    $content = preg_replace('/\s*```$/', '', $content);
+
+    if (preg_match('/\{.*\}/s', $content, $matches)) {
+        $content = $matches[0];
+    }
+
+    $data = json_decode($content, true);
+    if (!is_array($data) || empty($data['questions']) || !is_array($data['questions'])) {
+        throw new \Exception('The AI service did not return valid TCExam question JSON.');
+    }
+
+    $allowedTypes = ['multiple_choice_single', 'multiple_choice_multiple', 'true_false'];
+    if (!in_array($defaultQuestionType, $allowedTypes)) {
+        $defaultQuestionType = 'multiple_choice_single';
+    }
+
+    $questions = [];
+    foreach ($data['questions'] as $question) {
+        if (empty($question['question_text'])) {
+            continue;
+        }
+
+        $type = $defaultQuestionType;
+
+        $options = [];
+        foreach (($question['options'] ?? []) as $option) {
+            if (!isset($option['text']) || trim((string) $option['text']) === '') {
+                continue;
+            }
+
+            $options[] = [
+                'text' => aiTeacherPlainText($option['text']),
+                'correct' => !empty($option['correct']),
+            ];
+        }
+
+        if ($type === 'true_false') {
+            $answer = strtolower((string) ($question['answer'] ?? '')) === 'true';
+            if (empty($question['answer'])) {
+                foreach ($options as $option) {
+                    if ($option['correct']) {
+                        $answer = strtolower($option['text']) === 'true';
+                        break;
+                    }
+                }
+            }
+            $options = [
+                ['text' => 'True', 'correct' => $answer],
+                ['text' => 'False', 'correct' => !$answer],
+            ];
+        }
+
+        if (count($options) < 2) {
+            continue;
+        }
+
+        $questions[] = [
+            'question_type' => $type,
+            'question_text' => aiTeacherPlainText($question['question_text']),
+            'explanation' => aiTeacherPlainText($question['explanation'] ?? ''),
+            'difficulty' => in_array(($question['difficulty'] ?? ''), ['easy', 'medium', 'hard']) ? $question['difficulty'] : 'medium',
+            'usage_scope' => in_array(($question['usage_scope'] ?? ''), ['practice', 'exam', 'both']) ? $question['usage_scope'] : 'both',
+            'default_points' => max(1, (int) ($question['default_points'] ?? 1)),
+            'category' => aiTeacherPlainText($question['category'] ?? ''),
+            'tags' => aiTeacherPlainText($question['tags'] ?? ''),
+            'options' => array_slice($options, 0, 6),
+        ];
+    }
+
+    if (empty($questions)) {
+        throw new \Exception('No usable TCExam questions were returned by the AI service.');
+    }
+
+    return $questions;
+}
+
+function buildTCExamQuestionsCsv(array $questions) {
+    $headers = getTCExamQuestionCsvHeaders();
+    $csvRows = [buildTCExamCsvRow($headers)];
+
+    foreach ($questions as $question) {
+        $row = [
+            $question['question_type'],
+            $question['question_text'],
+            $question['explanation'],
+            '',
+            $question['difficulty'],
+            $question['usage_scope'],
+            $question['default_points'],
+            $question['category'],
+            $question['tags'],
+        ];
+
+        for ($i = 0; $i < 6; $i++) {
+            $option = $question['options'][$i] ?? ['text' => '', 'correct' => ''];
+            $row[] = $option['text'];
+            $row[] = $option['text'] === '' ? '' : ($option['correct'] ? 'true' : 'false');
+            $row[] = '';
+        }
+
+        $csvRows[] = buildTCExamCsvRow($row);
+    }
+
+    return implode("\n", $csvRows) . "\n";
+}
+
+function buildTCExamCsvRow(array $row) {
+    return implode(',', array_map(function ($value) {
+        return '"' . str_replace('"', '""', (string) $value) . '"';
+    }, $row));
+}
+
+function generateTCExamQuestions($pdo, $subject, $topic, $questionCount = 10, $customInstructions = '', ?array $lessonContext = null, $questionType = 'multiple_choice_single') {
+    $settings = getAITeacherSettings($pdo);
+    $apiKey = $settings['deepseek_api_key'] ?? null;
+
+    if (empty($apiKey)) {
+        throw new \Exception("DeepSeek API key is not configured.");
+    }
+
+    $questionCount = max(1, min(50, (int) $questionCount));
+    $allowedTypes = ['multiple_choice_single', 'multiple_choice_multiple', 'true_false'];
+    if (!in_array($questionType, $allowedTypes)) {
+        $questionType = 'multiple_choice_single';
+    }
+    $lessonPromptContext = buildAITeacherLessonPromptContext($lessonContext);
+
+    $prompt = "Generate {$questionCount} CSEC-style exam questions for TCExam import.\n"
+        . "Subject: {$subject}\n"
+        . "Topic: {$topic}\n"
+        . "Question type: {$questionType}. Every question object must set question_type exactly to {$questionType}.\n"
+        . (!empty($lessonPromptContext) ? "Base the questions on this lesson content:\n{$lessonPromptContext}\n" : '')
+        . "Use CSEC-style constructs: clear stems, plausible distractors, syllabus language, and explanations that justify the answer.\n"
+        . "Allowed question_type values: multiple_choice_single, multiple_choice_multiple, true_false.\n"
+        . "Allowed difficulty values: easy, medium, hard. Allowed usage_scope values: practice, exam, both.\n"
+        . "Return JSON only, no markdown, with this shape: "
+        . '{"questions":[{"question_type":"multiple_choice_single","question_text":"...","explanation":"...","difficulty":"medium","usage_scope":"both","default_points":1,"category":"...","tags":"tag1,tag2","options":[{"text":"...","correct":false},{"text":"...","correct":true}]}]}'
+        . "\nEach multiple choice question must have 4 options. Multiple-answer questions may have 4 to 6 options. True/false questions must use True and False options.";
+
+    if (!empty($customInstructions)) {
+        $prompt .= "\nAdditional teacher instructions: {$customInstructions}";
+    }
+
+    $api = new \Gibbon\Module\aiTeacher\DeepSeekAPI($apiKey);
+    error_log("[moduleFunctions - generateTCExamQuestions] Prompt sent to DeepSeekAPI: " . $prompt);
+    $generatedContent = $api->generateResponse($prompt, 'deepseek-v4-flash', 0.4, 4096);
+
+    if ($generatedContent === null || strpos($generatedContent, 'Error from AI Service:') === 0) {
+        throw new \Exception($generatedContent ?: 'Failed to get a valid response from the AI service.');
+    }
+
+    $questions = normalizeTCExamQuestions($generatedContent, $questionType);
+
+    return [
+        'questions' => $questions,
+        'csv' => buildTCExamQuestionsCsv($questions),
+        'raw' => $generatedContent,
+    ];
+}
+
 /**
  * Analyzes the provided text content using the AI model.
  *
@@ -978,4 +1283,3 @@ function updateConversationTopic($pdo, $sessionID, $topic, $gibbonPersonID) {
         return false;
     }
 }
-

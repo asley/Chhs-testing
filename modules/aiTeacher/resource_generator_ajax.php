@@ -64,16 +64,59 @@ try {
     $topic = $_POST['topic'] ?? '';
     $assessmentType = $_POST['assessmentType'] ?? '';
     $customInstructions = trim($_POST['customInstructions'] ?? '');
+    $mode = $_POST['mode'] ?? 'assessment';
+    $questionCount = $_POST['questionCount'] ?? 10;
+    $questionType = $_POST['questionType'] ?? 'multiple_choice_single';
+    $gibbonPlannerEntryID = $_POST['gibbonPlannerEntryID'] ?? '';
 
-    if (empty($subject) || empty($topic) || empty($assessmentType)) {
+    if (empty($subject) || empty($topic) || ($mode !== 'tcexam_csv' && empty($assessmentType))) {
         json_response([
             'success' => false,
-            'error' => 'Please fill in all required fields: Subject, Topic, and Assessment Type.',
+            'error' => 'Please fill in all required fields.',
             'message' => 'Validation error'
         ]);
     }
 
     try {
+        if ($mode === 'tcexam_csv') {
+            $lessonContext = null;
+            if (!empty($gibbonPlannerEntryID)) {
+                $canViewAllPlannerLessons = isActionAccessible(
+                    $guid,
+                    $connection2,
+                    '/modules/Planner/planner_view_full.php',
+                    'Lesson Planner_viewEditAllClasses'
+                );
+
+                $lessonContext = getAITeacherLessonContext(
+                    $pdo,
+                    $gibbonPlannerEntryID,
+                    $session->get('gibbonPersonID'),
+                    $canViewAllPlannerLessons
+                );
+
+                if (empty($lessonContext)) {
+                    json_response([
+                        'success' => false,
+                        'error' => 'The selected lesson could not be loaded, or you do not have access to it.',
+                        'message' => 'Lesson access error'
+                    ]);
+                }
+            }
+
+            $result = generateTCExamQuestions($pdo, $subject, $topic, $questionCount, $customInstructions, $lessonContext, $questionType);
+            $filenameTopic = preg_replace('/[^A-Za-z0-9_-]+/', '-', trim($topic));
+            $filenameTopic = trim($filenameTopic, '-') ?: 'lesson';
+
+            json_response([
+                'success' => true,
+                'message' => 'TCExam CSV Generated Successfully!',
+                'questions' => $result['questions'],
+                'csv' => $result['csv'],
+                'filename' => 'tcexam-questions-' . strtolower($filenameTopic) . '.csv',
+            ]);
+        }
+
         $assessmentResult = generateAssessment($pdo, $subject, $topic, $assessmentType, $customInstructions);
         if (is_string($assessmentResult) && strpos($assessmentResult, 'Error from AI Service:') === 0) {
             json_response([
