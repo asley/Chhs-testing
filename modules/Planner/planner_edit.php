@@ -216,6 +216,29 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_edit.php')
 
                 //LESSON
                 $form->addRow()->addHeading('Lesson Content', __('Lesson Content'));
+                $aiActions = [];
+                if (!empty($gibbonUnitID) && isActionAccessible($guid, $connection2, '/modules/aiTeacher/planner_generate.php')) {
+                    $aiParams = [
+                        'q' => '/modules/aiTeacher/planner_generate.php',
+                        'gibbonPlannerEntryID' => $gibbonPlannerEntryID,
+                    ];
+                    $aiActions[] = "<a class='button' href='".htmlPrep($session->get('absoluteURL').'/index.php?'.http_build_query($aiParams))."'>".__('Generate with AI').'</a>';
+                }
+                if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_generator.php')) {
+                    $assessmentParams = [
+                        'q' => '/modules/aiTeacher/resource_generator.php',
+                        'gibbonPlannerEntryID' => $gibbonPlannerEntryID,
+                    ];
+                    $aiActions[] = "<a class='button' target='_blank' rel='noopener' href='".htmlPrep($session->get('absoluteURL').'/index.php?'.http_build_query($assessmentParams))."'>".__('Generate Assessment').'</a>';
+                }
+                if (!empty($aiActions)) {
+                    $form->addRow()->addContent(
+                        "<div class='flex justify-end items-center gap-2 mb-2'>"
+                        ."<span class='text-xs italic text-gray-600'>".__('Save this lesson first to use the latest content.')."</span>"
+                        .implode('', $aiActions)
+                        .'</div>'
+                    );
+                }
 
                 $description = $settingGateway->getSettingByScope('Planner', 'lessonDetailsTemplate') ;
                 $row = $form->addRow();

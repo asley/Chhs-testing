@@ -221,6 +221,28 @@ function initResourceGenerator() {
         URL.revokeObjectURL(url);
     }
 
+    function downloadText(filename, content) {
+        const blob = new Blob([content || ""], { type: "text/markdown;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename || "assessment.md";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function buildDownloadFilename(prefix, extension) {
+        const topic = document.getElementById("topic").value || "assessment";
+        const slug = topic
+            .toLowerCase()
+            .replace(/[^a-z0-9_-]+/g, "-")
+            .replace(/^-+|-+$/g, "") || "assessment";
+
+        return `${prefix}-${slug}.${extension}`;
+    }
+
     function escapeHtml(value) {
         return String(value || "")
             .replace(/&/g, "&amp;")
@@ -311,11 +333,16 @@ function initResourceGenerator() {
                     });
                     downloadCsv(result.filename, result.csv || "");
                 } else {
-                    const html = marked.parse(result.formatted_assessment || '');
+                    const assessmentMarkdown = result.formatted_assessment || '';
+                    const html = marked.parse(assessmentMarkdown);
                     outputDiv.innerHTML = `
                         <div style="color:#2a7a2a;font-weight:bold;font-size:1.1em;margin-bottom:1em;">${result.message}</div>
+                        <button type="button" id="downloadReadableAssessment" class="button" style="margin-bottom:14px;">Download Assessment</button>
                         <div>${html}</div>
                     `;
+                    document.getElementById("downloadReadableAssessment").addEventListener("click", () => {
+                        downloadText(buildDownloadFilename("assessment", "md"), assessmentMarkdown);
+                    });
                 }
                 outputDiv.scrollIntoView({ behavior: "smooth" });
             } else {

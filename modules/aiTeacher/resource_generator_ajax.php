@@ -1,5 +1,7 @@
 <?php
-ob_clean();
+if (ob_get_level()) {
+    ob_clean();
+}
 header('Content-Type: application/json; charset=utf-8');
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -38,8 +40,13 @@ set_exception_handler(function($e) {
 });
 
 try {
-    // Remove access check for now to prevent undefined function error
-    // TODO: Add access control if needed, but only if Gibbon is loaded
+    if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_generator.php')) {
+        json_response([
+            'success' => false,
+            'error' => 'You do not have access to this action.',
+            'message' => 'Access denied'
+        ]);
+    }
 
     // Safe settings fetch
     if (!function_exists('getAITeacherSettings')) {
@@ -78,32 +85,32 @@ try {
     }
 
     try {
-        if ($mode === 'tcexam_csv') {
-            $lessonContext = null;
-            if (!empty($gibbonPlannerEntryID)) {
-                $canViewAllPlannerLessons = isActionAccessible(
-                    $guid,
-                    $connection2,
-                    '/modules/Planner/planner_view_full.php',
-                    'Lesson Planner_viewEditAllClasses'
-                );
+        $lessonContext = null;
+        if (!empty($gibbonPlannerEntryID)) {
+            $canViewAllPlannerLessons = isActionAccessible(
+                $guid,
+                $connection2,
+                '/modules/Planner/planner_view_full.php',
+                'Lesson Planner_viewEditAllClasses'
+            );
 
-                $lessonContext = getAITeacherLessonContext(
-                    $pdo,
-                    $gibbonPlannerEntryID,
-                    $session->get('gibbonPersonID'),
-                    $canViewAllPlannerLessons
-                );
+            $lessonContext = getAITeacherLessonContext(
+                $pdo,
+                $gibbonPlannerEntryID,
+                $session->get('gibbonPersonID'),
+                $canViewAllPlannerLessons
+            );
 
-                if (empty($lessonContext)) {
-                    json_response([
-                        'success' => false,
-                        'error' => 'The selected lesson could not be loaded, or you do not have access to it.',
-                        'message' => 'Lesson access error'
-                    ]);
-                }
+            if (empty($lessonContext)) {
+                json_response([
+                    'success' => false,
+                    'error' => 'The selected lesson could not be loaded, or you do not have access to it.',
+                    'message' => 'Lesson access error'
+                ]);
             }
+        }
 
+        if ($mode === 'tcexam_csv') {
             $result = generateTCExamQuestions($pdo, $subject, $topic, $questionCount, $customInstructions, $lessonContext, $questionType);
             $filenameTopic = preg_replace('/[^A-Za-z0-9_-]+/', '-', trim($topic));
             $filenameTopic = trim($filenameTopic, '-') ?: 'lesson';
@@ -117,7 +124,7 @@ try {
             ]);
         }
 
-        $assessmentResult = generateAssessment($pdo, $subject, $topic, $assessmentType, $customInstructions);
+        $assessmentResult = generateAssessment($pdo, $subject, $topic, $assessmentType, $customInstructions, $lessonContext);
         if (is_string($assessmentResult) && strpos($assessmentResult, 'Error from AI Service:') === 0) {
             json_response([
                 'success' => false,

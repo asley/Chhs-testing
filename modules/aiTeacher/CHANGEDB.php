@@ -220,3 +220,65 @@ AND NOT EXISTS (
     AND p.gibbonActionID = a.gibbonActionID
 );end
 ";
+
+// v2.2.00 - Add Planner AI Generator action and audit metadata table
+$count++;
+$sql[$count][0] = "2.2.00";
+$sql[$count][1] = "
+CREATE TABLE IF NOT EXISTS `aiTeacherPlannerGeneration` (
+  `aiTeacherPlannerGenerationID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `gibbonPersonID` int(10) unsigned NOT NULL,
+  `gibbonPlannerEntryID` int(14) unsigned zerofill DEFAULT NULL,
+  `gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,
+  `gibbonUnitID` int(10) unsigned zerofill DEFAULT NULL,
+  `subject` varchar(100) NOT NULL,
+  `outputType` varchar(50) NOT NULL,
+  `promptHash` varchar(64) DEFAULT NULL,
+  `provider` varchar(50) DEFAULT NULL,
+  `status` enum('Success','Error') NOT NULL,
+  `error` text,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`aiTeacherPlannerGenerationID`),
+  KEY `gibbonPersonID` (`gibbonPersonID`),
+  KEY `gibbonPlannerEntryID` (`gibbonPlannerEntryID`),
+  KEY `gibbonCourseClassID` (`gibbonCourseClassID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;end
+
+INSERT INTO gibbonAction (
+    gibbonModuleID, name, precedence, category, description,
+    URLList, entryURL, entrySidebar, menuShow,
+    defaultPermissionAdmin, defaultPermissionTeacher,
+    defaultPermissionStudent, defaultPermissionParent,
+    defaultPermissionSupport, categoryPermissionStaff,
+    categoryPermissionStudent, categoryPermissionParent,
+    categoryPermissionOther
+)
+SELECT
+    gibbonModuleID, 'Planner AI Generator', '10', 'Features',
+    'Generate draft Planner lesson content and homework from selected unit context',
+    'planner_generate.php,planner_generate_ajax.php,planner_applyProcess.php',
+    'planner_generate.php', 'N', 'N', 'Y', 'Y', 'N', 'N', 'Y',
+    'Y', 'N', 'N', 'N'
+FROM gibbonModule
+WHERE name = 'aiTeacher'
+AND NOT EXISTS (
+    SELECT 1 FROM gibbonAction WHERE name = 'Planner AI Generator'
+);end
+
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID)
+SELECT r.gibbonRoleID, a.gibbonActionID
+FROM gibbonRole r
+CROSS JOIN gibbonAction a
+JOIN gibbonModule m ON a.gibbonModuleID = m.gibbonModuleID
+WHERE m.name = 'aiTeacher'
+AND a.name = 'Planner AI Generator'
+AND (
+    (r.category = 'Staff' AND a.defaultPermissionAdmin = 'Y')
+    OR (r.category = 'Staff' AND a.defaultPermissionTeacher = 'Y')
+)
+AND NOT EXISTS (
+    SELECT 1 FROM gibbonPermission p
+    WHERE p.gibbonRoleID = r.gibbonRoleID
+    AND p.gibbonActionID = a.gibbonActionID
+);end
+";

@@ -187,7 +187,7 @@ function generateInterventionStrategy($pdo, $subject, $score) {
 // use Gibbon\Module\aiTeacher\DeepSeekAPI; 
 // (This use statement would typically be at the top of moduleFunctions.php)
 
-function generateAssessment($pdo, $subject, $topic, $assessmentType, $customInstructions = '') {
+function generateAssessment($pdo, $subject, $topic, $assessmentType, $customInstructions = '', ?array $lessonContext = null) {
     // Get settings (assuming getAITeacherSettings is available)
     $settings = getAITeacherSettings($pdo);
     $apiKey = $settings['deepseek_api_key'] ?? null;
@@ -196,10 +196,14 @@ function generateAssessment($pdo, $subject, $topic, $assessmentType, $customInst
         throw new \Exception("DeepSeek API key is not configured.");
     }
 
+    $lessonPromptContext = buildAITeacherLessonPromptContext($lessonContext);
+
     // Construct the prompt
-    $prompt = "Generate a '{$assessmentType}' assessment for the CSEC subject '{$subject}' on the topic '{$topic}'.";
+    $prompt = "Generate a '{$assessmentType}' assessment for the CSEC subject '{$subject}' on the topic '{$topic}'."
+        . (!empty($lessonPromptContext) ? "\nBase the assessment on this lesson content and objectives:\n{$lessonPromptContext}" : '')
+        . "\nUse CSEC-style constructs: clear stems, syllabus language, suitable difficulty progression, and an answer key or marking guidance.";
     if (!empty($customInstructions)) {
-        $prompt .= " Additional instructions: {$customInstructions}";
+        $prompt .= "\nAdditional instructions: {$customInstructions}";
     }
 
     // Instantiate DeepSeekAPI using its fully qualified namespace if no 'use' statement is active
