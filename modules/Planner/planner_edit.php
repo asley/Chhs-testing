@@ -217,6 +217,18 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_edit.php')
                 //LESSON
                 $form->addRow()->addHeading('Lesson Content', __('Lesson Content'));
 
+                if (!empty($gibbonUnitID) && isActionAccessible($guid, $connection2, '/modules/aiTeacher/planner_generate.php')) {
+                    $aiParams = [
+                        'q' => '/modules/aiTeacher/planner_generate.php',
+                        'gibbonPlannerEntryID' => $gibbonPlannerEntryID,
+                    ];
+                    $aiGeneratorURL = $session->get('absoluteURL').'/index.php?'.http_build_query($aiParams);
+
+                    $form->addRow()->addContent(
+                        "<div class='right'><a class='button' href='".htmlPrep($aiGeneratorURL)."'>".__('Generate with AI').'</a></div>'
+                    );
+                }
+
                 $description = $settingGateway->getSettingByScope('Planner', 'lessonDetailsTemplate') ;
                 $row = $form->addRow();
                     $column = $row->addColumn();

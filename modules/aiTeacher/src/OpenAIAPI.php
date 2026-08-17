@@ -10,13 +10,14 @@ class OpenAIAPI {
         $this->apiKey = $apiKey;
     }
 
-    public function generateResponse(string $prompt, string $model = 'gpt-3.5-turbo') {
+    public function generateResponse(string $prompt, string $model = 'gpt-3.5-turbo', float $temperature = 0.7, int $maxTokens = 1024) {
         $data = [
             'model' => $model,
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
-            ]
-            // You can add other parameters like temperature, max_tokens, etc.
+            ],
+            'temperature' => $temperature,
+            'max_tokens' => $maxTokens,
         ];
 
         $result = $this->send($data);
@@ -28,7 +29,7 @@ class OpenAIAPI {
             if (isset($result['response']['error']['message'])) {
                 $errorMessage = $result['response']['error']['message'];
             }
-            error_log("OpenAI API Error in generateResponse: " . $errorMessage . " - Full Response: " . print_r($result['response'] ?? $result, true));
+            error_log("OpenAI API Error in generateResponse: " . $errorMessage);
             return null;
         }
     }

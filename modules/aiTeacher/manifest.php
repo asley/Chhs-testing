@@ -25,7 +25,7 @@ $description = 'AI-powered teaching assistant for CSEC curriculum support, asses
 $entryURL    = "index.php";
 $type        = "Additional";
 $category    = 'Teaching & Learning';
-$version     = '2.1.00';
+$version     = '2.2.00';
 $author      = 'Asley Smith';
 $url         = 'https://tasanz.com';            
 
@@ -134,6 +134,26 @@ CREATE TABLE IF NOT EXISTS `aiTeacherUploads` (
     PRIMARY KEY (`aiTeacherUploadID`),
     KEY `gibbonPersonID` (`gibbonPersonID`),
     CONSTRAINT `aiTeacherUploads_ibfk_1` FOREIGN KEY (`gibbonPersonID`) REFERENCES `gibbonPerson` (`gibbonPersonID`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$moduleTables[] = "
+CREATE TABLE IF NOT EXISTS `aiTeacherPlannerGeneration` (
+  `aiTeacherPlannerGenerationID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `gibbonPersonID` int(10) unsigned NOT NULL,
+  `gibbonPlannerEntryID` int(14) unsigned zerofill DEFAULT NULL,
+  `gibbonCourseClassID` int(8) unsigned zerofill NOT NULL,
+  `gibbonUnitID` int(10) unsigned zerofill DEFAULT NULL,
+  `subject` varchar(100) NOT NULL,
+  `outputType` varchar(50) NOT NULL,
+  `promptHash` varchar(64) DEFAULT NULL,
+  `provider` varchar(50) DEFAULT NULL,
+  `status` enum('Success','Error') NOT NULL,
+  `error` text,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`aiTeacherPlannerGenerationID`),
+  KEY `gibbonPersonID` (`gibbonPersonID`),
+  KEY `gibbonPlannerEntryID` (`gibbonPlannerEntryID`),
+  KEY `gibbonCourseClassID` (`gibbonCourseClassID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // gibbonSettings: array of associative arrays (not SQL)
@@ -358,6 +378,25 @@ $actionRows = array(
         'defaultPermissionSupport'  => 'Y',
         'categoryPermissionStaff'   => 'Y',
         'categoryPermissionStudent' => 'Y',
+        'categoryPermissionParent'  => 'N',
+        'categoryPermissionOther'   => 'N'
+    ),
+    array(
+        'name'                      => 'Planner AI Generator',
+        'precedence'                => '10',
+        'category'                  => 'Features',
+        'description'               => 'Generate draft Planner lesson content and homework from selected unit context',
+        'URLList'                   => 'planner_generate.php,planner_generate_ajax.php,planner_applyProcess.php',
+        'entryURL'                  => 'planner_generate.php',
+        'entrySidebar'              => 'N',
+        'menuShow'                  => 'N',
+        'defaultPermissionAdmin'    => 'Y',
+        'defaultPermissionTeacher'  => 'Y',
+        'defaultPermissionStudent'  => 'N',
+        'defaultPermissionParent'   => 'N',
+        'defaultPermissionSupport'  => 'Y',
+        'categoryPermissionStaff'   => 'Y',
+        'categoryPermissionStudent' => 'N',
         'categoryPermissionParent'  => 'N',
         'categoryPermissionOther'   => 'N'
     ),

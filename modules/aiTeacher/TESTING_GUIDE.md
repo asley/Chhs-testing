@@ -511,7 +511,7 @@ Test in multiple browsers:
 ### Issue 2: AI responses are empty or null
 **Solution**:
 - Check DeepSeek API key is configured correctly
-- Check PHP error logs: `/modules/aiTeacher/php-error.log`
+- Check the configured PHP/web server error log
 - Verify API key has credits
 
 ### Issue 3: Database tables not created

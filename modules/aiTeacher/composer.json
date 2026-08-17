@@ -2,7 +2,7 @@
     "name": "asleysmith/ai-teacher",
     "autoload": {
         "psr-4": {
-            "Asleysmith\\AiTeacher\\": "src/"
+            "Gibbon\\Module\\aiTeacher\\": "src/"
         }
     },
     "authors": [
