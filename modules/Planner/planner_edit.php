@@ -222,20 +222,20 @@ if (isActionAccessible($guid, $connection2, '/modules/Planner/planner_edit.php')
                         'q' => '/modules/aiTeacher/planner_generate.php',
                         'gibbonPlannerEntryID' => $gibbonPlannerEntryID,
                     ];
-                    $aiActions[] = "<a class='button' href='".htmlPrep($session->get('absoluteURL').'/index.php?'.http_build_query($aiParams))."'>".__('Generate with AI').'</a>';
+                    $aiActions[] = "<a class='button' href='".htmlPrep($session->get('absoluteURL').'/index.php?'.http_build_query($aiParams))."'>".__('AI Lesson + Homework').'</a>';
                 }
                 if (isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_generator.php')) {
                     $assessmentParams = [
                         'q' => '/modules/aiTeacher/resource_generator.php',
                         'gibbonPlannerEntryID' => $gibbonPlannerEntryID,
                     ];
-                    $aiActions[] = "<a class='button' target='_blank' rel='noopener' href='".htmlPrep($session->get('absoluteURL').'/index.php?'.http_build_query($assessmentParams))."'>".__('Generate Assessment').'</a>';
+                    $aiActions[] = "<a class='button' target='_blank' rel='noopener' href='".htmlPrep($session->get('absoluteURL').'/index.php?'.http_build_query($assessmentParams))."'>".__('Assessment / TCExam CSV').'</a>';
                 }
                 if (!empty($aiActions)) {
                     $form->addRow()->addContent(
-                        "<div class='flex justify-end items-center gap-2 mb-2'>"
-                        ."<span class='text-xs italic text-gray-600'>".__('Save this lesson first to use the latest content.')."</span>"
-                        .implode('', $aiActions)
+                        "<div style='display:flex; justify-content:space-between; align-items:center; gap:18px; margin:0 0 18px 0; padding:12px 14px; border:1px solid #d8dde6; background:#f8fafc;'>"
+                        ."<span style='font-size:0.9em; color:#4b5563;'>".__('AI Lesson + Homework updates this lesson. Assessment / TCExam CSV creates exam questions from this lesson. Save first to use the latest content.')."</span>"
+                        ."<span style='display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end;'>".implode('', $aiActions).'</span>'
                         .'</div>'
                     );
                 }

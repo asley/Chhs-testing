@@ -22,6 +22,10 @@ class LessonContentGenerator
         $prompt = $this->buildPrompt($context, $subject, $outputType, $customInstructions);
         $raw = $this->provider->generate($prompt);
         $draft = $this->decodeJsonResponse($raw);
+        $homeworkDetails = $draft['homework']['details'] ?? '';
+        if (in_array($outputType, ['lesson_homework', 'homework'], true) && trim(strip_tags((string) $homeworkDetails)) === '') {
+            $homeworkDetails = $this->resolveHomeworkDetails($context, $subject);
+        }
 
         return [
             'success' => true,
@@ -32,9 +36,9 @@ class LessonContentGenerator
                 'teachersNotes' => $this->resolveTeacherNotes($draft, $subject, $context),
             ],
             'homework' => [
-                'enabled' => (bool) ($draft['homework']['enabled'] ?? true),
-                'details' => $draft['homework']['details'] ?? '',
-                'timeCap' => $draft['homework']['timeCap'] ?? null,
+                'enabled' => trim(strip_tags((string) $homeworkDetails)) !== '',
+                'details' => $homeworkDetails,
+                'timeCap' => $draft['homework']['timeCap'] ?? ($homeworkDetails !== '' ? 30 : null),
             ],
             'meta' => [
                 'provider' => $this->provider->getProviderName(),
@@ -71,6 +75,9 @@ class LessonContentGenerator
             ."Lesson Content should be concise teaching content the teacher can use in class: key concepts, explanations, examples, important vocabulary, and CSEC-style application points. Aim for 250-450 words unless the teacher asks for more.\n"
             ."The lesson.teachersNotes field is required. Include a short teacher-only note with: preparation reminders, likely misconceptions, quick questioning prompts, and answer guidance for homework or checks. Keep it concise, but do not leave it empty.\n"
             ."The homework.details field should include clear student instructions, numbered tasks, expected output, and marking/collection guidance without revealing answers.\n"
+            ."For output type lesson_homework, homework.enabled must be true and homework.details must be non-empty with 3-5 student tasks based on the lesson objectives/content.\n"
+            ."For output type homework, homework.enabled must be true and homework.details must be non-empty; keep lesson.description brief.\n"
+            ."For output type lesson, set homework.enabled to false and homework.details to an empty string unless the teacher asks for homework.\n"
             ."Output type requested: {$outputType}\n"
             ."Subject: {$subject['subject']}\n"
             ."Course: ".($context['course']['name'] ?? '')." (".($context['course']['nameShort'] ?? '').")\n"
@@ -138,5 +145,19 @@ class LessonContentGenerator
         return '<p><strong>Preparation:</strong> Review the key terms and examples for '.htmlspecialchars($unitName, ENT_QUOTES, 'UTF-8').' before class.</p>'
             .'<p><strong>Misconceptions:</strong> Check that students can explain the difference between similar concepts in '.htmlspecialchars($subjectName, ENT_QUOTES, 'UTF-8').' and can apply them to CSEC-style scenarios.</p>'
             .'<p><strong>Questioning:</strong> Ask students to justify their answers using syllabus vocabulary and real examples.</p>';
+    }
+
+    private function resolveHomeworkDetails(array $context, array $subject): string
+    {
+        $lessonName = htmlspecialchars($context['lesson']['name'] ?? 'today\'s lesson', ENT_QUOTES, 'UTF-8');
+        $unitName = htmlspecialchars($context['unit']['name'] ?? $lessonName, ENT_QUOTES, 'UTF-8');
+        $subjectName = htmlspecialchars($subject['subject'] ?? 'the subject', ENT_QUOTES, 'UTF-8');
+
+        return '<ol>'
+            .'<li>Review the learning objectives and lesson content for <strong>'.$unitName.'</strong>.</li>'
+            .'<li>Write five key terms from the lesson and explain each one in your own words.</li>'
+            .'<li>Answer three CSEC-style short-answer questions based on <strong>'.$lessonName.'</strong>, using complete sentences and correct '.$subjectName.' vocabulary.</li>'
+            .'<li>Prepare one question about any part of the lesson that needs clarification.</li>'
+            .'</ol>';
     }
 }
