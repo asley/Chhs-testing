@@ -144,7 +144,7 @@ function generateLessonPlan($pdo, $subject, $topic, $gradeLevel, $objectives) { 
                    "The learning objectives are: {$objectives}. " .
                    "Include learning objectives (elaborate on the provided ones if necessary), activities, assessment criteria, and resources needed.";
         
-        error_log("AI Teacher - generateLessonPlan: Sending prompt to OpenAI: " . $prompt); // Log the prompt
+        error_log("AI Teacher - generateLessonPlan: Sending prompt to OpenAI. Prompt hash: " . hash('sha256', $prompt));
 
         $response = $api->generateResponse($prompt);
         
@@ -152,7 +152,7 @@ function generateLessonPlan($pdo, $subject, $topic, $gradeLevel, $objectives) { 
             error_log("AI Teacher - generateLessonPlan: OpenAIAPI->generateResponse returned null. Check OpenAIAPI class and API communication.");
             return "Error: The AI service returned an empty response. Please try again or check logs.";
         } elseif (empty(trim($response))) {
-            error_log("AI Teacher - generateLessonPlan: OpenAIAPI->generateResponse returned an empty string. Prompt: " . $prompt);
+            error_log("AI Teacher - generateLessonPlan: OpenAIAPI->generateResponse returned an empty string. Prompt hash: " . hash('sha256', $prompt));
             return "Error: The AI service returned an empty lesson plan. This might be due to the prompt or an API issue.";
         }
         
@@ -207,9 +207,9 @@ function generateAssessment($pdo, $subject, $topic, $assessmentType, $customInst
     // you can just use: $api = new DeepSeekAPI($apiKey);
     $api = new \Gibbon\Module\aiTeacher\DeepSeekAPI($apiKey); 
     
-    error_log("[moduleFunctions - generateAssessment] Prompt sent to DeepSeekAPI: " . $prompt);
+    error_log("[moduleFunctions - generateAssessment] Prompt sent to DeepSeekAPI. Prompt hash: " . hash('sha256', $prompt));
     $generatedContent = $api->generateResponse($prompt);
-    error_log("[moduleFunctions - generateAssessment] Raw response from DeepSeekAPI: " . print_r($generatedContent, true));
+    error_log("[moduleFunctions - generateAssessment] Response received from DeepSeekAPI.");
 
     if ($generatedContent === null) {
         // The generateResponse method in DeepSeekAPI now returns null on failure
@@ -218,7 +218,7 @@ function generateAssessment($pdo, $subject, $topic, $assessmentType, $customInst
         throw new \Exception("Failed to get a valid response from the AI service. Check API logs.");
     }
 
-    error_log("[moduleFunctions - generateAssessment] Content returned by generateAssessment: " . print_r($generatedContent, true));
+    error_log("[moduleFunctions - generateAssessment] Content returned by generateAssessment.");
     return $generatedContent;
 }
 
@@ -978,4 +978,3 @@ function updateConversationTopic($pdo, $sessionID, $topic, $gibbonPersonID) {
         return false;
     }
 }
-

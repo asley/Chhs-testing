@@ -13,17 +13,17 @@ class DeepSeekAPI {
         $this->apiKey = $apiKey;
     }
 
-    public function generateResponse(string $prompt, string $model = 'deepseek-v4-flash', float $temperature = 0.7, int $maxTokens = 1024): ?string {
+    public function generateResponse(string $prompt, string $model = 'deepseek-chat', float $temperature = 0.7, int $maxTokens = 1024): ?string {
         $data = [
-            'model' => 'deepseek-v4-flash',
+            'model' => $model,
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ],
-            'temperature' => 0.7,
-            'max_tokens' => 1024
+            'temperature' => $temperature,
+            'max_tokens' => $maxTokens
         ];
 
-        error_log("[DeepSeek] Request Data: " . json_encode($data));
+        error_log("[DeepSeek] Request started. Model: {$model}, Prompt hash: " . hash('sha256', $prompt));
 
         $startTime = microtime(true);
         $result = $this->send($data);
@@ -35,7 +35,7 @@ class DeepSeekAPI {
             if (isset($result['response']['choices'][0]['message']['content'])) {
                 return $result['response']['choices'][0]['message']['content'];
             } else {
-                error_log("[DeepSeek] API 200 but missing content. Full response: " . print_r($result['response'], true));
+                error_log("[DeepSeek] API 200 but missing content.");
                 return "Error: The AI service returned a successful response but no content was found. This may be due to a malformed or incomplete reply. Please try again or reduce your prompt size.";
             }
         }
@@ -44,10 +44,6 @@ class DeepSeekAPI {
         $curlErrno = $result['curl_errno'] ?? null;
 
         error_log("[DeepSeek] Error: {$errorMessage}");
-        if (isset($result['response'])) {
-            error_log("[DeepSeek] Full Response: " . print_r($result['response'], true));
-        }
-
         if ($curlErrno === 28) {
             return "Error from AI Service: The request to the AI service timed out. Please try again later. (Details: {$errorMessage})";
         }
@@ -116,7 +112,7 @@ class DeepSeekAPI {
     
         if ($httpcode != 200) {
             // Log and return error array instead of throwing
-            error_log("[DeepSeek] API Error: HTTP Code {$httpcode}. Response: {$response}");
+            error_log("[DeepSeek] API Error: HTTP Code {$httpcode}");
             return [
                 'success' => false,
                 'error' => "API Error: HTTP Code {$httpcode}",
@@ -133,7 +129,7 @@ class DeepSeekAPI {
                 'raw_response' => $response
             ];
         }
-        error_log("[DeepSeek] Raw Response: " . $response);
+        error_log("[DeepSeek] Response decoded successfully.");
         return [
             'success' => true,
             'response' => $json

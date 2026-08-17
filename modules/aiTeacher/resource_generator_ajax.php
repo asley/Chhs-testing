@@ -4,7 +4,6 @@ header('Content-Type: application/json; charset=utf-8');
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
-ini_set('error_log', __DIR__ . '/php-error.log');
 ini_set('memory_limit', '512M');
 set_time_limit(180);
 
@@ -38,8 +37,13 @@ set_exception_handler(function($e) {
 });
 
 try {
-    // Remove access check for now to prevent undefined function error
-    // TODO: Add access control if needed, but only if Gibbon is loaded
+    if (!isActionAccessible($guid, $connection2, '/modules/aiTeacher/resource_generator.php')) {
+        json_response([
+            'success' => false,
+            'error' => 'You do not have access to this action.',
+            'message' => 'Access denied'
+        ]);
+    }
 
     // Safe settings fetch
     if (!function_exists('getAITeacherSettings')) {
@@ -49,7 +53,7 @@ try {
             'message' => 'Configuration error'
         ]);
     }
-    error_log("[ResourceGenerator] Incoming POST Data: " . print_r($_POST, true));
+    error_log("[ResourceGenerator] Request received. Payload hash: " . hash('sha256', json_encode($_POST)));
 
     $settings = getAITeacherSettings($pdo);
     if (empty($settings['deepseek_api_key'])) {
@@ -81,8 +85,6 @@ try {
                 'error' => $assessmentResult
             ]);
         } elseif (!empty($assessmentResult)) {
-            error_log("[ResourceGenerator] Assessment Result (before encoding/cleaning): " . $assessmentResult);
-
             $cleanContent = mb_convert_encoding($assessmentResult, 'UTF-8', 'UTF-8');
             $cleanContent = preg_replace('/[\x00-\x08\x0B-\x0C\x0E-\x1F]/', '', $cleanContent);
             $response = [
@@ -90,7 +92,7 @@ try {
                 'message' => 'Assessment Generated Successfully!',
                 'formatted_assessment' => $cleanContent
             ];
-            error_log("[ResourceGenerator] Final JSON Response: " . json_encode($response));
+            error_log("[ResourceGenerator] Assessment generated successfully.");
             json_response($response);
         } else {
             json_response([
@@ -98,7 +100,7 @@ try {
                 'error' => 'The AI service returned an empty or invalid response.'
         ]);
     }
-    error_log("[ResourceGenerator] Final JSON Response: " . json_encode(['success' => false, 'error' => 'The AI service returned an empty or invalid response.']));
+    error_log("[ResourceGenerator] Empty AI response.");
 } catch (\Exception $e) {
         error_log("AI Teacher - resource_generator_ajax.php - Exception: " . $e->getMessage() . "\nStack Trace:\n" . $e->getTraceAsString());
         $errorResponse = [
