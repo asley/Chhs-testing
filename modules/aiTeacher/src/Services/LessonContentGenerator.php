@@ -26,13 +26,14 @@ class LessonContentGenerator
         if (in_array($outputType, ['lesson_homework', 'homework'], true) && trim(strip_tags((string) $homeworkDetails)) === '') {
             $homeworkDetails = $this->resolveHomeworkDetails($context, $subject);
         }
+        $homeworkDetails = $this->normalizeGeneratedHtml($homeworkDetails);
 
         return [
             'success' => true,
             'lesson' => [
                 'name' => $draft['lesson']['name'] ?? '',
                 'summary' => $draft['lesson']['summary'] ?? '',
-                'description' => $draft['lesson']['description'] ?? $this->htmlFromText($raw),
+                'description' => $this->normalizeGeneratedHtml($draft['lesson']['description'] ?? $this->htmlFromText($raw)),
                 'teachersNotes' => $this->resolveTeacherNotes($draft, $subject, $context),
             ],
             'homework' => [
@@ -69,7 +70,7 @@ class LessonContentGenerator
         return "You are {$subject['agent']}, a CSEC teacher generating classroom-ready Planner draft content.\n"
             ."Return strict JSON only. Do not wrap it in Markdown.\n"
             ."JSON shape: {\"lesson\":{\"name\":\"\",\"summary\":\"\",\"description\":\"\",\"teachersNotes\":\"\"},\"homework\":{\"enabled\":true,\"details\":\"\",\"timeCap\":30}}\n"
-            ."Use simple HTML in description, teachersNotes, and homework.details. Do not include script, iframe, or external media.\n"
+            ."Use simple HTML in description, teachersNotes, and homework.details. Do not use Markdown. Do not include script, iframe, or external media.\n"
             ."The lesson.description field should contain only two sections: Learning Objectives and Lesson Content. Do not create a full lesson plan with starter, timing, activities, plenary, differentiation, resources, or teacher/student action sections unless the teacher specifically asks for them.\n"
             ."Learning Objectives should be 3-5 clear, measurable objectives aligned to the unit and CSEC level.\n"
             ."Lesson Content should be concise teaching content the teacher can use in class: key concepts, explanations, examples, important vocabulary, and CSEC-style application points. Aim for 250-450 words unless the teacher asks for more.\n"
@@ -136,7 +137,7 @@ class LessonContentGenerator
     {
         $teachersNotes = trim((string) ($draft['lesson']['teachersNotes'] ?? ''));
         if ($teachersNotes !== '') {
-            return $teachersNotes;
+            return $this->normalizeGeneratedHtml($teachersNotes);
         }
 
         $unitName = $context['unit']['name'] ?? 'the selected unit';
@@ -145,6 +146,63 @@ class LessonContentGenerator
         return '<p><strong>Preparation:</strong> Review the key terms and examples for '.htmlspecialchars($unitName, ENT_QUOTES, 'UTF-8').' before class.</p>'
             .'<p><strong>Misconceptions:</strong> Check that students can explain the difference between similar concepts in '.htmlspecialchars($subjectName, ENT_QUOTES, 'UTF-8').' and can apply them to CSEC-style scenarios.</p>'
             .'<p><strong>Questioning:</strong> Ask students to justify their answers using syllabus vocabulary and real examples.</p>';
+    }
+
+    private function normalizeGeneratedHtml(string $content): string
+    {
+        $content = trim($content);
+        if ($content === '') {
+            return '';
+        }
+
+        $hasBlockHtml = preg_match('/<\/?(p|ul|ol|li|h[1-6])\b/i', $content);
+        $content = preg_replace('/\*\*(.*?)\*\*/s', '<strong>$1</strong>', $content);
+        if ($hasBlockHtml) {
+            return $content;
+        }
+
+        $lines = preg_split('/\R+/', $content);
+        $html = '';
+        $listItems = [];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+
+            if (preg_match('/^[-*]\s+(.+)$/', $line, $matches)) {
+                $listItems[] = $matches[1];
+                continue;
+            }
+
+            if (!empty($listItems)) {
+                $html .= $this->buildUnorderedList($listItems);
+                $listItems = [];
+            }
+
+            if (preg_match('/^#{2,4}\s+(.+)$/', $line, $matches)) {
+                $html .= '<h4>'.$matches[1].'</h4>';
+            } else {
+                $html .= '<p>'.$line.'</p>';
+            }
+        }
+
+        if (!empty($listItems)) {
+            $html .= $this->buildUnorderedList($listItems);
+        }
+
+        return $html;
+    }
+
+    private function buildUnorderedList(array $items): string
+    {
+        $html = '<ul>';
+        foreach ($items as $item) {
+            $html .= '<li>'.$item.'</li>';
+        }
+
+        return $html.'</ul>';
     }
 
     private function resolveHomeworkDetails(array $context, array $subject): string
