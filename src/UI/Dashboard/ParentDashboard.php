@@ -531,14 +531,14 @@ class ParentDashboard implements OutputableInterface, ContainerAwareInterface
             $gibbonSchoolYearID = $this->session->get('gibbonSchoolYearID');
             $student = $this->container->get(StudentGateway::class)->selectActiveStudentByPerson($gibbonSchoolYearID, $gibbonPersonID)->fetch();
 
-            if (empty($student) || !$activitiesModuleLoaded) {
+            if (empty($student) || !$activitiesModuleLoaded || !class_exists(ActivitiesViewParent::class)) {
                 $activitiesOutput .= Format::alert(__('There are no records to display.'), 'empty');
+            } else {
+                /* @phpstan-ignore class.notFound */
+                $activitiesOutput .= $this->container->get(ActivitiesViewParent::class)
+                    ->createTable($gibbonSchoolYearID, $gibbonPersonID, $student)
+                    ->getOutput();
             }
-            
-            /* @phpstan-ignore class.notFound */
-            $activitiesOutput .= $this->container->get(ActivitiesViewParent::class)
-                ->createTable($gibbonSchoolYearID, $gibbonPersonID, $student)
-                ->getOutput();
 
         } else {
             $activitiesOutput .= Format::alert(__('There are no records to display.'), 'empty');
