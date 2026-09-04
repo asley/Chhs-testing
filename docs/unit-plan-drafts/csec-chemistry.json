@@ -1,0 +1,67 @@
+{
+  "subject": "CSEC Chemistry",
+  "sourcePdf": "docs/syllabus copy/CSEC-Chemistry-Syllabus.pdf",
+  "generatedAt": "2026-09-03T04:02:53+00:00",
+  "intendedUse": "Review draft for Gibbon Planner unit and block seeding. Do not import without human verification.",
+  "mapping": {
+    "unit": "gibbonUnit candidate",
+    "generalObjective": "gibbonOutcome candidate",
+    "specificObjective": "gibbonUnitBlock candidate"
+  },
+  "warnings": [],
+  "units": [
+    {
+      "sequence": "C",
+      "title": "Section C: Inorganic Chemistry",
+      "generalObjectives": [],
+      "specificObjectives": [],
+      "sourceExcerpt": "SUGGESTIONS FOR TEACHING THE SYLLABUS\nIt is recommended that Section A be taught first. However, in teaching each section, teachers need\nnot follow the sequence given. SI units and IUPAC conversion of nomenclature should be used\nthroughout.\nTeachers are strongly encouraged to use inquiry-based strategies to teach chemical concepts.\nTeachers should ensure that their lessons stimulate the students’ curiosity and facilitate critical\nthinking and problem solving. This will help students view Chemistry as a dynamic and exciting\ninvestigative process. The provision of cooperative and collaborative activities is encouraged.\nThe general and specific objectives indicate the scope of the content including practical work that\nshould be covered. However, unfamiliar situations may be presented as stimulus material in\nexamination questions.\nThis syllabus caters to varying teaching and learning styles, with specific attention made to ensure\nthe interrelatedness of concepts. The fourth column entitled, “Skills and Interrelationships” states\nwhich specific objectives are best suited for Observation, Recording and Reporting (ORR),\nManipulation and Measurement (MM), Analysis and Interpretation (AI), and Planning and Designing\n(PD) skills. It also highlights connections between chemical concepts and fields of Biology, Physics,\nMathematics and Agricultural Science. Whenever possible, a variety of teaching and learning\nstrategies suitable to varying learning needs of students should be employed with special attention\ngiven to the identification of variables and the use of controls in chemical investigations. The need for\nrepeated investigations and observations to arrive at meaningful conclusions should be emphasised.\nIn addition to developing a solid foundation of factual information, teachers are encouraged to\nemphasise the application of scientific concepts and principles and minimise memorisation and rote\nlearning. In order to make the course as relevant as possible, every opportunity should be taken to\nhelp students make the connections between chemistry and their environment.\nThe role of the teacher is to facilitate students’ learning accurate and unbiased information that will\nindirectly contribute to a more scientifically literate citizenry that is capable of making educated\ndecisions regarding the world in which we live.\nCERTIFICATION AND DEFINITION OF PROFILES\nThe syllabus will be examined for General Proficiency certification.\n[excerpt truncated]",
+      "warnings": [
+        "No general objectives were detected for this unit.",
+        "No specific objectives were detected for this unit."
+      ]
+    },
+    {
+      "sequence": "A",
+      "title": "Section A: Principles of Chemistry",
+      "generalObjectives": [
+        "be aware that matter is made up of particles;",
+        "understand that different types of mixtures can be separated based on the properties of the components;",
+        "be familiar with the concept of the atom as the basic building block of matter;",
+        "appreciate that matter can be classified based on physical or chemical properties;",
+        "be aware of the different forces of attraction that exist between particles;",
+        "understand the mole as the unit for comparison of amounts of matter;",
+        "appreciate that properties of chemicals will affect their reactions;",
+        "assess the impact of certain materials on living systems and the environment;",
+        "be familiar with the composition of certain materials and develop the ability to make reasoned choices concerning their use;",
+        "understand that the rate at which a chemical reaction proceeds is dependent on a number of physical factors;",
+        "appreciate that energy changes occur during the course of a chemical reaction;",
+        "appreciate the importance of chemistry to the environment."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1.1",
+          "title": "explain how Evidence obtained Experiments of Biology- Osmosis,",
+          "content": "evidence supports from practical work diffusion of ammonia diffusion. the particulate involving processes, and hydrogen chloride Physics-Kinetic theory of matter; such as diffusion and gases in cylindrical Theory. osmosis. Use of salt tube. Osmosis of or sugar to control Pawpaw (green) strips Skills: ORR; PD. garden pests and as a in a container of preservative. distilled water. Potassium manganate (VII) in water."
+        },
+        {
+          "sequence": "1.2",
+          "title": "distinguish among Arrangement of",
+          "content": "the three states of particles, energy of matter; particles, strength of forces of interaction. Consideration of physical characteristics of states. Example: Volume, density, compressibility."
+        },
+        {
+          "sequence": "1.3",
+          "title": "explain the changes Consideration of Heat the following ice, Physics - Specific",
+          "content": "between the three freezing, melting, water, butter, Iodine latent heat. states of matter in boiling, evaporation, (in a fume hood). terms of energy and sublimation, Skills: MM; AI; arrangement of condensation; heating ORR. particles. and cooling curves. 2. MIXTURES AND SEPARATIONS"
+        },
+        {
+          "sequence": "2.1",
+          "title": "distinguish between Elements, Compare boiling Biology – Solutions",
+          "content": "pure substances and compounds, atoms, point of pure water in life processes. mixtures; molecules, fixed and sodium composition, chloride solution. Skill: MM. properties, variable composition, variable properties."
+        }
+      ],
+      "sourceExcerpt": "Section A is designed as an introduction to fundamental chemical concepts and principles. A study of\nthe particulate nature of matter, structure, bonding, chemical properties and physical properties of\nelements, compounds and mixtures is included as well as certain quantitative properties.\nComprehension of these concepts and principles will help students appreciate the importance of\nchemistry as it relates to the environment and the daily activities of man.\nGENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. be aware that matter is made up of particles;\n2. understand that different types of mixtures can be separated based on the properties of the\ncomponents;\n3. be familiar with the concept of the atom as the basic building block of matter;\n4. appreciate that matter can be classified based on physical or chemical properties;\n5. be aware of the different forces of attraction that exist between particles;\n6. understand the mole as the unit for comparison of amounts of matter;\n7. appreciate that properties of chemicals will affect their reactions;\n8. assess the impact of certain materials on living systems and the environment;\n9. be familiar with the composition of certain materials and develop the ability to make reasoned\nchoices concerning their use;\n10. understand that the rate at which a chemical reaction proceeds is dependent on a number of\nphysical factors;\n11. appreciate that energy changes occur during the course of a chemical reaction;\n12. appreciate the importance of chemistry to the environment.\nSECTION A - PRINCIPLES OF CHEMISTRY (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\n1. STATES OF MATTER\nStudents should be able to:\n1.1 explain how Evidence obtained Experiments of Biology- Osmosis,\nevidence supports from practical work diffusion of ammonia diffusion.\nthe particulate involving processes, and hydrogen chloride Physics-Kinetic\ntheory of matter; such as diffusion and gases in cylindrical Theory.\nosmosis. Use of salt tube. Osmosis of\nor sugar to control Pawpaw (green) strips Skills: ORR; PD.\ngarden pests and as a in a container of\npreservative. distilled water.\nPotassium manganate\n(VII) in water.\n1.2 distinguish among Arrangement of\nthe three states of particles, energy of\nmatter; particles, strength of\nforces of interaction.\nConsideration of\nphysical\ncharacteristics of\nstates.\nExample: Volume,\ndensity,\ncompressibility.\n[excerpt truncated]",
+      "warnings": []
+    }
+  ]
+}

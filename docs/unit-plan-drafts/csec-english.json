@@ -1,0 +1,57 @@
+{
+  "subject": "CSEC English",
+  "sourcePdf": "docs/syllabus copy/CSEC-English-Syllabus.pdf",
+  "generatedAt": "2026-09-03T04:02:53+00:00",
+  "intendedUse": "Review draft for Gibbon Planner unit and block seeding. Do not import without human verification.",
+  "mapping": {
+    "unit": "gibbonUnit candidate",
+    "generalObjective": "gibbonOutcome candidate",
+    "specificObjective": "gibbonUnitBlock candidate"
+  },
+  "warnings": [],
+  "units": [
+    {
+      "sequence": "A",
+      "title": "Section A: Drama",
+      "generalObjectives": [],
+      "specificObjectives": [],
+      "sourceExcerpt": "Question 1: Shakespeare\nQuestion 2: Modern Drama",
+      "warnings": [
+        "No general objectives were detected for this unit.",
+        "No specific objectives were detected for this unit."
+      ]
+    },
+    {
+      "sequence": "B",
+      "title": "Section B: Poetry",
+      "generalObjectives": [],
+      "specificObjectives": [],
+      "sourceExcerpt": "Questions 3 and 4",
+      "warnings": [
+        "No general objectives were detected for this unit.",
+        "No specific objectives were detected for this unit."
+      ]
+    },
+    {
+      "sequence": "C",
+      "title": "Section C: Prose Fiction",
+      "generalObjectives": [],
+      "specificObjectives": [
+        {
+          "sequence": "4",
+          "title": "Write your answers in the spaces provided in this answer booklet.",
+          "content": "5. Do NOT write in the margins."
+        },
+        {
+          "sequence": "6",
+          "title": "Use ONLY the books from the prescribed list for this examination to answer the",
+          "content": "questions. 7. You are advised to take some time to read through the paper and plan your answers. 8. If you need to rewrite any answer and there is not enough space to do so on the original page, you must use the extra lined page(s) provided at the back of this booklet. Remember to draw a line through your original answer. 9. If you use the extra page(s) you MUST write the question number clearly in the box provided at the top of the extra page(s) and, where relevant, include the question part beside the answer. DO NOT TURN THIS PAGE UNTIL YOU ARE TOLD TO DO SO. Copyright © 2017 Caribbean Examinations Council All rights reserved. GO ON TO THE NEXT PAGE 01219020/SPEC 2017 For each question in Sections A, B, and C, in addition to the 25 marks indicated for content and argument, 10 marks is allocated for language, organization and competence in the mechanics of writing."
+        }
+      ],
+      "sourceExcerpt": "Questions 5 and 6: Novel\nQuestions 7 and 8: Short Story\n2. Answer THREE questions only, ONE question from EACH section.\n3. You MUST write in essay format and develop ALL your responses fully.\n4. Write your answers in the spaces provided in this answer booklet.\n5. Do NOT write in the margins.\n6. Use ONLY the books from the prescribed list for this examination to answer the\nquestions.\n7. You are advised to take some time to read through the paper and plan your answers.\n8. If you need to rewrite any answer and there is not enough space to do so on the original\npage, you must use the extra lined page(s) provided at the back of this booklet. Remember\nto draw a line through your original answer.\n9. If you use the extra page(s) you MUST write the question number clearly in the box\nprovided at the top of the extra page(s) and, where relevant, include the question part\nbeside the answer.\nDO NOT TURN THIS PAGE UNTIL YOU ARE TOLD TO DO SO.\nCopyright © 2017 Caribbean Examinations Council\nAll rights reserved.\nGO ON TO THE NEXT PAGE\n01219020/SPEC 2017\nFor each question in Sections A, B, and C, in addition to the 25 marks indicated for content and\nargument, 10 marks is allocated for language, organization and competence in the mechanics of\nwriting.\nSECTION A — DRAMA\nAnswer ONE question in this section.\nTHE TEMPEST — William Shakespeare\nEITHER\n1. “The Tempest is an exploration of different types of relationships.”\nWrite an essay in which you describe TWO different types of relationships in the play. In this essay,\nyou must also discuss ONE theme that is portrayed in any ONE of the relationships described, and\nexamine ONE dramatic technique Shakespeare uses to present relationships in the play as a whole.\nTotal 35 marks\nOR\nTI -JEAN AND HIS BROTHERS — Derek Walcott\n2. “A dominant theme in Ti Jean and His Brothers is good versus evil.”\nWrite an essay in which you describe TWO incidents in which the conflict between good and evil\nis presented. In this essay, you must also discuss how the MAIN characters are affected in ONE of\nthe incidents, and examine ONE technique that Walcott uses to present the theme of good versus\nevil in the play.\nTotal 35 marks\nGO ON TO THE NEXT PAGE\n01219020/SPEC 2017\nYour answer to the question you have chosen in Section A – Drama should be written here.\nRemember to write your question number in the box provided below.\nQuestion No.\n[excerpt truncated]",
+      "warnings": [
+        "No general objectives were detected for this unit."
+      ]
+    }
+  ]
+}

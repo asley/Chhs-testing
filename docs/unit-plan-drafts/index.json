@@ -1,0 +1,166 @@
+{
+  "generatedAt": "2026-09-03T04:03:01+00:00",
+  "source": "scripts/build-csec-unit-plan-drafts.py",
+  "results": [
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Biology-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-biology.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-biology.json",
+      "units": 3,
+      "specificObjectives": 8,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Chemistry-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-chemistry.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-chemistry.json",
+      "units": 2,
+      "specificObjectives": 4,
+      "warnings": 2
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-EDPM-Syllabus-Revised-2024.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-edpm.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-edpm.json",
+      "units": 9,
+      "specificObjectives": 19,
+      "warnings": 1
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-English-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-english.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-english.json",
+      "units": 3,
+      "specificObjectives": 2,
+      "warnings": 5
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Geography-Syllabus copy.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-geography.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-geography.json",
+      "units": 1,
+      "specificObjectives": 4,
+      "warnings": 2
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-HOME-ECONOMICS-SYLLABUS-Revised-2015.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-home-economics-2015.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-home-economics-2015.json",
+      "units": 21,
+      "specificObjectives": 189,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-HOME-ECONOMICS-SYLLABUS-Updated-July-2025-2.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-home-economics-updated-july-2025-2.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-home-economics-updated-july-2025-2.json",
+      "units": 21,
+      "specificObjectives": 189,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-HOME-ECONOMICS-SYLLABUS-Updated-July-2025.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-home-economics-updated-july-2025.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-home-economics-updated-july-2025.json",
+      "units": 21,
+      "specificObjectives": 189,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Home-Economics-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-home-economics.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-home-economics.json",
+      "units": 21,
+      "specificObjectives": 189,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Industrial-Technology-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-industrial-technology.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-industrial-technology.json",
+      "units": 18,
+      "specificObjectives": 116,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Information-Technology-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-information-technology.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-information-technology.json",
+      "units": 9,
+      "specificObjectives": 34,
+      "warnings": 3
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Integrated-Science-Syllabus-Revised.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-integrated-science.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-integrated-science.json",
+      "units": 20,
+      "specificObjectives": 25,
+      "warnings": 22
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Mathematics-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-mathematics.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-mathematics.json",
+      "units": 9,
+      "specificObjectives": 49,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Music-Syllabus-Amended.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-music-amended.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-music-amended.json",
+      "units": 4,
+      "specificObjectives": 29,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Office-Administration-Syllabus-Revised-2024.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-office-administration.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-office-administration.json",
+      "units": 11,
+      "specificObjectives": 32,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Physical-Education-and-Sport-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-physical-education-and-sport.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-physical-education-and-sport.json",
+      "units": 2,
+      "specificObjectives": 49,
+      "warnings": 2
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Physics-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-physics.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-physics.json",
+      "units": 4,
+      "specificObjectives": 9,
+      "warnings": 0
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Principles-of-Accounts-Syllabus.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-principles-of-accounts.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-principles-of-accounts.json",
+      "units": 12,
+      "specificObjectives": 48,
+      "warnings": 13
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Principles-of-Business-Syllabus-.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-principles-of-business.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-principles-of-business.json",
+      "units": 11,
+      "specificObjectives": 54,
+      "warnings": 12
+    },
+    {
+      "pdf": "/Applications/MAMP/htdocs/chhs-testing/docs/syllabus copy/CSEC-Social-Studies-Syllabus-July-2023.pdf",
+      "markdown": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-social-studies-july-2023.md",
+      "json": "/Applications/MAMP/htdocs/chhs-testing/docs/unit-plan-drafts/csec-social-studies-july-2023.json",
+      "units": 2,
+      "specificObjectives": 3,
+      "warnings": 0
+    }
+  ]
+}

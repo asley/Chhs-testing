@@ -28,20 +28,7 @@ from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "docs" / "unit-plan-drafts"
-
-DEFAULT_PDFS = [
-    REPO_ROOT / "docs/syllabus copy/CSEC-Biology-Syllabus.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Chemistry-Syllabus.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-English-Syllabus.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Geography-Syllabus copy.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Integrated-Science-Syllabus-Revised.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Mathematics-Syllabus.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Office-Administration-Syllabus-Revised-2024.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Physics-Syllabus.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Principles-of-Accounts-Syllabus.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Principles-of-Business-Syllabus-.pdf",
-    REPO_ROOT / "docs/syllabus copy/CSEC-Social-Studies-Syllabus-July-2023.pdf",
-]
+DEFAULT_SYLLABUS_DIR = REPO_ROOT / "docs" / "syllabus copy"
 
 
 STOP_HEADINGS = {
@@ -125,7 +112,7 @@ class UnitDraft:
 def run() -> int:
     args = parse_args()
     output_dir = resolve_path(args.output_dir)
-    pdfs = [resolve_path(path) for path in (args.pdf or DEFAULT_PDFS)]
+    pdfs = [resolve_path(path) for path in args.pdf] if args.pdf else discover_default_pdfs()
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -148,7 +135,7 @@ def run() -> int:
         unit_count = len(draft["units"])
         objective_count = sum(len(unit["specificObjectives"]) for unit in draft["units"])
         warning_count = len(draft["warnings"]) + sum(len(unit["warnings"]) for unit in draft["units"])
-        print(f"Wrote {md_path.relative_to(REPO_ROOT)} ({unit_count} units, {objective_count} objectives, {warning_count} warnings)")
+        print(f"Wrote {display_path(md_path)} ({unit_count} units, {objective_count} objectives, {warning_count} warnings)")
         results.append(
             {
                 "pdf": str(pdf_path),
@@ -167,7 +154,7 @@ def run() -> int:
     }
     index_path = output_dir / "index.json"
     index_path.write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"Wrote {index_path.relative_to(REPO_ROOT)}")
+    print(f"Wrote {display_path(index_path)}")
 
     return 0
 
@@ -177,7 +164,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--pdf",
         action="append",
-        help="PDF to process. Can be passed more than once. Defaults to the configured CSEC syllabus list.",
+        help="PDF to process. Can be passed more than once. Defaults to every CSEC syllabus PDF in docs/syllabus copy.",
     )
     parser.add_argument(
         "--output-dir",
@@ -187,11 +174,28 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def discover_default_pdfs() -> list[Path]:
+    pdfs = [
+        path
+        for path in DEFAULT_SYLLABUS_DIR.glob("CSEC*.pdf")
+        if "syllabus" in path.name.lower()
+    ]
+
+    return sorted(pdfs, key=lambda path: path.name.lower())
+
+
 def resolve_path(path: str | Path) -> Path:
     path = Path(path)
     if path.is_absolute():
         return path
     return (REPO_ROOT / path).resolve()
+
+
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
 
 
 def extract_pdf_text(pdf_path: Path) -> str:

@@ -1,0 +1,387 @@
+{
+  "subject": "CSEC Mathematics",
+  "sourcePdf": "docs/syllabus copy/CSEC-Mathematics-Syllabus.pdf",
+  "generatedAt": "2026-09-03T04:02:58+00:00",
+  "intendedUse": "Review draft for Gibbon Planner unit and block seeding. Do not import without human verification.",
+  "mapping": {
+    "unit": "gibbonUnit candidate",
+    "generalObjective": "gibbonOutcome candidate",
+    "specificObjective": "gibbonUnitBlock candidate"
+  },
+  "warnings": [],
+  "units": [
+    {
+      "sequence": "1",
+      "title": "Section 1: Number Theory and Computation",
+      "generalObjectives": [
+        "demonstrate computational skills;",
+        "be aware of the importance of accuracy in computation;",
+        "appreciate the need for numeracy in everyday life;",
+        "demonstrate the ability to make estimates fit for purpose;",
+        "understand and appreciate the decimal numeration system;",
+        "appreciate the development of different numeration systems;",
+        "demonstrate the ability to use rational approximations of real numbers;",
+        "demonstrate the ability to use number properties to solve problems; and,",
+        "develop the ability to use patterns, trends and investigative skills."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "distinguish among sets of Sets of numbers:",
+          "content": "numbers; natural numbers ℕ = {1, 2, 3, . . . }; whole numbers 𝕎 = {0, 1, 2, 3, . . . }; integers ℤ = {. . . −2, −1, 0, 1, 2, . . . }; rational numbers ℚ = {𝑝𝑞 ∶ 𝑝 and 𝑞 are integers, 𝑞 ≠ 𝜊}; irrational numbers (numbers that cannot be expressed as terminating or recurring decimals, for example, numbers such as  and √2); real numbers ℝ = {the union of rational and irrational numbers}; inclusion relations, for example, ℕ ⊂ 𝕎 ⊂ ℤ ⊂ ℚ ⊂ ℝ; and, sequences of numbers that have a recognisable pattern; factors and multiples; square numbers; even numbers; odd numbers; prime numbers; composite numbers."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. demonstrate computational skills;\n2. be aware of the importance of accuracy in computation;\n3. appreciate the need for numeracy in everyday life;\n4. demonstrate the ability to make estimates fit for purpose;\n5. understand and appreciate the decimal numeration system;\n6. appreciate the development of different numeration systems;\n7. demonstrate the ability to use rational approximations of real numbers;\n8. demonstrate the ability to use number properties to solve problems; and,\n9. develop the ability to use patterns, trends and investigative skills.\nSPECIFIC OBJECTIVES CONTENT/ EXPLANATORY NOTES\nStudents should be able to:\n1. distinguish among sets of Sets of numbers:\nnumbers;\nnatural numbers ℕ = {1, 2, 3, . . . };\nwhole numbers 𝕎 = {0, 1, 2, 3, . . . };\nintegers ℤ = {. . . −2, −1, 0, 1, 2, . . . };\nrational numbers ℚ = {𝑝𝑞 ∶\n𝑝 and 𝑞 are integers, 𝑞 ≠ 𝜊};\nirrational numbers (numbers that cannot be\nexpressed as terminating or recurring decimals, for\nexample, numbers such as  and √2);\nreal numbers ℝ =\n{the union of rational and irrational numbers};\ninclusion relations, for example,\nℕ ⊂ 𝕎 ⊂ ℤ ⊂ ℚ ⊂ ℝ; and,\nsequences of numbers that have a recognisable\npattern; factors and multiples; square numbers;\neven numbers; odd numbers; prime numbers;\ncomposite numbers.\nSECTION 1: NUMBER THEORY AND COMPUTATION (cont’d)\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n2. compute powers of real numbers of Including squares, square roots, cubes, cube roots.\nthe form 𝓍 𝑎 , where 𝑎 ∈ ℚ ;\n3. evaluate numerical expressions Addition, multiplication, subtraction and division\nusing any of the four basic of whole numbers, fractions and decimals; order of\noperations on real numbers; operations.\n4. convert among fractions, percents Conversion of fractions to decimals and percents,\nand decimals; conversion of decimal to fractions and percents,\nconversion of percents to decimals and fractions.\n5. list the set of factors and multiples Positive and negative factors of an integer.\nof a given integer;\n6. compute the H.C.F. or L.C.M. of Highest common factors and lowest common\ntwo or more positive integers; multiples.\n7. state the value of a digit of a Place value and face value of numbers in bases 2,\nnumeral in a given base; 4, 8, and 10.\n8. convert from one set of units to Conversion using conversion scales, converting\nanother; within the metric scales, 12-hour and 24-hour\nclock.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "2",
+      "title": "Section 2: Consumer Arithmetic",
+      "generalObjectives": [
+        "develop the ability to perform the calculations required in normal business transactions, and in computing their own budgets;",
+        "appreciate the need for both accuracy and speed in calculations;",
+        "appreciate the advantages and disadvantages of different ways of investing money;",
+        "appreciate that business arithmetic is indispensable in everyday life; and,",
+        "demonstrate the ability to use concepts in consumer arithmetic to describe, model and solve real-world problems."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "4",
+          "title": "solve problems involving marked",
+          "content": "price, selling price, cost price, profit, loss or discount;"
+        },
+        {
+          "sequence": "5",
+          "title": "solve problems involving payments by",
+          "content": "instalments as in the case of hire purchase and mortgages;"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop the ability to perform the calculations required in normal business transactions, and\nin computing their own budgets;\n2. appreciate the need for both accuracy and speed in calculations;\n3. appreciate the advantages and disadvantages of different ways of investing money;\n4. appreciate that business arithmetic is indispensable in everyday life; and,\n5. demonstrate the ability to use concepts in consumer arithmetic to describe, model and solve\nreal-world problems.\nSPECIFIC OBJECTIVES CONTENT/ EXPLANATORY NOTES\nStudents should be able to:\n1. calculate:\n(a) discount;\n(b) sales tax;\n(c) profit; and,\n(d) loss;\n2. calculate\n(a) percentage profit; and,\n(b) percentage loss;\n3. express a profit, loss, discount,\nmarkup and purchase tax, as a\npercentage of some value;\n4. solve problems involving marked\nprice, selling price, cost price, profit,\nloss or discount;\n5. solve problems involving payments by\ninstalments as in the case of hire\npurchase and mortgages;\nSECTION 2: CONSUMER ARITHMETIC (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ EXPLANATORY NOTES\nStudents should be able to:\n6. solve problems involving simple Principal, time, rate, amount.\ninterest;\n7. solve problems involving Formulae may be used in computing compound\ncompound interest; interest. The use of calculators is encouraged.\n8. solve problems involving\nappreciation and depreciation;\n9. solve problems involving Currency conversion.\nmeasures and money; and,\n10. solve problems involving:\n(a) rates and taxes;\n(b) utilities;\n(c) invoices and shopping\nbills;\n(d) salaries and wages; and,\n(e) insurance and\ninvestments.\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this Section, teachers are advised to engage\nstudents in the teaching and learning activities listed below.\n1. Encourage the use of:\n(a) calculators;\n(b) games and quizzes;\n(c) appropriate software (for example, create an excel document to calculate utility bills\nand net salary);\n(d) examples of consumer arithmetic drawn from current affairs;\n(e) online videos;\nSECTION 2: CONSUMER ARITHMETIC (cont’d)\n(f) advertisement clippings for comparing prices; comparing prices and determining best\nbuy; calculating hire purchase; and,\n(g) bills and financial forms, for example, calculating utility cost and completing tax forms.\n2. Solve problems using the straight line and reducing balance method.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "3",
+      "title": "Section 3: Sets",
+      "generalObjectives": [
+        "demonstrate the ability to communicate using set language and concepts;",
+        "demonstrate the ability to reason logically; and,",
+        "appreciate the importance and utility of sets in analysing and solving real-world problems."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain concepts relating to Examples and non-examples of sets, description of",
+          "content": "sets; sets using words, membership of a set, cardinality of a set, finite and infinite sets, universal set, empty set, complement of a set, subsets."
+        },
+        {
+          "sequence": "2",
+          "title": "represent a set in various Representation of a set. For example,",
+          "content": "forms; (a) Description: the set A comprising the first three natural numbers. (b) Set builder notation: 𝐴 = {𝑥: 0 < 𝑥 < 4, 𝑥 ∈ ℕ};"
+        },
+        {
+          "sequence": "c",
+          "title": "Listing: 𝐴 = {1,2,3}",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "list subsets of a given set; Identifying the subsets as well as determining the",
+          "content": "number of subsets of a set with n elements."
+        },
+        {
+          "sequence": "4",
+          "title": "determine elements in Intersection and union of not more than three sets.",
+          "content": "intersections, unions and Apply the result complements of sets; n( A  B)  n( A)  n( B)  n( A  B) ."
+        },
+        {
+          "sequence": "5",
+          "title": "describe relationships among Universal, complement, subsets, equal and equivalent",
+          "content": "sets using set notation and sets, intersection, disjoint sets and union of sets. symbols;"
+        },
+        {
+          "sequence": "6",
+          "title": "draw Venn diagrams to Not more than 4 sets including the universal set.",
+          "content": "represent relationships among sets;"
+        },
+        {
+          "sequence": "7",
+          "title": "use Venn diagrams to",
+          "content": "represent the relationships among sets; and,"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. demonstrate the ability to communicate using set language and concepts;\n2. demonstrate the ability to reason logically; and,\n3. appreciate the importance and utility of sets in analysing and solving real-world problems.\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n1. explain concepts relating to Examples and non-examples of sets, description of\nsets; sets using words, membership of a set, cardinality of\na set, finite and infinite sets, universal set, empty set,\ncomplement of a set, subsets.\n2. represent a set in various Representation of a set. For example,\nforms;\n(a) Description: the set A comprising the first\nthree natural numbers.\n(b) Set builder notation:\n𝐴 = {𝑥: 0 < 𝑥 < 4, 𝑥 ∈ ℕ};\n(c) Listing: 𝐴 = {1,2,3}\n3. list subsets of a given set; Identifying the subsets as well as determining the\nnumber of subsets of a set with n elements.\n4. determine elements in Intersection and union of not more than three sets.\nintersections, unions and Apply the result\ncomplements of sets; n( A  B)  n( A)  n( B)  n( A  B) .\n5. describe relationships among Universal, complement, subsets, equal and equivalent\nsets using set notation and sets, intersection, disjoint sets and union of sets.\nsymbols;\n6. draw Venn diagrams to Not more than 4 sets including the universal set.\nrepresent relationships\namong sets;\n7. use Venn diagrams to\nrepresent the relationships\namong sets; and,\nSECTION 3: SETS (cont’d)\n8. solve problems in Number\nTheory, Algebra and Geometry\nusing concepts in Set Theory.\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this Section, teachers are advised to engage\nstudents in the teaching and learning activities listed below.\n1. Encourage the use of:\n(a) calculators;\n(b) games and quizzes;\n(c) appropriate software (for example, whiteboard apps for drawing and labelling Venn\ndiagrams);\n(d) examples of sets drawn from current affairs;\n(e) the use of recipes in teaching sets; and,\n(f) online demonstrative videos.\n2. Explore the link between sets and other disciplines, for example:\n(a) Music: types of instruments, classification of songs;\n(b) Sciences: periodic tables; find the number of elements in a naturally occurring set\nbased on characteristics of other sets;\n(c) Art and Geography: classifying regions according to soil type or altitude;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "4",
+      "title": "Section 4: Measurement",
+      "generalObjectives": [
+        "understand that the attributes of geometrical objects can be quantified using measurement;",
+        "appreciate that all measurements are approximate and that the relative accuracy of a measurement is dependent on the measuring instrument and the measurement process; and,",
+        "demonstrate the ability to use concepts in measurement to model and solve real-world problems."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "2",
+          "title": "use the appropriate SI unit of Refer to Sec 1, SO8.",
+          "content": "measure for area, volume, capacity, mass, temperature and time (24-hour clock) and other derived quantities;"
+        },
+        {
+          "sequence": "3",
+          "title": "determine the perimeter of a Estimating and measuring the perimeter of",
+          "content": "plane shape; compound and irregular shapes. Calculating the perimeter of polygons and circles."
+        },
+        {
+          "sequence": "4",
+          "title": "calculate the length of an arc Perimeter of sector of a circle",
+          "content": "of a circle; 5. estimate the area of plane Finding the area of plane shapes without using shapes; formulae."
+        },
+        {
+          "sequence": "6",
+          "title": "calculate the area of polygons",
+          "content": "and circles;"
+        },
+        {
+          "sequence": "7",
+          "title": "calculate the area of a sector of",
+          "content": "a circle;"
+        },
+        {
+          "sequence": "8",
+          "title": "calculate the area of a triangle Use of formulae. Including given two sides and",
+          "content": "given two sides and the angle included angle. they form;"
+        },
+        {
+          "sequence": "9",
+          "title": "calculate the area of a segment",
+          "content": "of a circle;"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand that the attributes of geometrical objects can be quantified using measurement;\n2. appreciate that all measurements are approximate and that the relative accuracy of a\nmeasurement is dependent on the measuring instrument and the measurement process; and,\n3. demonstrate the ability to use concepts in measurement to model and solve real-world\nproblems.\nSPECIFIC OBJECTIVES CONTENT/ EXPLANATORY NOTES\nStudents should be able to:\n1. convert units of length, mass, Refer to Sec 1, SO8.\narea, volume, capacity;\n2. use the appropriate SI unit of Refer to Sec 1, SO8.\nmeasure for area, volume,\ncapacity, mass, temperature\nand time (24-hour clock) and\nother derived quantities;\n3. determine the perimeter of a Estimating and measuring the perimeter of\nplane shape; compound and irregular shapes.\nCalculating the perimeter of polygons and circles.\n4. calculate the length of an arc Perimeter of sector of a circle\nof a circle;\n5. estimate the area of plane Finding the area of plane shapes without using\nshapes; formulae.\n6. calculate the area of polygons\nand circles;\n7. calculate the area of a sector of\na circle;\n8. calculate the area of a triangle Use of formulae. Including given two sides and\ngiven two sides and the angle included angle.\nthey form;\n9. calculate the area of a segment\nof a circle;\nSECTION 4: MEASUREMENT (cont’d)\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n10. calculate the surface area of Prisms including cubes and cylinders; right pyramids\nsolids; including cones; spheres. Surface area of sphere,\n𝐴 = 4𝜋𝑟 2 .\n11. calculate the volume of Prism including cube and cuboid, cylinder, right\nsolids; pyramid, cone and sphere. Volume of sphere,\n𝑉 = 3 𝜋𝑟 3\n12. solve problems involving the Average speed.\nrelations among time,\ndistance and speed;\n13. estimate the margin of error Sources of error.\nfor a given measurement; Maximum and minimum measurements.\n14. use scales and scale (Link to Geography)\ndrawings to determine\ndistances and areas; and,\n15. solve problems involving Perimeter, area and volume of compound shapes\nmeasurement. and solids.\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this Section, teachers are advised to engage\nstudents in the teaching and learning activities listed below.\n1. Encourage the use of:\n(a) calculators;\n(b) games and quizzes;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "5",
+      "title": "Section 5: Statistics",
+      "generalObjectives": [
+        "appreciate the advantages and disadvantages of the various ways of presenting and representing data;",
+        "appreciate the necessity for taking precautions in collecting, analysing and interpreting statistical data, and making inferences;",
+        "demonstrate the ability to use concepts in statistics and probability to describe, model and solve real-world problems; and,",
+        "understand the four levels/scales of measurement that inform the collection of data."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "differentiate between sample Sample statistics and population parameters.",
+          "content": "and population attributes;"
+        },
+        {
+          "sequence": "2",
+          "title": "construct a frequency table Discrete and continuous variables.",
+          "content": "for a given set of data; Ungrouped and grouped data."
+        },
+        {
+          "sequence": "3",
+          "title": "determine class features for a Class interval, class boundaries, class limits, class",
+          "content": "given set of data; midpoint, class width."
+        },
+        {
+          "sequence": "4",
+          "title": "construct statistical diagrams; Pie charts, bar charts, line graphs, histograms with",
+          "content": "bars of equal width and frequency polygons."
+        },
+        {
+          "sequence": "5",
+          "title": "determine measures of central Ungrouped data: mean, median and mode",
+          "content": "tendency for raw, ungrouped Grouped data: modal class, median class and the and grouped data; estimate of the mean."
+        },
+        {
+          "sequence": "6",
+          "title": "determine when it is most Levels of measurement (measurement scales):",
+          "content": "appropriate to use the mean, nominal, ordinal, interval and ratio. median and mode as the Sets with extreme values or recurring values. average for a set of data;"
+        },
+        {
+          "sequence": "7",
+          "title": "determine the measures of Range, interquartile range and semi-interquartile",
+          "content": "dispersion (spread) for raw, range; estimating these measures for grouped data. ungrouped and grouped data;"
+        },
+        {
+          "sequence": "8",
+          "title": "use standard deviation to No calculation of the standard deviation will be",
+          "content": "compare sets of data; required."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. appreciate the advantages and disadvantages of the various ways of presenting and\nrepresenting data;\n2. appreciate the necessity for taking precautions in collecting, analysing and interpreting\nstatistical data, and making inferences;\n3. demonstrate the ability to use concepts in statistics and probability to describe, model and\nsolve real-world problems; and,\n4. understand the four levels/scales of measurement that inform the collection of data.\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n1. differentiate between sample Sample statistics and population parameters.\nand population attributes;\n2. construct a frequency table Discrete and continuous variables.\nfor a given set of data; Ungrouped and grouped data.\n3. determine class features for a Class interval, class boundaries, class limits, class\ngiven set of data; midpoint, class width.\n4. construct statistical diagrams; Pie charts, bar charts, line graphs, histograms with\nbars of equal width and frequency polygons.\n5. determine measures of central Ungrouped data: mean, median and mode\ntendency for raw, ungrouped Grouped data: modal class, median class and the\nand grouped data; estimate of the mean.\n6. determine when it is most Levels of measurement (measurement scales):\nappropriate to use the mean, nominal, ordinal, interval and ratio.\nmedian and mode as the Sets with extreme values or recurring values.\naverage for a set of data;\n7. determine the measures of Range, interquartile range and semi-interquartile\ndispersion (spread) for raw, range; estimating these measures for grouped data.\nungrouped and grouped data;\n8. use standard deviation to No calculation of the standard deviation will be\ncompare sets of data; required.\nSECTION 5: STATISTICS (cont’d)\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n9. draw cumulative frequency Appropriate scales for axes.\ncurve (Ogive); Class boundaries as domain.\n10. analyse statistical diagrams; Finding the mean, mode, median, range, quartiles,\ninterquartile range, semi-interquartile range; trends\nand patterns.\n11. determine the proportion or\npercentage of the sample\nabove or below a given value\nfrom raw data, frequency\ntable or cumulative\nfrequency curve;\n12. identify the sample space for Including the use of coins, dice and playing cards.\nsimple experiment; The use of contingency tables.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "6",
+      "title": "Section 6: Algebra",
+      "generalObjectives": [
+        "appreciate the use of algebra as a language and a form of communication;",
+        "appreciate the role of symbols and algebraic techniques in solving problems in mathematics and related fields; and,",
+        "demonstrate the ability to reason with abstract entities."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "use symbols to represent Symbolic representation.",
+          "content": "numbers, operations, variables and relations; 2. translate between algebraic symbols and worded expressions;"
+        },
+        {
+          "sequence": "3",
+          "title": "evaluate arithmetic",
+          "content": "operations involving directed numbers; 4. simplify algebraic expressions using the four basic operations; 5. substitute numbers for variables in algebraic expressions;"
+        },
+        {
+          "sequence": "6",
+          "title": "evaluate expressions Commutative, associative and distributive properties.",
+          "content": "involving binary operations (other than the four basic operations);"
+        },
+        {
+          "sequence": "7",
+          "title": "apply the distributive law to For example,",
+          "content": "factorise or expand algebraic 𝑥(𝑎 + 𝑏) = 𝑎𝑥 + 𝑏𝑥 𝑎𝑛𝑑 expressions; (𝑎 + 𝑏)(𝑥 + 𝑦) = 𝑎𝑥 + 𝑏𝑥 + 𝑎𝑦 + 𝑏𝑦."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. appreciate the use of algebra as a language and a form of communication;\n2. appreciate the role of symbols and algebraic techniques in solving problems in mathematics\nand related fields; and,\n3. demonstrate the ability to reason with abstract entities.\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n1. use symbols to represent Symbolic representation.\nnumbers, operations,\nvariables and relations;\n2. translate between algebraic\nsymbols and worded\nexpressions;\n3. evaluate arithmetic\noperations involving\ndirected numbers;\n4. simplify algebraic\nexpressions using the four\nbasic operations;\n5. substitute numbers for\nvariables in algebraic\nexpressions;\n6. evaluate expressions Commutative, associative and distributive properties.\ninvolving binary operations\n(other than the four basic\noperations);\n7. apply the distributive law to For example,\nfactorise or expand algebraic 𝑥(𝑎 + 𝑏) = 𝑎𝑥 + 𝑏𝑥 𝑎𝑛𝑑\nexpressions; (𝑎 + 𝑏)(𝑥 + 𝑦) = 𝑎𝑥 + 𝑏𝑥 + 𝑎𝑦 + 𝑏𝑦.\nSECTION 6: ALGEBRA (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ EXPLANATORY NOTES\nStudents should be able to:\n8. simplify algebraic fractions; The four basic operation on algebraic fractions.\n9. use the laws of indices to For m 𝜖 ℤ, n 𝜖 ℤ.\nmanipulate expressions with\n(i) 𝑥 𝑚 × 𝑥 𝑛 = 𝑥 𝑚+𝑛\nintegral indices;\nxm\n(ii) n\n x mn\nx\n(iii) x   x\nm n mn\n(iv) x m \nxm\n10. solve linear equations in one\nunknown;\n11. solve simultaneous linear\nequations, in two unknowns,\nalgebraically;\n12. solve a simple linear\ninequality in one unknown;\n13. change the subject of Including equations involving roots and powers.\nformulae;\n14. factorise algebraic Expressions of the type:\nexpressions; 𝑎2 − 𝑏 2 ;\na2 2abb2\n𝑎𝑥 + 𝑏𝑥 + 𝑎𝑦 + 𝑏𝑦\n𝑎𝑥 2 + 𝑏𝑥 + 𝑐\nwhere 𝑎, 𝑏, and 𝑐 are integers and 𝑎 ≠ 0\n15. rewrite a quadratic Completing the square of a quadratic expression.\nexpression in the form\na ( x  h) 2  k ;\n16. solve quadratic equations Formula and by methods of factorisation and\nalgebraically; completing the square.\nSECTION 6: ALGEBRA (cont’d)\n17. solve word problems; Linear equation, Linear inequalities, two\nsimultaneous linear equations, quadratic equations.\nApplications to other subjects for example demand\nand supply functions of business studies.\n18. solve a pair of equations in\ntwo variables when one\nequation is quadratic or non-\nlinear and the other linear;\n19. prove two algebraic Equations vs. identities.\nexpressions to be identical;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "7",
+      "title": "Section 7: Relations, Functions and Graphs",
+      "generalObjectives": [
+        "appreciate the importance of relations in Mathematics;",
+        "appreciate that many mathematical relations may be represented in symbolic form, tabular or pictorial form; and,",
+        "appreciate the usefulness of concepts in relations, functions and graphs to solve real-world problems."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain basic concepts Concept of a relation, types of relations, examples",
+          "content": "associated with relations; and non-examples of relations, domain, range, image, co-domain."
+        },
+        {
+          "sequence": "2",
+          "title": "represent a relation in Set of ordered pairs, arrow diagrams, graphically,",
+          "content": "various ways; algebraically."
+        },
+        {
+          "sequence": "3",
+          "title": "state the characteristics Concept of a function, examples and non-examples of",
+          "content": "that define a function; functions."
+        },
+        {
+          "sequence": "4",
+          "title": "use functional notation; For example, 𝑓 ∶ 𝑥  𝑥 2 ; or 𝑓(𝑥) = 𝑥 2 as well as",
+          "content": "𝑦 = 𝑓(𝑥) for given domains. The inverse function 𝑓 −1 (𝑥). Composite functions 𝑓𝑔 = 𝑓[𝑔(𝑥)]."
+        },
+        {
+          "sequence": "5",
+          "title": "distinguish between a Ordered pairs, arrow diagram, graphically (vertical",
+          "content": "relation and a function; line test)."
+        },
+        {
+          "sequence": "6",
+          "title": "draw graphs of linear Concept of linear function, types of linear function",
+          "content": "functions; (𝑦 = 𝑐; 𝑥 = 𝑘; 𝑦 = 𝑚𝑥 + 𝑐; where 𝑚, 𝑐 and 𝑘 are real numbers)."
+        },
+        {
+          "sequence": "7",
+          "title": "determine the intercepts of 𝑥-intercepts and 𝑦-intercepts, graphically and",
+          "content": "the graph of linear algebraically. functions;"
+        },
+        {
+          "sequence": "8",
+          "title": "determine the gradient of a Definition of gradient/slope.",
+          "content": "straight line;"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. appreciate the importance of relations in Mathematics;\n2. appreciate that many mathematical relations may be represented in symbolic form, tabular\nor pictorial form; and,\n3. appreciate the usefulness of concepts in relations, functions and graphs to solve real-world\nproblems.\nSPECIFIC OBJECTIVES CONTENT/ EXPLANATORY NOTES\nStudents should be able to:\n1. explain basic concepts Concept of a relation, types of relations, examples\nassociated with relations; and non-examples of relations, domain, range, image,\nco-domain.\n2. represent a relation in Set of ordered pairs, arrow diagrams, graphically,\nvarious ways; algebraically.\n3. state the characteristics Concept of a function, examples and non-examples of\nthat define a function; functions.\n4. use functional notation; For example, 𝑓 ∶ 𝑥  𝑥 2 ; or 𝑓(𝑥) = 𝑥 2 as well as\n𝑦 = 𝑓(𝑥) for given domains. The inverse function\n𝑓 −1 (𝑥). Composite functions 𝑓𝑔 = 𝑓[𝑔(𝑥)].\n5. distinguish between a Ordered pairs, arrow diagram, graphically (vertical\nrelation and a function; line test).\n6. draw graphs of linear Concept of linear function, types of linear function\nfunctions; (𝑦 = 𝑐; 𝑥 = 𝑘; 𝑦 = 𝑚𝑥 + 𝑐;\nwhere 𝑚, 𝑐 and 𝑘 are real numbers).\n7. determine the intercepts of 𝑥-intercepts and 𝑦-intercepts, graphically and\nthe graph of linear algebraically.\nfunctions;\n8. determine the gradient of a Definition of gradient/slope.\nstraight line;\nSECTION 7: RELATIONS, FUNCTIONS AND GRAPHS (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ EXPLANATORY NOTES\nStudents should be able to:\n9. determine the equation of a Using:\nstraight line;\n(a) the graph of the line;\n(b) the co-ordinates of two points on the line;\n(c) the gradient and one point on the line; and,\n(d) one point on the line or its gradient, and its\nrelationship to another line.\n10. solve problems involving the\ngradient of parallel and\nperpendicular lines;\n11. determine from co-ordinates The concept of magnitude or length, concept of\non a line segment: midpoint.\n(a) the length; and,\n(b) the co-ordinates of\nthe midpoint.\n12. solve a pair of simultaneous Intersection of graphs.\nlinear equations in two\nunknowns graphically;\n13. represent the solution of\nlinear inequalities in one\nvariable using:\n(a) set notation;\n(b) the number line; and,\n(c) graph.\n14. draw a graph to represent a\nlinear inequality in two\nvariables;\nSECTION 7: RELATIONS, FUNCTIONS AND GRAPHS (cont’d)\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "8",
+      "title": "Section 8: Geometry and Trigonometry",
+      "generalObjectives": [
+        "appreciate the notion of space as a set of points with subsets of that set (space) having properties related to other mathematical systems;",
+        "understand the properties and relationship among geometrical objects;",
+        "understand the properties of transformations;",
+        "demonstrate the ability to use geometrical concepts to model and solve real world problems; and,",
+        "appreciate the power of trigonometrical methods in solving authentic problems."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain concepts relating to Points, lines, parallel lines, intersecting lines and",
+          "content": "geometry; perpendicular lines, line segments, rays, curves, planes; types of angles; number of faces, edges and vertices."
+        },
+        {
+          "sequence": "2",
+          "title": "draw and measure angles",
+          "content": "and line segments accurately using appropriate instruments;"
+        },
+        {
+          "sequence": "3",
+          "title": "construct lines, angles, and Parallel and perpendicular lines.",
+          "content": "polygons using appropriate Bisecting line segments and angles. instruments; Constructing a line perpendicular to another line, L, from a point that is not on the line, L. Triangles, quadrilaterals, regular and irregular polygons. Angles include 30𝑜 , 45𝑜 , 60𝑜 , 90𝑜 , 120𝑜 and their combinations."
+        },
+        {
+          "sequence": "4",
+          "title": "identify the type(s) of Line(s) of symmetry, rotational symmetry, order of",
+          "content": "symmetry possessed by a rotational symmetry. given plane figure;"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. appreciate the notion of space as a set of points with subsets of that set (space) having\nproperties related to other mathematical systems;\n2. understand the properties and relationship among geometrical objects;\n3. understand the properties of transformations;\n4. demonstrate the ability to use geometrical concepts to model and solve real world problems;\nand,\n5. appreciate the power of trigonometrical methods in solving authentic problems.\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n1. explain concepts relating to Points, lines, parallel lines, intersecting lines and\ngeometry; perpendicular lines, line segments, rays, curves,\nplanes; types of angles; number of faces, edges and\nvertices.\n2. draw and measure angles\nand line segments accurately\nusing appropriate\ninstruments;\n3. construct lines, angles, and Parallel and perpendicular lines.\npolygons using appropriate Bisecting line segments and angles.\ninstruments; Constructing a line perpendicular to another line, L,\nfrom a point that is not on the line, L.\nTriangles, quadrilaterals, regular and irregular\npolygons.\nAngles include 30𝑜 , 45𝑜 , 60𝑜 , 90𝑜 , 120𝑜 and their\ncombinations.\n4. identify the type(s) of Line(s) of symmetry, rotational symmetry, order of\nsymmetry possessed by a rotational symmetry.\ngiven plane figure;\nSECTION 8: GEOMETRY AND TRIGONOMETRY (cont’d)\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n5. solve geometric problems Determining and justifying the measure of angles:\nusing properties of: adjacent angles, angles at a point, supplementary\nangles, complementary angles, vertically opposite\n(a) lines, angles, and angles.\npolygons;\nParallel lines and transversals, alternate angles,\ncorresponding angles, co-interior angles.\nTriangles: Equilateral, Isosceles, scalene, obtuse,\nright, acute.\nQuadrilaterals: Square, rectangle, rhombus, kite,\nparallelogram, trapezium.\nOther polygons.\n(b) congruent triangles; Cases of congruency.\n(c) similar figures; Properties of similar triangles\n(d) faces, edges and\nvertices of solids;\nand,\n(e) classes of solids. Prisms, pyramids, cylinders, cones, sphere.\n6. solve geometric problems Radius, diameter, chord, circumference, arc,\nusing properties of circles and tangent, segment, sector, semicircle, pi.\ncircle theorems;\nDetermining and justifying angles using the circle\ntheorems:\nThe angle which an arc of a circle subtends at the\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "9",
+      "title": "Section 9: Vectors and Matrices",
+      "generalObjectives": [
+        "demonstrate the ability to use vector notation and concepts to model and solve real-world problems;",
+        "develop awareness of the existence of certain mathematical objects, such as matrices, that do not satisfy the same rules of operation as the real number system; and,",
+        "appreciate the use of vectors and matrices in representing certain types of linear transformations in the plane."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain concepts associated with Concept of a vector, magnitude, unit vector, direction,",
+          "content": "vectors; scalar. Scalar multiples: parallel vectors, equal vectors, inverse vectors. 2. simplify expressions involving Vector algebra: addition, subtraction, scalar vectors; multiplication. Vector geometry: triangle law, parallelogram law."
+        },
+        {
+          "sequence": "3",
+          "title": "write the position vector of a Displacement and position vectors; including the use of",
+          "content": "𝑎 co-ordinates in the x-y plane to identify and determine point 𝑃(𝑎, 𝑏) as ⃗⃗⃗⃗⃗ 𝑂𝑃 = ( ) 𝑏 displacement and position vectors. where 𝑂 is the origin (0,0);"
+        },
+        {
+          "sequence": "4",
+          "title": "determine the magnitude of a Including unit vectors.",
+          "content": "vector;"
+        },
+        {
+          "sequence": "5",
+          "title": "determine the direction of a vector;",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "use vectors to solve problems in Points in a straight line, Parallel lines; displacement,",
+          "content": "geometry; velocity, weight."
+        },
+        {
+          "sequence": "7",
+          "title": "explain basic concepts associated Concept of a matrix, row, column, square, identity",
+          "content": "with matrices; rectangular, order."
+        },
+        {
+          "sequence": "8",
+          "title": "solve problems involving matrix Addition and subtraction of matrices of the same order.",
+          "content": "operations; Scalar multiples. Multiplication of conformable matrices. Equality, non-commutativity of matrix multiplication."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. demonstrate the ability to use vector notation and concepts to model and solve real-world\nproblems;\n2. develop awareness of the existence of certain mathematical objects, such as matrices, that\ndo not satisfy the same rules of operation as the real number system; and,\n3. appreciate the use of vectors and matrices in representing certain types of linear\ntransformations in the plane.\nSPECIFIC OBJECTIVES CONTENT/EXPLANATORY NOTES\nStudents should be able to:\n1. explain concepts associated with Concept of a vector, magnitude, unit vector, direction,\nvectors; scalar.\nScalar multiples: parallel vectors, equal vectors, inverse\nvectors.\n2. simplify expressions involving Vector algebra: addition, subtraction, scalar\nvectors; multiplication.\nVector geometry: triangle law, parallelogram law.\n3. write the position vector of a Displacement and position vectors; including the use of\n𝑎 co-ordinates in the x-y plane to identify and determine\npoint 𝑃(𝑎, 𝑏) as ⃗⃗⃗⃗⃗\n𝑂𝑃 = ( )\n𝑏 displacement and position vectors.\nwhere 𝑂 is the origin (0,0);\n4. determine the magnitude of a Including unit vectors.\nvector;\n5. determine the direction of a vector;\n6. use vectors to solve problems in Points in a straight line, Parallel lines; displacement,\ngeometry; velocity, weight.\n7. explain basic concepts associated Concept of a matrix, row, column, square, identity\nwith matrices; rectangular, order.\n8. solve problems involving matrix Addition and subtraction of matrices of the same order.\noperations; Scalar multiples.\nMultiplication of conformable matrices.\nEquality, non-commutativity of matrix multiplication.\nSECTION 9: VECTORS AND MATRICES (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ EXPLANATORY NOTES\nStudents should be able to:\n9. evaluate the determinant of\na ‘2 x 2’ matrix;\n10. define the multiplicative Identity for the square matrices.\ninverse of a non-singular\nsquare matrix;\n11. obtain the inverse of a non- Determinant and adjoint of a matrix.\nsingular ‘2 x 2’ matrix;\n12. determine a ‘2 x 2’ matrix Transformation which is equivalent to the\nassociated with a specified composition of two linear transformations in a plane\ntransformation; and, (where the origin remains fixed).\n(a) Reflection in: the 𝑥-axis, 𝑦-axis,\nthe lines 𝑦 = 𝑥 and 𝑦 = – 𝑥.\n(b) Rotation in a clockwise and anticlockwise\ndirection about the origin; the general\nrotation matrix.\n(c) Enlargement with centre at the origin.\n[excerpt truncated]",
+      "warnings": []
+    }
+  ]
+}

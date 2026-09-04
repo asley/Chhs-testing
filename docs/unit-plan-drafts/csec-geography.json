@@ -1,0 +1,47 @@
+{
+  "subject": "CSEC Geography",
+  "sourcePdf": "docs/syllabus copy/CSEC-Geography-Syllabus copy.pdf",
+  "generatedAt": "2026-09-03T04:02:54+00:00",
+  "intendedUse": "Review draft for Gibbon Planner unit and block seeding. Do not import without human verification.",
+  "mapping": {
+    "unit": "gibbonUnit candidate",
+    "generalObjective": "gibbonOutcome candidate",
+    "specificObjective": "gibbonUnitBlock candidate"
+  },
+  "warnings": [
+    "Only one section/unit was detected. Check whether this syllabus uses non-standard headings."
+  ],
+  "units": [
+    {
+      "sequence": "III",
+      "title": "Section III: Human Systems.",
+      "generalObjectives": [],
+      "specificObjectives": [
+        {
+          "sequence": "e",
+          "title": "use the scale to measure straight and curved distances;",
+          "content": "(f) (i) copy a section of the map; (ii) reduce a section of the map; and, (iii) enlarge a section of a map. (g) (i) draw cross sections and sketch sections; and, (ii) interpret cross sections and sketch sections. (h) (i) calculate gradients; and, (ii) differentiate among steep, moderate and gentle slopes."
+        },
+        {
+          "sequence": "i",
+          "title": "draw diagrams to illustrate geographical features;",
+          "content": ""
+        },
+        {
+          "sequence": "j",
+          "title": "describe landscapes using the following: relief, drainage and land use; and,",
+          "content": ""
+        },
+        {
+          "sequence": "k",
+          "title": "explain the inter-relationships among relief, drainage and land use.",
+          "content": ""
+        }
+      ],
+      "sourceExcerpt": "APPROACHES TO TEACHING THE SYLLABUS\nCritical to the study of Geography is the recognition of the inter-dependence and inter-relationships of\nthe elements that comprise the human and natural systems. Teachers will find it useful to employ an\nintegrated approach to teaching this syllabus. In this way students will have an opportunity to observe,\nexperience, reflect on, and draw conclusions about the intricate inter-dependence and inter-\nrelationships that comprise the human and natural systems.\nWhile the topics are presented within this syllabus in a linear manner, it must be emphasised that an\nintegrated approach will enable students to develop:\n1. an understanding and appreciation of the inter-relationships among the natural systems, the\nhuman systems and the skills component of the syllabus as the various factors associated with\na particular topic can be fully explored;\n2. their critical thinking and problem-solving skills; and,\n3. an awareness of their role, as well as others, in the sustainable use of the earth’s resources.\nAdditionally, integrating the teaching and learning of the three sections of the syllabus allows for more\nefficient use of class time and also helps students to be better prepared for the constructed-response\nquestions on the examination paper. The following are some suggestions of the ways in which topics\nin Sections I, II and III can be integrated for efficient and effective teaching and learning.\n# SECTION SPECIFIC OBJECTIVES\n1. Natural Systems 3; 28–30\nPractical Skills 1 (i-k); 4\n2. Natural Systems 10; 16–19\nHuman Systems 21–22\nPractical Skills 1 (i-k); 4\n3. Natural Systems 10\nHuman 16–22\nPractical Skills 1 (j-k); 4 (b); 4 (c); 5\nNote that School-Based Assessment (SBA) topics can be selected from among all the Specific Objectives\nbut students can also select a topic that highlights an integrated approach, for example, “Investigating\nthe impacts of human activities on tropical forest vegetation.”\nSUGGESTED TIMETABLE ALLOCATION\nIt is recommended that a minimum of five 40-minute periods per week, over two academic years or\nthe equivalent be allocated to the syllabus. The time should include at least one double period.\nCERTIFICATION\nThe syllabus is offered for General Proficiency certification. A candidate’s performance will be\nindicated on the certificate by an overall numerical grade on a six-point scale as well as a letter grade\nfor each of three profile dimensions, namely, Practical Skills, Knowledge and Comprehension, and Use\n[excerpt truncated]",
+      "warnings": [
+        "No general objectives were detected for this unit."
+      ]
+    }
+  ]
+}

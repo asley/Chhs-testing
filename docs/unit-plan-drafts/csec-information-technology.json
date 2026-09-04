@@ -1,0 +1,291 @@
+{
+  "subject": "CSEC Information Technology",
+  "sourcePdf": "docs/syllabus copy/CSEC-Information-Technology-Syllabus.pdf",
+  "generatedAt": "2026-09-03T04:02:58+00:00",
+  "intendedUse": "Review draft for Gibbon Planner unit and block seeding. Do not import without human verification.",
+  "mapping": {
+    "unit": "gibbonUnit candidate",
+    "generalObjective": "gibbonOutcome candidate",
+    "specificObjective": "gibbonUnitBlock candidate"
+  },
+  "warnings": [],
+  "units": [
+    {
+      "sequence": "1",
+      "title": "Section 1: Computer Fundamentals and Information",
+      "generalObjectives": [
+        "develop an understanding of the fundamental hardware and software components and the interrelationship among them;",
+        "develop expertise in evaluating computer systems; and,",
+        "develop an understanding of basic information processing principles."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain the concept of Information Definition and scope of Information",
+          "content": "Technology; Technology."
+        },
+        {
+          "sequence": "2",
+          "title": "distinguish among the major types of Major types:",
+          "content": "computer systems in terms of processing speed, storage and portability; (a) Super Computers (for example, Cray). (b) Mainframes (for example, IBM zEnterprise System). (c) Desktop systems. (d) Mobile devices (for example, laptops, notebooks, netbooks, smartphones, tablets and game consoles). (e) Embedded devices (for example, special-purpose systems such as controllers in microwaves, car ignition systems, answering machines)."
+        },
+        {
+          "sequence": "3",
+          "title": "explain the functions of the major Major components: input, central processing",
+          "content": "hardware components of a computer unit, primary memory (RAM and ROM), system; secondary storage, output. (a) Secondary storage devices: hard disk, magnetic tape, flash drive, memory card, and optical disks (CD, DVD and Blu- Ray). (b) Units of storage: bits, bytes, kilobytes, megabytes, gigabytes, terabytes."
+        }
+      ],
+      "sourceExcerpt": "PROCESSING\nGENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an understanding of the fundamental hardware and software components and the\ninterrelationship among them;\n2. develop expertise in evaluating computer systems; and,\n3. develop an understanding of basic information processing principles.\nSPECIFIC OBJECTIVES CONTENT\nCOMPUTER FUNDAMENTALS\nStudents should be able to:\n1. explain the concept of Information Definition and scope of Information\nTechnology; Technology.\n2. distinguish among the major types of Major types:\ncomputer systems in terms of processing\nspeed, storage and portability; (a) Super Computers (for example, Cray).\n(b) Mainframes (for example, IBM\nzEnterprise System).\n(c) Desktop systems.\n(d) Mobile devices (for example, laptops,\nnotebooks, netbooks, smartphones,\ntablets and game consoles).\n(e) Embedded devices (for example,\nspecial-purpose systems such as\ncontrollers in microwaves, car ignition\nsystems, answering machines).\n3. explain the functions of the major Major components: input, central processing\nhardware components of a computer unit, primary memory (RAM and ROM),\nsystem; secondary storage, output.\n(a) Secondary storage devices: hard disk,\nmagnetic tape, flash drive, memory\ncard, and optical disks (CD, DVD and Blu-\nRay).\n(b) Units of storage: bits, bytes, kilobytes,\nmegabytes, gigabytes, terabytes.\nSECTION 1: COMPUTER FUNDAMENTALS AND INFORMATION PROCESSING (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nCOMPUTER FUNDAMENTALS (cont’d)\nStudents should be able to:\n4. explain how the major hardware Input processing output storage (IPOS) cycle.\ncomponents of a computer system\ninterrelate;\n5. evaluate the relative merits of cloud Definition of cloud and local storage.\nstorage and local storage; Assessment criteria: capacity, cost,\naccessibility; security issues.\n6. select appropriate input/output devices Associate the following devices with suitable\nto meet the needs of specified applications:\napplications;\n(a) Input: Optical mark reader (OMR),\ncharacter readers (OCR, MICR), mouse,\njoystick, bar code reader, document\nscanner, light-pen, touch terminals,\nvoice response unit, Touch Screens\n(tablets, point of sale, ATM), keyboard,\ndigital camera, biometric systems,\nsensors, remote control, sound capture,\npointing devices, webcam.\n(b) Visual output: Monitors, Printers (laser,\ninkjet, dot matrix, thermal, plotters, 3D\nPrinters), microfilm.\n(c) Audible output: speakers, headphones,\nearphones.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "2",
+      "title": "Section 2: Computer Networks and Web Technologies",
+      "generalObjectives": [
+        "basic networking concepts, including mobile networks; and,",
+        "Internet and Web Technology concepts."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "distinguish among types of networks; Types of networks (local area network,",
+          "content": "metropolitan area network, wide area network, mobile network). (a) Concept of mobile network as radio- based common carrier. (b) Overview of mobile networks: from 2G to current. (Knowledge of the inner workings of mobile systems is NOT required) Wireless network technologies (for example, Bluetooth, Wi-Fi, hotspot). Level of privacy (intranet, extranet, Internet)."
+        },
+        {
+          "sequence": "2",
+          "title": "explain the functions of the basic Basic components and functions:",
+          "content": "components of a network; (a) Transmission media: (i) Wired: twisted pair, coaxial, fibre; and, (ii) Wireless: infrared, microwave, satellite. (b) Switch, router, modem. (c) Network interface card/network adapter."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should develop an awareness of:\n1. basic networking concepts, including mobile networks; and,\n2. Internet and Web Technology concepts.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. distinguish among types of networks; Types of networks (local area network,\nmetropolitan area network, wide area\nnetwork, mobile network).\n(a) Concept of mobile network as radio-\nbased common carrier.\n(b) Overview of mobile networks: from 2G\nto current. (Knowledge of the inner\nworkings of mobile systems is NOT\nrequired)\nWireless network technologies (for example,\nBluetooth, Wi-Fi, hotspot).\nLevel of privacy (intranet, extranet, Internet).\n2. explain the functions of the basic Basic components and functions:\ncomponents of a network;\n(a) Transmission media:\n(i) Wired: twisted pair, coaxial,\nfibre; and,\n(ii) Wireless: infrared, microwave,\nsatellite.\n(b) Switch, router, modem.\n(c) Network interface card/network\nadapter.\nSECTION 2: COMPUTER NETWORKS AND WEB TECHNOLOGIES (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n3. assess the importance of mobile Suitability of mobile networks to various\ncommunication technologies as a applications (for example, education,\ncomponent of modern communication commerce, and journalism).\nnetworks; and,\n4. explain the interrelationship among key World Wide Web.\nWeb technology concepts.\nHypertext Markup Language.\nHypertext Transfer Protocol.\nHyperlinks.\nWeb Server.\nWeb Page.\nFile Transfer Protocol.\nWeb Browser.\nUniform Resource Locator.\nUpload and download.\nEmail.\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this Section, teachers/facilitators are encouraged\nto engage students in the teaching and learning activities below.\n1. Engage students in a debate on the importance of mobile communication technologies to our\ndaily lives, for example, the pros and cons of mobile technology in the fields of education,\ncommerce, and journalism.\n2. Engage students in a matching activity where they match the functions of the basic\ncomponents of a network.\n3. Engage students in role play activities where they illustrate how the different networks\noperate.\n4. Invite someone with expertise in computer networks and web technologies to address the\nclass and explain some of the concepts.",
+      "warnings": []
+    },
+    {
+      "sequence": "3",
+      "title": "Section 3: Social and Economic Impact of Information and",
+      "generalObjectives": [
+        "develop an understanding of the various elements of computer security, and data misuse and the impact on individuals and organizations;",
+        "maintain safe and secure computing environments; and,",
+        "assess the impact of technological advancements on different fields, disciplines and jobs."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "outline the concepts of computer Computer security and cybersecurity as",
+          "content": "security, cybersecurity and computer related to the assessment and minimization misuse; of risk. – Elements: vulnerability, threat, attack, countermeasure. Computer misuse by individuals and groups/organizations."
+        },
+        {
+          "sequence": "2",
+          "title": "assess the potential impact of computer Misuse:",
+          "content": "systems misuse based on the main entities impacted; (a) Cyberbullying, copyright infringement, data theft, denial of service attacks, transmission of viruses and malware, identity theft, online publication of obscene materials, phishing attacks, software and music piracy, financial abuses, violation of privacy, propaganda, electronic eavesdropping, industrial espionage; and, (b) Entity impacted: individual, organization, government."
+        }
+      ],
+      "sourceExcerpt": "COMMUNICATIONS TECHNOLOGY (ICT)\nGENERAL OBJECTIVES\nOn completion of this Section, students should be able to:\n1. develop an understanding of the various elements of computer security, and data misuse and\nthe impact on individuals and organizations;\n2. maintain safe and secure computing environments; and,\n3. assess the impact of technological advancements on different fields, disciplines and jobs.\nSPECIFIC OBJECTIVES CONTENT\nIMPLICATIONS OF MISUSE AND\nCYBERSECURITY\nStudents should be able to:\n1. outline the concepts of computer Computer security and cybersecurity as\nsecurity, cybersecurity and computer related to the assessment and minimization\nmisuse; of risk.\n– Elements: vulnerability, threat, attack,\ncountermeasure.\nComputer misuse by individuals and\ngroups/organizations.\n2. assess the potential impact of computer Misuse:\nsystems misuse based on the main\nentities impacted; (a) Cyberbullying, copyright\ninfringement, data theft, denial of\nservice attacks, transmission of\nviruses and malware, identity theft,\nonline publication of obscene\nmaterials, phishing attacks, software\nand music piracy, financial abuses,\nviolation of privacy, propaganda,\nelectronic eavesdropping, industrial\nespionage; and,\n(b) Entity impacted: individual,\norganization, government.",
+      "warnings": []
+    },
+    {
+      "sequence": "3",
+      "title": "Section 3: Social and Economic Impact of Information and Communications",
+      "generalObjectives": [],
+      "specificObjectives": [
+        {
+          "sequence": "3",
+          "title": "describe suitable countermeasures to Physical measures: backup and recovery",
+          "content": "mitigate effects of identified threats; procedures; hardware firewall, intrusion detection systems, biometrics. Software measures: effective passwords and authentication systems, encryption of data, firewall, biometrics, antivirus and malware detection. Personal Security practices. Some practices include: - verifying authenticity of email from companies or individuals, assessing website URLs for authenticity, limiting access to open Wi-Fi networks, securing mobile devices, protection in an online environment (for example, social media). IMPACT ON JOB SKILLS AND CAREERS Students should be able to:"
+        },
+        {
+          "sequence": "4",
+          "title": "assess the effect of automation on job Job loss vs productivity gains in skilled and",
+          "content": "security; unskilled job categories."
+        },
+        {
+          "sequence": "5",
+          "title": "describe the roles of various personnel Network Engineer, Computer",
+          "content": "in computer-related professions; and, Programmer, Computer Support Specialist, Computer Systems Analyst, Administrators (Network, Systems and Database), Software Developer, Web Developer, Social Media Specialist."
+        }
+      ],
+      "sourceExcerpt": "TECHNOLOGY (ICT) (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nIMPLICATIONS OF MISUSE AND\nCYBERSECURITY (cont’d)\nStudents should be able to:\n3. describe suitable countermeasures to Physical measures: backup and recovery\nmitigate effects of identified threats; procedures; hardware firewall, intrusion\ndetection systems, biometrics.\nSoftware measures: effective passwords and\nauthentication systems, encryption of data,\nfirewall, biometrics, antivirus and malware\ndetection.\nPersonal Security practices.\nSome practices include:\n- verifying authenticity of email from\ncompanies or individuals, assessing\nwebsite URLs for authenticity, limiting\naccess to open Wi-Fi networks, securing\nmobile devices, protection in an online\nenvironment (for example, social\nmedia).\nIMPACT ON JOB SKILLS AND CAREERS\nStudents should be able to:\n4. assess the effect of automation on job Job loss vs productivity gains in skilled and\nsecurity; unskilled job categories.\n5. describe the roles of various personnel Network Engineer, Computer\nin computer-related professions; and, Programmer, Computer Support\nSpecialist, Computer Systems Analyst,\nAdministrators (Network, Systems and\nDatabase), Software Developer, Web\nDeveloper, Social Media Specialist.\nSECTION 3: SOCIAL AND ECONOMIC IMPACT OF INFORMATION AND COMMUNICATIONS\nTECHNOLOGY (ICT) (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nIMPACT ON JOB SKILLS AND CAREERS\n(cont’d)\nStudents should be able to:\n6. assess the impact of information and Economic implications of ICT on Education,\ncommunications technology on select Medicine, Business, Law Enforcement and\nfields. Recreation.\nFor example:\n(a) Impact on Education in terms of:\naccess to information, reach (distance\nteaching), collaborative teaching and\nlearning, plagiarism; online tutoring.\n(b) Impact on Medicine in terms of:\naccess to information (for both medical\npersonnel and patients), telemedicine,\neHealth (online access to health\nservices), implications for the quality of\nhealthcare, increase in self-diagnosis,\neasy access to medical expertise in\ndistant location (for example,\nteleradiology).\n(c) Impact on Business in terms of:\nE-commerce, Electronic Point of Sale\n(EPOS), telecommuting Email.\n(d) Impact on Law Enforcement in terms of:\nE-surveillance, finger printing,\nBiometrics.\n(e) Impact on Recreation in terms of:\nMusic and gaming.\nSECTION 3: SOCIAL AND ECONOMIC IMPACT OF INFORMATION AND COMMUNICATIONS\nTECHNOLOGY (ICT) (cont’d)\nSuggested Teaching and Learning Activities\n[excerpt truncated]",
+      "warnings": [
+        "No general objectives were detected for this unit."
+      ]
+    },
+    {
+      "sequence": "4",
+      "title": "Section 4: Word-processing and Web Page Design",
+      "generalObjectives": [
+        "have hands-on experience in the use of Word-Processing and Web Page Design in the development of computer-generated documents; and,",
+        "be able to express their aptitude and creativity in design."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "create a document using content from Importing text (combining documents).",
+          "content": "a range of sources; Typewritten text, images and other objects."
+        },
+        {
+          "sequence": "2",
+          "title": "use appropriate document formatting Formatting features: font types and sizes,",
+          "content": "features; colour, underline, bold, italics, superscript and subscript, tab stops, bullets and numbering, line spacing, justification (left, right, centre, full), highlight, uppercase, word wrap, page size, margins, page and section breaks, page numbers, headers, footers, footnotes and endnotes."
+        },
+        {
+          "sequence": "3",
+          "title": "use appropriate editing features to Drag and drop editing: perform block",
+          "content": "structure and organize a document; operations on selected areas of text within a document. Use search and replace functions appropriately to edit a document. Use of tables, table styles, shading, borders, row and column insertion, split cells, split tables, text direction and cell margins, cell size. Use of columns (one, two, three, left and right columns, column breaks)."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. have hands-on experience in the use of Word-Processing and Web Page Design in the\ndevelopment of computer-generated documents; and,\n2. be able to express their aptitude and creativity in design.\nSPECIFIC OBJECTIVES CONTENT\nWORD-PROCESSING\nStudents should be able to:\n1. create a document using content from Importing text (combining documents).\na range of sources;\nTypewritten text, images and other objects.\n2. use appropriate document formatting Formatting features: font types and sizes,\nfeatures; colour, underline, bold, italics, superscript and\nsubscript, tab stops, bullets and numbering,\nline spacing, justification (left, right, centre,\nfull), highlight, uppercase, word wrap, page\nsize, margins, page and section breaks, page\nnumbers, headers, footers, footnotes and\nendnotes.\n3. use appropriate editing features to Drag and drop editing: perform block\nstructure and organize a document; operations on selected areas of text within a\ndocument.\nUse search and replace functions appropriately\nto edit a document.\nUse of tables, table styles, shading, borders,\nrow and column insertion, split cells, split\ntables, text direction and cell margins, cell size.\nUse of columns (one, two, three, left and right\ncolumns, column breaks).\nSECTION 4: WORD-PROCESSING AND WEB PAGE DESIGN (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nWORD-PROCESSING (cont’d)\nStudents should be able to:\n4. use the review feature of a word Spell and grammar check, thesaurus, word\nprocessor to enhance document count, language setting, comments, and track\nreadiness; changes.\n5. appropriately use features that allow Automatic save and backup copy, edit\nthe protection of a document; restrictions – password protection.\n6. generate table of contents for a Auto table of content.\ndocument;\n7. use mail merge feature in the Creation of primary documents and data files\npreparation of a document for a in mail merge application.\nvariety of situations;\nField names.\n8. create a fillable electronic form for Use of content controls, such as check boxes,\nonline use; text boxes, date picker, drop-down lists, and\ncommand buttons.\nWEB PAGE DESIGN\nThis section provides students with hands-on experience in the use of web design tools to create a\nsimple website.\nStudents should be able to:\n9. plan a website structure and Reasons for the website.\norganization of page;\nThe intended audience.\nNumber of web pages desired (no more than 3\npages).\nContent of each page.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "5",
+      "title": "Section 5: Spreadsheets",
+      "generalObjectives": [],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain the purpose of a spreadsheet; Purpose of a spreadsheet: a spreadsheet is a",
+          "content": "table consisting of cells (columns, row locations) that hold accounting or financial data and simulates the traditional spreadsheet. It captures displays and manipulates data."
+        },
+        {
+          "sequence": "2",
+          "title": "use appropriate terminologies and Common features: workbook, worksheet,",
+          "content": "notions commonly associated with column, row, cell (cell address, range, label, spreadsheets; value), formula, function."
+        },
+        {
+          "sequence": "3",
+          "title": "use basic pre-defined systems Including sum, average, date, max, min, count,",
+          "content": "functions; counta, countif, vlookup, pmt, if."
+        },
+        {
+          "sequence": "4",
+          "title": "create advanced arithmetic formulae; Formulae including addition, subtraction,",
+          "content": "multiplication, division, and use of brackets. 5. replicate (copy) formulae into other Relative addressing, absolute addressing, cells; naming of ranges. Effect of move, copy, delete operations on formulae."
+        },
+        {
+          "sequence": "6",
+          "title": "manipulate columns and rows; Insert, delete and modify columns and rows.",
+          "content": ""
+        },
+        {
+          "sequence": "7",
+          "title": "manipulate data in a spreadsheet; Numeric Data formatting (currency,",
+          "content": "accounting, percentage, comma, decimal places). Sorting data (primary field, secondary field, ascending vs descending order). Filtering data (multiple criteria, complex criterion). Pivot Table (create one and two dimensional pivot tables, create frequency distribution from data and create pivot chart)"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVE\nOn completion of this Section, students should develop expertise in the use of a spreadsheet package\nin the development of computer applications.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. explain the purpose of a spreadsheet; Purpose of a spreadsheet: a spreadsheet is a\ntable consisting of cells (columns, row\nlocations) that hold accounting or financial\ndata and simulates the traditional\nspreadsheet. It captures displays and\nmanipulates data.\n2. use appropriate terminologies and Common features: workbook, worksheet,\nnotions commonly associated with column, row, cell (cell address, range, label,\nspreadsheets; value), formula, function.\n3. use basic pre-defined systems Including sum, average, date, max, min, count,\nfunctions; counta, countif, vlookup, pmt, if.\n4. create advanced arithmetic formulae; Formulae including addition, subtraction,\nmultiplication, division, and use of brackets.\n5. replicate (copy) formulae into other Relative addressing, absolute addressing,\ncells; naming of ranges.\nEffect of move, copy, delete operations on\nformulae.\n6. manipulate columns and rows; Insert, delete and modify columns and rows.\n7. manipulate data in a spreadsheet; Numeric Data formatting (currency,\naccounting, percentage, comma, decimal\nplaces).\nSorting data (primary field, secondary field,\nascending vs descending order).\nFiltering data (multiple criteria, complex\ncriterion).\nPivot Table (create one and two dimensional\npivot tables, create frequency distribution from\ndata and create pivot chart)\nSECTION 5: SPREADSHEETS (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n8. perform charting operations; and, Select appropriate chart types: Column charts,\nBar charts, line graphs, pie charts.\nLabelling charts: graph titles, labels on axes,\ndata labels.\n9. Manipulate one or more worksheets. Use of one or more worksheets to solve\nproblems involving some of or all of the\nfunctions and operations listed above.\nLinking of two or more worksheets to solve\nproblems.\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this Section, teachers/facilitators are encouraged\nto engage students in the teaching and learning activities below.\n1. Teachers should engage students in using feedback on class activities towards completing their\nSBA.\n2. Encourage students to complete exercises that use functions and formulas to effect a more\nefficient and effective solution.\n[excerpt truncated]",
+      "warnings": [
+        "No general objectives were detected for this unit."
+      ]
+    },
+    {
+      "sequence": "6",
+      "title": "Section 6: Database Management",
+      "generalObjectives": [],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain the concept of a database; Definition of database:",
+          "content": "(a) repository of information; and, (b) collection of tables that are related to each other. Purpose of database."
+        },
+        {
+          "sequence": "2",
+          "title": "use terminology commonly Database terminology: table, row (record),",
+          "content": "associated with a database; column (field), primary key, secondary key, candidate key, foreign key. Data types: numeric; text; logical; date /time; currency."
+        },
+        {
+          "sequence": "3",
+          "title": "create a database; and, Table structure with at least three data",
+          "content": "types and populated with at least 25 records. Modify a table structure: adding new fields, deleting fields, changing field definitions. Establish primary keys. Establish relationships: show the joins between tables (one-to-one and one-to-many)."
+        },
+        {
+          "sequence": "4",
+          "title": "manipulate data in a database. (a) Forms:",
+          "content": ""
+        },
+        {
+          "sequence": "i",
+          "title": "Use of form wizard only;",
+          "content": "(ii) select suitable fields; and, (iii) use of sub-form. (b) Queries: (i) more than one criterion; (ii) use of select; (iii) use of calculated field; and, (iv) two or more fields involving the use of relational and logical operators."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should develop expertise in the design of a database\nmanagement system in the development of computer applications.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. explain the concept of a database; Definition of database:\n(a) repository of information; and,\n(b) collection of tables that are related to\neach other.\nPurpose of database.\n2. use terminology commonly Database terminology: table, row (record),\nassociated with a database; column (field), primary key, secondary key,\ncandidate key, foreign key.\nData types: numeric; text; logical; date /time;\ncurrency.\n3. create a database; and, Table structure with at least three data\ntypes and populated with at least 25 records.\nModify a table structure: adding new fields,\ndeleting fields, changing field definitions.\nEstablish primary keys.\nEstablish relationships: show the joins between\ntables (one-to-one and one-to-many).\n4. manipulate data in a database. (a) Forms:\n(i) Use of form wizard only;\n(ii) select suitable fields; and,\n(iii) use of sub-form.\n(b) Queries:\n(i) more than one criterion;\n(ii) use of select;\n(iii) use of calculated field; and,\n(iv) two or more fields involving the\nuse of relational and logical\noperators.\nSECTION 6: DATABASE MANAGEMENT (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n(c) Reports:\n(i) use of report wizard;\n(ii) use of sorting, grouping, statistical\nand summary features, for\nexample, count, sum, and average;\n(iii) report generated to screen, printer\nand file; and,\n(iv) renaming of report title.\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this Section, teachers/facilitators are encouraged\nto engage students in the teaching and learning activities below.\n1. Highlight various paper-based databases of which students may be aware and discuss\nadvantages of digitizing these paper-based records. From the discussion, have students\ngenerate definitions of a database and terminologies associated with a database.\n2. Engage students in exercises where they create database tables and practise changing the\ngeneral properties of database tables.\n3. Engage students in activities where they practise manipulating table-editing features such as\nsorting, inserting and deleting records and fields.\n4. Engage students in activities where they use given criteria to create simple queries that will\npull specific records from a table or tables.\n[excerpt truncated]",
+      "warnings": [
+        "No general objectives were detected for this unit."
+      ]
+    },
+    {
+      "sequence": "7",
+      "title": "Section 7: Problem-solving and Program Design",
+      "generalObjectives": [
+        "develop the cognitive skills to solve problems; and,",
+        "develop competence in applying a structured approach to solving problems on the computer."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "outline the steps in problem-solving; Steps in problem-solving:",
+          "content": ""
+        },
+        {
+          "sequence": "a",
+          "title": "define the problem;",
+          "content": "(b) propose and evaluate solutions;"
+        },
+        {
+          "sequence": "c",
+          "title": "determine the most efficient solution;",
+          "content": "(d) develop the algorithm; and, (e) test and validate the solution."
+        },
+        {
+          "sequence": "2",
+          "title": "use the divide-and-conquer approach Basic treatment of the structured approach",
+          "content": "to decompose large everyday for solving complex problems. problems into smaller tasks; Note: It is not necessary to give a detailed treatment of the approach. Simple illustrations can be provided to help students recognize that most problems involve multiple tasks and that they should understand how to approach such problems in a structured manner."
+        },
+        {
+          "sequence": "3",
+          "title": "define a problem by decomposing it The components are: input; process; and",
+          "content": "into its significant components; output. A defining diagram (IPO Chart) may be used to delineate the components."
+        },
+        {
+          "sequence": "4",
+          "title": "distinguish between variables and Variables as an area of storage whose value",
+          "content": "constants; can change during processing; the value of a constant never changes. Data types: integers, floating point (real), characters, Boolean, string."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop the cognitive skills to solve problems; and,\n2. develop competence in applying a structured approach to solving problems on the\ncomputer.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. outline the steps in problem-solving; Steps in problem-solving:\n(a) define the problem;\n(b) propose and evaluate solutions;\n(c) determine the most efficient solution;\n(d) develop the algorithm; and,\n(e) test and validate the solution.\n2. use the divide-and-conquer approach Basic treatment of the structured approach\nto decompose large everyday for solving complex problems.\nproblems into smaller tasks;\nNote: It is not necessary to give a detailed\ntreatment of the approach. Simple illustrations\ncan be provided to help students recognize that\nmost problems involve multiple tasks and that\nthey should understand how to approach such\nproblems in a structured manner.\n3. define a problem by decomposing it The components are: input; process; and\ninto its significant components; output. A defining diagram (IPO Chart) may be\nused to delineate the components.\n4. distinguish between variables and Variables as an area of storage whose value\nconstants; can change during processing; the value of a\nconstant never changes.\nData types: integers, floating point (real),\ncharacters, Boolean, string.\nSECTION 7: PROBLEM-SOLVING AND PROGRAM DESIGN (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n5. explain the concept of algorithms; Definition of algorithms.\nCharacteristics: finite number of steps,\nprecise, unambiguous, flow of control from\none process to another, terminate.\n6. represent algorithms in the form of Use of flowchart symbols: input/output,\nflowchart and pseudocode; and, process, decision, directional arrows,\nstart/stop.\nPseudocode – Use of read, input, store,\nwrite, print, output, display, conditional\nbranching (if-then, if-then-else, nested\nconditions); loops (for, while, repeat).\nUse of relational operators: <, >, =, <=, >\n=,< >.\nLogical operators: AND, OR, NOT; use of\ntruth tables.\nArithmetic operators: +‚ –‚ *, /, MOD, DIV.\n7. test algorithms for correctness. Desk checks/dry run: construction and use of\ntrace tables to verify results. Trace tables\nconsist of variable names (identifiers) as\ncolumn headings and values in the cells, one\nrow for each pass.\nSuggested Teaching and Learning Activities\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "8",
+      "title": "Section 8: Program Implementation",
+      "generalObjectives": [
+        "know how to translate an algorithm into a high-level program; and,",
+        "understand how to employ techniques to successfully execute a program."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "distinguish between low-level and high- Low-level language (Machine or Assembly).",
+          "content": "level programming languages; High-level language (For example, Visual Basic, Pascal, C)."
+        },
+        {
+          "sequence": "2",
+          "title": "describe the sequence of steps in Steps in implementing a program:",
+          "content": "implementing a program;"
+        },
+        {
+          "sequence": "a",
+          "title": "create source code;",
+          "content": "(b) translate and/or link (on some systems this step is transparent to users); (c) execute/run program; and, (d) maintain program."
+        },
+        {
+          "sequence": "3",
+          "title": "perform checks and tests on programs Errors: syntax, logic, runtime.",
+          "content": "to verify correctness; Testing (test data). Debugging techniques. 4. declare variables and constants using Data types: integer, real/double/float, elementary data types; character, string and Boolean/logical. 5. translate algorithmic statements into Assignment statements; input/output high-level language syntax; and, operations using standard input/output (reading data entered via keyboard, displaying data on monitor). Syntax for arithmetic, logic and relational operators. Syntax for conditional branching (for example, if-then, if-then-else, nested if-then- else or case). Syntax for Iteration (Loops): for, while, repeat."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. know how to translate an algorithm into a high-level program; and,\n2. understand how to employ techniques to successfully execute a program.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. distinguish between low-level and high- Low-level language (Machine or Assembly).\nlevel programming languages;\nHigh-level language (For example, Visual\nBasic, Pascal, C).\n2. describe the sequence of steps in Steps in implementing a program:\nimplementing a program;\n(a) create source code;\n(b) translate and/or link (on some systems\nthis step is transparent to users);\n(c) execute/run program; and,\n(d) maintain program.\n3. perform checks and tests on programs Errors: syntax, logic, runtime.\nto verify correctness;\nTesting (test data).\nDebugging techniques.\n4. declare variables and constants using Data types: integer, real/double/float,\nelementary data types; character, string and Boolean/logical.\n5. translate algorithmic statements into Assignment statements; input/output\nhigh-level language syntax; and, operations using standard input/output\n(reading data entered via keyboard,\ndisplaying data on monitor).\nSyntax for arithmetic, logic and relational\noperators.\nSyntax for conditional branching (for\nexample, if-then, if-then-else, nested if-then-\nelse or case).\nSyntax for Iteration (Loops): for, while,\nrepeat.\nSECTION 8: PROGRAM IMPLEMENTATION (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n6. effectively document programs. Importance of documentation.\nFeatures of internal documentation (use of\nmnemonic, variable names, use of\ncomments, indentation, effective use of\nwhite space).\nFeatures of external documentation (user\nmanual).\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this Section, teachers/facilitators are encouraged\nto engage students in the teaching and learning activities below.\n1. Provide students with various examples of codes that represent high-level and low-level\nprogramming languages.\n2. Use programming examples to demonstrate to students the effect of not declaring variables,\nconstants, or arrays, and the advantage of initializing them to avoid processing erroneous\ndata.\n3. Provide opportunities for students to practise identifying test data for sample programs to\nunderstand the use of appropriate data (for example, negative, positive, or decimal values,\n[excerpt truncated]",
+      "warnings": []
+    }
+  ]
+}

@@ -1,0 +1,837 @@
+{
+  "subject": "CSEC Industrial Technology",
+  "sourcePdf": "docs/syllabus copy/CSEC-Industrial-Technology-Syllabus.pdf",
+  "generatedAt": "2026-09-03T04:02:57+00:00",
+  "intendedUse": "Review draft for Gibbon Planner unit and block seeding. Do not import without human verification.",
+  "mapping": {
+    "unit": "gibbonUnit candidate",
+    "generalObjective": "gibbonOutcome candidate",
+    "specificObjective": "gibbonUnitBlock candidate"
+  },
+  "warnings": [],
+  "units": [
+    {
+      "sequence": "1",
+      "title": "Section 1: Fundamentals of Industry",
+      "generalObjectives": [
+        "understand the organisation of an industry with special focus on the manufacturing and construction industries;",
+        "apply a working knowledge of codes and regulations governing the manufacturing and construction industries;",
+        "demonstrate an awareness of careers in the construction and manufacturing industries and the contributions made by people who work in them; and,",
+        "demonstrate skills in the application of workshop and worksite safety, health and maintenance practices through occupational safety and health management systems."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the sectors and their roles within the construction and manufacturing industries;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "create a basic organisational structure of the construction and manufacturing industries;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "discuss the types of occupation levels and their functions in the construction and",
+          "content": "manufacturing industries;"
+        },
+        {
+          "sequence": "4",
+          "title": "analyse career paths and the requisite qualifications in the construction and manufacturing",
+          "content": "industries;"
+        },
+        {
+          "sequence": "5",
+          "title": "discuss codes and standards governing industrial processes, designs, materials and",
+          "content": "environmental practices; 6. practise occupational health, safety and welfare standards in the construction and manufacturing industries; and,"
+        },
+        {
+          "sequence": "7",
+          "title": "discuss the impact of industries on the social and economic well-being of Caribbean countries.",
+          "content": ""
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the organisation of an industry with special focus on the manufacturing and\nconstruction industries;\n2. apply a working knowledge of codes and regulations governing the manufacturing and\nconstruction industries;\n3. demonstrate an awareness of careers in the construction and manufacturing industries and\nthe contributions made by people who work in them; and,\n4. demonstrate skills in the application of workshop and worksite safety, health and maintenance\npractices through occupational safety and health management systems.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. discuss the sectors and their roles within the construction and manufacturing industries;\n2. create a basic organisational structure of the construction and manufacturing industries;\n3. discuss the types of occupation levels and their functions in the construction and\nmanufacturing industries;\n4. analyse career paths and the requisite qualifications in the construction and manufacturing\nindustries;\n5. discuss codes and standards governing industrial processes, designs, materials and\nenvironmental practices;\n6. practise occupational health, safety and welfare standards in the construction and\nmanufacturing industries; and,\n7. discuss the impact of industries on the social and economic well-being of Caribbean countries.\nSECTION 1: FUNDAMENTALS OF INDUSTRY (cont’d)\nCONTENT\n1. Sectors and their roles\n(a) Definitions of:\n(i) an industry:\n- a construction;\n- a manufacturing; and,\n- an electrical and electronic.\n(b) The construction sectors:\n(i) residential;\n(ii) industrial;\n(iii) commercial; and,\n(v) civic.\n(c) The roles of the following in the manufacturing sectors:\n(i) engineering design;\n(ii) industrial production; and,\n(iii) industrial maintenance.\n2. Organisational structure\n(a) Organisational chart of personnel (managers, workers, tasks and relationships):\n(i) top-down structure;\n(ii) flat structure; and,\n(iii) matrix.\nSECTION 1: FUNDAMENTALS OF INDUSTRY (cont’d)\n3. Occupational levels and their functions\n(a) Semi-skilled.\n(b) Skilled.\n(c) Technician supervisory.\n(d) Technologist/Master Craftsman.\n(e) Professional.\n4. Career paths and qualifications\n(a) Construction industries:\n(i) craftsmen /tradesmen - carpenters, electricians, electronics technicians,\nmasons, plumbers, furniture makers, woodcrafters, upholsterers,\npainters; welders, machine operators and fitters;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "2",
+      "title": "Section 2: Design Principles and Processes",
+      "generalObjectives": [
+        "understand the design principles and processes used in the development and modification of industry goods and services; and,",
+        "apply the design principles and processes used in industries."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain the design principles;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "explain the design elements;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "discuss the design processes;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "explain the factors that determine the appropriateness of a design; and,",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "use the principles, processes and elements of design.",
+          "content": "1. The Design Principles (a) Line, direction and style. (b) Shape and size. (c) Colour. (d) Texture. (e) Space. (f) Form. 2. The Design Elements (a) Line: (i) weights; and, (ii) line types."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the design principles and processes used in the development and modification of\nindustry goods and services; and,\n2. apply the design principles and processes used in industries.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. explain the design principles;\n2. explain the design elements;\n3. discuss the design processes;\n4. explain the factors that determine the appropriateness of a design; and,\n5. use the principles, processes and elements of design.\nCONTENT\n1. The Design Principles\n(a) Line, direction and style.\n(b) Shape and size.\n(c) Colour.\n(d) Texture.\n(e) Space.\n(f) Form.\n2. The Design Elements\n(a) Line:\n(i) weights; and,\n(ii) line types.\nSECTION 2: DESIGN PRINCIPLES AND PROCESSES (cont’d)\n(b) Colour.\n(c) Shades.\n(d) Hatching.\n3. The Design Process\n(a) Identifying the problem.\n(b) Critical analysis of a problem.\n(c) Generating alternative solutions.\n(d) Selecting the best solution.\n(e) Communication of the design ideas.\n(f) Development of working drawings.\n(g) Manaufacture of the prototype/model (functions, ergonomics, material,\nconstruction, economy, aesthetics, virtual).\n(h) Testing and evaluation of the product.\n(i) Codes and conventions (ISO and BS – British Standards).\n4. Factors that determine the appropriateness of a design\n(a) Aesthetics.\n(b) Functionality.\n(c) Economics.\n(d) Environnent – resource conservation, environmental pollution.\n(e) Ergonomics.\n(f) Suitability of material.\n(g) Innovation.\n(h) Decoration.\n(i) Anthropometrics.\n(j) Selection of material.\nSECTION 2: DESIGN PRINCIPLES AND PROCESSES (cont’d)\n5. Use the principles, elements and processes of design\n(a) Using sketches (manual or computer-aided) to design a simple product in the areas\nof:\n(i) Electrical and Electronic Technology;\n(ii) Building and Furniture Technologies; and,\n(iii) Mechanical Engineering Technology.\n(b) Analysing a simple manufactured product in the areas of:\n(i) Electrical and Electronic Technology;\n(ii) Building Technology;\n(iii) Mechanical Engineering Technology; and,\n(iv) Preparing the analysis report:\n- findings (appropriateness of the design); and,\n- recommendations.",
+      "warnings": []
+    },
+    {
+      "sequence": "3",
+      "title": "Section 3: Information Communication and Graphic Technologies",
+      "generalObjectives": [
+        "understand the uses of multimedia computer systems in industry;",
+        "understand the operating principles of a multimedia computer system; and,",
+        "apply basic communication graphics and design software."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the uses of computers in industry;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "describe the operating principles of a computer;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "use communication devices to access and exchange information;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "describe the basic principles of graphic communication;",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "perform simple tasks using design softwares; and,",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "describe modern trends in engineering technologies.",
+          "content": "1. Uses of computers in industry (i) Word processing. (ii) Accounting/financial applications. (iii) Human resource applications. (iv) Material/inventory management. (v) Process control. (vi) Robotics. (vii) Research and development. (viii) Metrology."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the uses of multimedia computer systems in industry;\n2. understand the operating principles of a multimedia computer system; and,\n3. apply basic communication graphics and design software.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. discuss the uses of computers in industry;\n2. describe the operating principles of a computer;\n3. use communication devices to access and exchange information;\n4. describe the basic principles of graphic communication;\n5. perform simple tasks using design softwares; and,\n6. describe modern trends in engineering technologies.\nCONTENT\n1. Uses of computers in industry\n(i) Word processing.\n(ii) Accounting/financial applications.\n(iii) Human resource applications.\n(iv) Material/inventory management.\n(v) Process control.\n(vi) Robotics.\n(vii) Research and development.\n(viii) Metrology.\nSECTION 3: INFORMATION COMMUNICATION AND GRAPHIC TECHNOLOGIES (cont’d)\n2. Using the operating principles of a computer\n(a) Projects to include:\n(i) storing, organising, retrieving and communicating information;\n(ii) using software for creating, editing and publishing multimedia projects;\n(iii) applying spread sheet development procedures – Writing formulae,\nusing functions, enhancing spread sheet, creating charts, printing basic\nspread sheets and charts;\n(iv) using productivity, application and presentation tools – scanners, digital\ncameras, camcorders, projectors, microphones, printers; and,\n(v) using storage devices – hard drives, USB drives, compact disc, digital\nvideo disc.\n3. Using communication devices to access and exchange information\n(a) Networks:\n(i) Intranet (LAN);\n(ii) Extranet (WAN); and,\n(iii) Internet.\n(b) Communication:\n(i) Fibre;\n(ii) WIFI;\n(iii) GPRS; and,\n(iv) Dial-up Connection.\n(c) Devices:\n(i) personal computers (PCs);\n(ii) mini computers;\n(iii) smart phones/tablets; and,\n(iv) cell phones.\nSECTION 3: INFORMATION COMMUNICATION AND GRAPHIC TECHNOLOGIES (cont’d)\n4. Applying graphics communication techniques\nUsing computer based graphical techniques:\n(a) preparing pictorial drawings using CAD;\n(b) isometric, Oblique, Perspective;\n(c) preparing orthographic drawings using CAD; and,\n(d) explaining the importance of the basic principles of CAM.\n5. Performing simple tasks using design soft wares\n(a) Media:\n(i) sound;\n(ii) pictures;\n(iii) video;\n(iv) animations; and,\n(v) text.\n(b) Software:\nMultimedia.\n(c) Developing presentations for example:\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "1",
+      "title": "Section 1: Electrical Principles and Measurements",
+      "generalObjectives": [
+        "apply knowledge of the units and theories associated with electrical principles and measurements;",
+        "demonstrate safety practices in the application of electrical theories; and,",
+        "apply the theories and concepts of related calculations and experimentations."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the structure of an atom;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "explain the electronic theory of current flow;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "analyse the principles of static electricity;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "outline the basic laws of electromagnetism;",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "explain terminologies relating to electrical measurement and quantities;",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "use electrical measuring instruments safely;",
+          "content": "7. verify the principle of Ohm’s law from project data;"
+        },
+        {
+          "sequence": "8",
+          "title": "apply the principles of resistance in determining electrical values;",
+          "content": ""
+        },
+        {
+          "sequence": "9",
+          "title": "discuss the functions of various types of circuit devices;",
+          "content": ""
+        },
+        {
+          "sequence": "10",
+          "title": "use the operating principles of AC and DC circuits;",
+          "content": ""
+        },
+        {
+          "sequence": "11",
+          "title": "outline the operating principles of basic circuit configurations;",
+          "content": ""
+        },
+        {
+          "sequence": "12",
+          "title": "calculate basic energy bills; and,",
+          "content": ""
+        },
+        {
+          "sequence": "13",
+          "title": "describe the operating principles of electricity generating devices.",
+          "content": ""
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. apply knowledge of the units and theories associated with electrical principles and\nmeasurements;\n2. demonstrate safety practices in the application of electrical theories; and,\n3. apply the theories and concepts of related calculations and experimentations.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. discuss the structure of an atom;\n2. explain the electronic theory of current flow;\n3. analyse the principles of static electricity;\n4. outline the basic laws of electromagnetism;\n5. explain terminologies relating to electrical measurement and quantities;\n6. use electrical measuring instruments safely;\n7. verify the principle of Ohm’s law from project data;\n8. apply the principles of resistance in determining electrical values;\n9. discuss the functions of various types of circuit devices;\n10. use the operating principles of AC and DC circuits;\n11. outline the operating principles of basic circuit configurations;\n12. calculate basic energy bills; and,\n13. describe the operating principles of electricity generating devices.\nSECTION 1: ELECTRICAL PRINCIPLES AND MEASUREMENTS (cont’d)\nCONTENT\n1. The structure of an atom\n(a) Diagrammatic representation of an atom.\n(b) Parts of the atom and their functions.\n(c) Nucleus and valence shells.\n(d) Differentiating between positively and negatively charged atoms:\n(i) electron loss; and,\n(ii) electron gain.\n2. The electronic theory of current flow\n(a) Definition of electricity.\n(b) Current flow.\n(c) Electron flow.\n(d) Effects of electricity:\n(i) heating;\n(ii) lighting;\n(iii) chemical;\n(iv) magnetic; and,\n(v) use simple projects to demonstrate the operating principles of each effect\nsafely.\n(e) Sources of Electromotive Force (emf) and the resistance of the circuit.\n(f) Difference between emf and potential difference (p.d).\n3. Principles of static electricity\n(a) Effects of friction on an object:\n(i) built up of excess electrons; and,\n(ii) storage of electric charge.\nSECTION 1: ELECTRICAL PRINCIPLES AND MEASUREMENTS (cont’d)\n(b) Basic rules for an electric charge:\n(i) like charges repel; and,\n(ii) unlike charges attract.\n4. Basic laws of electromagnetism\n(a) The Molecular theory of magnetism.\n(b) Laws of magnetism.\n(c) Types of magnetic materials and their uses:\n(i) ferromagnetic materials (soft and hard magnetic materials); and,\n(ii) diamagnetic materials.\n(d) Using diagrams/sketches to show:\n(i) the Magnetic effects of electric current;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "2",
+      "title": "Section 2: Electrical and Electronic Drafting",
+      "generalObjectives": [
+        "produce electrical and electronic drawings using the principles of computer-aided design and manual methods;",
+        "understand basic electronic signs and symbols; and,",
+        "display proficiency in the reading and interpretation of electrical and electronic plans, diagrams and representations."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the types of electrical and electronic drawings;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "analyse various types of electrical plans and connection diagrams;",
+          "content": "3. read and interpret plans for domestic and commercial circuits;"
+        },
+        {
+          "sequence": "4",
+          "title": "prepare simple electrical wiring diagrams and plans to engineering standards;",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "prepare schematic diagrams to engineering standards;",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "prepare flow and block diagrams to engineering standards; and,",
+          "content": ""
+        },
+        {
+          "sequence": "7",
+          "title": "explain electrical drawings to a construction team.",
+          "content": "1. and 7. Electrical and electronic drawings (a) Types: (i) electrical wiring diagrams; and, (ii) schematic diagrams. (b) Uses, characteristics and sketches of each type."
+        },
+        {
+          "sequence": "c",
+          "title": "Sketching block, flow and circuit diagrams.",
+          "content": "(d) Graphical standards and symbols for electrical and schematic diagrams."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. produce electrical and electronic drawings using the principles of computer-aided design and\nmanual methods;\n2. understand basic electronic signs and symbols; and,\n3. display proficiency in the reading and interpretation of electrical and electronic plans,\ndiagrams and representations.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. discuss the types of electrical and electronic drawings;\n2. analyse various types of electrical plans and connection diagrams;\n3. read and interpret plans for domestic and commercial circuits;\n4. prepare simple electrical wiring diagrams and plans to engineering standards;\n5. prepare schematic diagrams to engineering standards;\n6. prepare flow and block diagrams to engineering standards; and,\n7. explain electrical drawings to a construction team.\nCONTENT\n1. and 7. Electrical and electronic drawings\n(a) Types:\n(i) electrical wiring diagrams; and,\n(ii) schematic diagrams.\n(b) Uses, characteristics and sketches of each type.\n(c) Sketching block, flow and circuit diagrams.\n(d) Graphical standards and symbols for electrical and schematic diagrams.\nSECTION 2: ELECTRICAL AND ELECTRONIC DRAFTING (cont’d)\n2. Electrical plans and connection diagrams\n(a) Components, connections and symbols of electrical plans:\n(i) plot plans;\n(ii) residential and commercial;\n(iii) internal distribution systems;\n(iv) electrical distributions systems; and,\n(v) signalling circuits.\n(b) Components and connecting points in connection diagrams:\n(i) point to point diagrams;\n(ii) base line diagrams;\n(iii) high way diagrams; and,\n(iv) lineless diagrams.\n3. Plans for domestic and commercial circuits\n(a) Lines and symbols.\n(b) Circuit routes and isolation points.\n(c) Wiring layout.\n(d) Specification of plans, circuit and sub-circuits.\n(e) Calculating loads.\n(f) Computing dimensions and outlet positions from plans:\n(i) length of circuits;\n(ii) position of switches; and,\n(iii) determining quantity and cost of materials from plans (cable, flexible cords,\nand accessories).\nSECTION 2: ELECTRICAL AND ELECTRONIC DRAFTING (cont’d)\n4. Electrical wiring diagrams and plans\n(a) Guidelines and techniques for line work and notations:\n(i) one-line diagram; and,\n(ii) principles of operation of one-line diagram (symbols, type of distribution\nsystem, signalling circuits).\n(b) Converting one-line to three-line diagram and vice versa.\n(c) Designing and drawing basic electrical plans.\n5. Schematic diagrams\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "3",
+      "title": "Section 3: Electrical Power and Machines",
+      "generalObjectives": [
+        "understand the principles of electrical power generation and production;",
+        "demonstrate proficiency in the use of electrical machines;",
+        "apply the theories and methods of calculation and experimentations to analyse and solve power and machine problems; and,",
+        "appreciate the importance of workshop and worksite safety and maintenance standards."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "differentiate among apparent power, true power and power factor;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "discuss the basic sources of electrical generation and production;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "explain the principal sources and conversion of primary energy used for the generation of",
+          "content": "electricity in the region;"
+        },
+        {
+          "sequence": "4",
+          "title": "compare the different types of a.c and d.c. electrical machines;",
+          "content": "5. connect d.c. and single and three phase a.c. motors to supply mains; 6. maintain generators;"
+        },
+        {
+          "sequence": "7",
+          "title": "compare different types of transformers; and,",
+          "content": "8. install and maintain a low voltage transformer. 1. Apparent power, true power and power factor (a) Differences: (i) functions; (ii) mathematical relationships and units; and, (iii) engineering relationships."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the principles of electrical power generation and production;\n2. demonstrate proficiency in the use of electrical machines;\n3. apply the theories and methods of calculation and experimentations to analyse and solve\npower and machine problems; and,\n4. appreciate the importance of workshop and worksite safety and maintenance standards.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. differentiate among apparent power, true power and power factor;\n2. discuss the basic sources of electrical generation and production;\n3. explain the principal sources and conversion of primary energy used for the generation of\nelectricity in the region;\n4. compare the different types of a.c and d.c. electrical machines;\n5. connect d.c. and single and three phase a.c. motors to supply mains;\n6. maintain generators;\n7. compare different types of transformers; and,\n8. install and maintain a low voltage transformer.\nCONTENT\n1. Apparent power, true power and power factor\n(a) Differences:\n(i) functions;\n(ii) mathematical relationships and units; and,\n(iii) engineering relationships.\nSECTION 3: ELECTRICAL POWER AND MACHINES (cont’d)\n2. Basic sources of electrical generation and production\n(a) Sources:\n(i) friction;\n(ii) pressure;\n(iii) heat;\n(iv) light;\n(v) chemical action; and,\n(vi) electromagnetic induction.\n(b) Functions and characteristics of each source.\n(c) Advantages and disadvantages of each source.\n3. Principal sources of primary energy\nNon-renewable energy sources:\nFossil fuel – oil, coal, natural gas, mineral fuel (uranium).\n(a) Renewable energy sources:\n(i) solar;\n(ii) wind;\n(iii) tidal; and,\n(iv) geothermal.\n(b) Production processes in:\n(i) an oil refinery;\n(ii) fossil fuel power plant;\n(iii) wind farm;\n(iv) photovaltic system; and,\n(v) nuclear power plant.\nSECTION 3: ELECTRICAL POWER AND MACHINES (cont’d)\n(c) Primary energy and the Law of Thermodynamics.\n(d) Methods of converting primary energy to electrical energy:\nProcesses in:\n(i) steam-driven generators;\n(ii) internal combustion engine-driven generators; and,\n(iii) hydro-driven generators.\n4. AC and DC electrical machines\n(a) Types:\n(i) generators;\n(ii) motors; and,\n(iii) transformers.\n(b) Parts and their functions.\n(c) Construction features and operating principles.\n(d) Codes and regulations.\n(e) Service and maintenance procedures.\n(f) Generator and motor related calculations: Power, synchronous speed, percentage slip\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "4",
+      "title": "Section 4: Electrical Installation",
+      "generalObjectives": [
+        "understand the codes and regulations governing electrical wiring systems;",
+        "demonstrate skills in the installation of wiring systems for domestic and industry purposes;",
+        "understand the operating principles of lighting, cooling and heating systems;",
+        "demonstrate with accuracy the use of calculations and experimentations to solve related problems; and,",
+        "comply with safety and maintenance standards."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain codes and regulations governing wiring systems;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "explain terminologies associated with wiring systems;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "distinguish between domestic and industrial installation;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "explain the different categorises of electrical materials and their uses;",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "discuss the functions of basic wiring systems;",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "discuss the functions of basic electrical terminators;",
+          "content": "7. conduct basic tests on wiring systems; 8. troubleshoot faults in wiring systems; and,"
+        },
+        {
+          "sequence": "9",
+          "title": "demonstrate skills in electrical installation.",
+          "content": "1. Codes and regulations associated with wiring systems (a) Regional codes: J S 21 standards."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the codes and regulations governing electrical wiring systems;\n2. demonstrate skills in the installation of wiring systems for domestic and industry purposes;\n3. understand the operating principles of lighting, cooling and heating systems;\n4. demonstrate with accuracy the use of calculations and experimentations to solve related\nproblems; and,\n5. comply with safety and maintenance standards.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. explain codes and regulations governing wiring systems;\n2. explain terminologies associated with wiring systems;\n3 distinguish between domestic and industrial installation;\n4. explain the different categorises of electrical materials and their uses;\n5. discuss the functions of basic wiring systems;\n6. discuss the functions of basic electrical terminators;\n7. conduct basic tests on wiring systems;\n8. troubleshoot faults in wiring systems; and,\n9. demonstrate skills in electrical installation.\nCONTENT\n1. Codes and regulations associated with wiring systems\n(a) Regional codes:\nJ S 21 standards.\nSECTION 4: ELECTRICAL INSTALLATION (cont’d)\n(b) International codes:\n(i) IEE wiring regulations; and,\n(ii) NEC wiring regulations.\n2. Terminologies associated with wiring systems\n(a) Circuits.\n(b) Circuit symbols.\n(c) Electricity flows.\n(d) Generating apparatus.\n(e) Controlling apparatus.\n(f) Cables.\n(g) Wiring support.\n3. Domestic and industrial installation\nDifferences in:\n(a) domestic installation;\n(b) commercial; and,\n(c) industrial installation.\n4. Electrical installation materials\n(a) Categories:\n(i) construction;\n(ii) conducting;\n(iii) resisting;\n(iv) insulating;\n(v) magnetic; and,\n(vi) semi-conducting.\nSECTION 4: ELECTRICAL INSTALLATION (cont’d)\n(b) Examples and uses of each category.\n5. Basic wiring systems\n(a) Types:\n(i) radial system;\n(ii) ring circuit systems;\n(iii) distribution systems;\n(iv) security/fire alarm systems;\n(v) domestic telephone systems; and,\n(vi) motor starter systems.\n(b) Functions of each wiring system.\n(c) Sketches/schematic diagrams of each system.\n6. Electrical terminators\n(a) Types:\n(i) passive (a resistor); and,\n(ii) active (voltage regulator).\n(b) Functions of each type.\n7. Wiring systems’ tests:\n(a) Verification of polarity.\n(b) Insulation resistance between conductors and between conductors and earth.\n(c) Earth continuity conductor.\n(d) Earth leakage.\nSECTION 4: ELECTRICAL INSTALLATION (cont’d)\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "5",
+      "title": "Section 5: Fundamentals of Electronics",
+      "generalObjectives": [
+        "understand codes and regulations relating to electronics and electronic systems;",
+        "understand the basic operating principles of electronics;",
+        "demonstrate a working knowledge of circuit assembly tools and equipment in accordance with codes, regulations and instructional guidelines;",
+        "perform accurate calculations and experimentations to analyse and solve problems associated with circuits, input and output devices; and,",
+        "observe safety and maintenance standards."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the features and functions of basic electronic components;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "compare analogue and digital systems;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "explain the operating principles of thermoelectricity;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "prepare solder joints;",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "explain the operating principles of basic semi-conductor devices and materials;",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "differentiate between filtering circuits and rectifying circuits;",
+          "content": ""
+        },
+        {
+          "sequence": "7",
+          "title": "construct a full and a half wave rectifier circuit;",
+          "content": ""
+        },
+        {
+          "sequence": "8",
+          "title": "use basic semi-conductor devices;",
+          "content": ""
+        },
+        {
+          "sequence": "9",
+          "title": "explain the functions of basic logi gates and their truth tables;",
+          "content": "10. design circuits using truth tables and Boolean notation for a binary to decimal decoder;"
+        },
+        {
+          "sequence": "11",
+          "title": "construct combinational logic circuits using integrated circuits;",
+          "content": ""
+        },
+        {
+          "sequence": "12",
+          "title": "evaluate various types of multi-vibrators;",
+          "content": ""
+        },
+        {
+          "sequence": "13",
+          "title": "construct and test serial shift register and four bit counter circuits; and,",
+          "content": ""
+        },
+        {
+          "sequence": "14",
+          "title": "explain the production and use of electromagnetic radio and TV frequency waves.",
+          "content": ""
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand codes and regulations relating to electronics and electronic systems;\n2. understand the basic operating principles of electronics;\n3. demonstrate a working knowledge of circuit assembly tools and equipment in accordance with\ncodes, regulations and instructional guidelines;\n4. perform accurate calculations and experimentations to analyse and solve problems associated\nwith circuits, input and output devices; and,\n5. observe safety and maintenance standards.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. discuss the features and functions of basic electronic components;\n2. compare analogue and digital systems;\n3. explain the operating principles of thermoelectricity;\n4. prepare solder joints;\n5. explain the operating principles of basic semi-conductor devices and materials;\n6. differentiate between filtering circuits and rectifying circuits;\n7. construct a full and a half wave rectifier circuit;\n8. use basic semi-conductor devices;\n9. explain the functions of basic logi gates and their truth tables;\n10. design circuits using truth tables and Boolean notation for a binary to decimal decoder;\n11. construct combinational logic circuits using integrated circuits;\n12. evaluate various types of multi-vibrators;\n13. construct and test serial shift register and four bit counter circuits; and,\n14. explain the production and use of electromagnetic radio and TV frequency waves.\nSECTION 5: FUNDAMENTALS OF ELECTRONICS (cont’d)\nCONTENT\n1. Features and functions of basic electronic components\n(a) Diodes.\n(b) Transistors.\n(c) Thermistors.\n(d) Integrated circuits.\n(e) Composite circuits (RIC, R/L, C/L).\n(f) TRIACs, SCRs, LEDs.\n2. Comparing analogue and digital systems\nDifferences:\n(a) uses;\n(b) operating principles;\n(c) circuitry;\n(d) waveforms;\n(e) current variations;\n(f) signals; and,\n(g) frequency.\n3. The operating principles of thermoelectricity\n(a) Thermoelectric materials and devices.\n(b) Conduction and transportation of electrons.\n(c) Thermionic emissions.\n(d) Thermistor and Thermocouple principles and applications.\n(e) Researchers associated with thermoelectricity (Joule, Seebeck, Peltier, Thompson).\nSECTION 5: FUNDAMENTALS OF ELECTRONICS (cont’d)\n4. Solder joints\n(a) Procedures for using soft and hard soldering and soldering irons.\n(b) Heat conduction.\n(c) Oxidation.\n(d) Oxidation removal.\n(e) Molecular action.\n(f) Conductor materials.\n(g) Flux.\n(h) Desoldering procedures.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "1",
+      "title": "Section 1: Materials, Hand Tools and Processes",
+      "generalObjectives": [
+        "develop an understanding of the fundamental scientific principles associated with engineering materials, tools and processes;",
+        "understand the basic scientific principles governing metallurgy and materials engineering;",
+        "develop a working knowledge of the selection, use and maintenance of materials and hand tools;",
+        "demonstrate the use of materials, hand tools and processes in the efficient production of goods and services; and,",
+        "appreciate the importance of engineering codes and regulations."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "distinguish among the methods used in the production of basic engineering materials and",
+          "content": "their uses;"
+        },
+        {
+          "sequence": "2",
+          "title": "explain the factors to consider in selecting engineering materials;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "describe the functions of engineering hand tools;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "describe the response of solid materials to different type of forces applied to them;",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "discuss the basic heat treatment methods for metals;",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "perform basic heat treatment to ferrous and non-ferrous materials for specific purposes;",
+          "content": ""
+        },
+        {
+          "sequence": "7",
+          "title": "perform bench work operations; and,",
+          "content": ""
+        },
+        {
+          "sequence": "8",
+          "title": "discuss the operations of cutting tools.",
+          "content": ""
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an understanding of the fundamental scientific principles associated with engineering\nmaterials, tools and processes;\n2. understand the basic scientific principles governing metallurgy and materials engineering;\n3. develop a working knowledge of the selection, use and maintenance of materials and hand\ntools;\n4. demonstrate the use of materials, hand tools and processes in the efficient production of goods\nand services; and,\n5. appreciate the importance of engineering codes and regulations.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. distinguish among the methods used in the production of basic engineering materials and\ntheir uses;\n2. explain the factors to consider in selecting engineering materials;\n3. describe the functions of engineering hand tools;\n4. describe the response of solid materials to different type of forces applied to them;\n5. discuss the basic heat treatment methods for metals;\n6. perform basic heat treatment to ferrous and non-ferrous materials for specific purposes;\n7. perform bench work operations; and,\n8. discuss the operations of cutting tools.\nSECTION 1: MATERIALS, HAND TOOLS AND PROCESSES (cont’d)\nCONTENT\n1. Methods used in the production of basic engineering materials and their uses\n(a) Ferrous materials and their alloys:\n(i) iron and steel;\n(ii) sources;\n(iii) production processes ;\n(iv) diagrams and sketches of the production processes;\n(v) properties; and,\n(vi) uses.\n(b) Non-ferrous materials and their alloys:\n(i) aluminium;\n(ii) copper;\n(iii) lead;\n(iv) zinc; and,\n(v) brass:\n- sources;\n- production processes;\n- sketches and diagrams of the production processes;\n- properties; and,\n- uses.\n(c) Plastics:\n(i) thermoplastics;\n(ii) polymers; and,\nSECTION 1: MATERIALS, HAND TOOLS AND PROCESSES (cont’d)\n(iii) co-polymers;\n- sources;\n- production processes;\n- sketch and diagrams of the production processes;\n- properties of various plastics; and,\n- uses.\n2. Engineering materials\n(a) The function of the finished product.\n(b) The design of the product.\n(c) Structural and mechanical properties of the material.\n(d) Cost of the material.\n(e) Wear resistance.\n(f) Corrosion resistance.\n3. Engineering hand tools for bench work\n(a) Marking out.\n(b) Measurement.\n(c) Inspection and holding.\n(d) Labelled diagrams and sketches of hand tools.\n4. Forces applied to solid materials\n(a) Response of engineering materials to:\n(i) tension compression;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "2",
+      "title": "Section 2: Graphic Communication and Design",
+      "generalObjectives": [
+        "develop skills in preparing, reading and interpreting blueprint and design to engineering standards;",
+        "understand the principles of design in the identification and solutions of engineering problems; and,",
+        "develop proficiency in the application of computer-aided design/computer-aided manufacturing."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "compare the basic methods of graphic communication used in engineering;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "prepare orthographic drawings;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "discuss the different types of pictorial drawings;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "prepare engineering drawings;",
+          "content": "5. read and interpret engineering drawings;"
+        },
+        {
+          "sequence": "6",
+          "title": "assess the design of basic engineering components; and,",
+          "content": "7. design simple engineering products. 1. Basic methods of graphic communication used in engineering (a) Methods of graphic communication: (i) pictures; (ii) diagrams; (iii) drawings - pictorial, orthographic, working drawing, assembly drawing; (iv) geometrical drawing - surface developments, interpenetration of solids, projection of points, lines and planes; and, (v) uses of models, notes and notation."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop skills in preparing, reading and interpreting blueprint and design to engineering\nstandards;\n2. understand the principles of design in the identification and solutions of engineering problems;\nand,\n3. develop proficiency in the application of computer-aided design/computer-aided\nmanufacturing.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. compare the basic methods of graphic communication used in engineering;\n2. prepare orthographic drawings;\n3. discuss the different types of pictorial drawings;\n4. prepare engineering drawings;\n5. read and interpret engineering drawings;\n6. assess the design of basic engineering components; and,\n7. design simple engineering products.\nCONTENT\n1. Basic methods of graphic communication used in engineering\n(a) Methods of graphic communication:\n(i) pictures;\n(ii) diagrams;\n(iii) drawings - pictorial, orthographic, working drawing, assembly drawing;\n(iv) geometrical drawing - surface developments, interpenetration of solids,\nprojection of points, lines and planes; and,\n(v) uses of models, notes and notation.\nSECTION 2: GRAPHIC COMMUNICATION AND DESIGN (cont’d)\n(b) Methods of preparing graphic communication:\n(i) manual and Computer-Assisted Drawing (CAD);\n(ii) functions of each method;\n(iii) advantages and disadvantages of each method; and,\n(iv) preparing samples using each method (photographs, sketches, drawings).\n2. Orthographic drawings\nAD and manual drawing principles for:\n(a) first angle projection; and,\n(b) third angle projection.\n3. Pictorial drawings\n(a) Types:\n(i) isometric;\n(ii) oblique: cavalier; and,\n(iii) perspective.\n(b) Functions of each type of pictorial drawing.\n(c) Drawing principles for each type of pictorial drawing.\n(d) Drawings and sketches using CAD and manual method:\n(i) 2-D CAD drawing; and,\n(ii) 3-D CAD drawing.\n(e) Applying the basic principles of CAM:\n(i) principles of cutting tool axes;\n(ii) identifying Z and X axis;\n(iii) movement in the Z and X axes; and,\n(iv) using absolute coordinates.\nSECTION 2: GRAPHIC COMMUNICATION AND DESIGN (cont’d)\n4. Engineering drawings\n(a) Types:\n(i) multi-view;\n(ii) sectional;\n(iii) assembly; and,\n(iv) auxiliary drawings.\n(b) Preparing multi view drawings of nuts, bolts, pins cam, gear and spring.\n(c) Preparing simple engineering geometric drawings:\n(i) geometrical solids - prisms, pyramid;\n(ii) surface development - prism, cones, cylinders, square pyramid inter-\npenetration;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "3",
+      "title": "Section 3: Production Engineering",
+      "generalObjectives": [
+        "demonstrate a working knowledge of the operating principles of production tools, equipment and manufacturing processes;",
+        "develop skills in selecting the appropriate materials, tools and equipment for the production of goods and services;",
+        "develop proficiency in the use of calculations and the design process to analyse and solve problems relating to production engineering processes;",
+        "value the principles of quality and standards in the production of goods and services; and,",
+        "appreciate occupational health and safety standards."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "apply safe working practices, workshop and equipment maintenance techniques;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "explain the processes used to shape metals;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "differentiate between sand casting and die-casting techniques;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "explain the features and operating principles of simple machines;",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "explain the functions of special parts, accessories and processes essential to the effective",
+          "content": "operation of productive engineering machines; and,"
+        },
+        {
+          "sequence": "6",
+          "title": "demonstrate competencies in a range of production engineering projects.",
+          "content": "1. Safe work practices, workshop and equipment maintenance techniques (a) OHS standards. (b) Safety rules for using hand tools and equipment. (c) Predictive and preventative maintenance of hand tools and equipment."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. demonstrate a working knowledge of the operating principles of production tools, equipment\nand manufacturing processes;\n2. develop skills in selecting the appropriate materials, tools and equipment for the production\nof goods and services;\n3. develop proficiency in the use of calculations and the design process to analyse and solve\nproblems relating to production engineering processes;\n4. value the principles of quality and standards in the production of goods and services; and,\n5. appreciate occupational health and safety standards.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. apply safe working practices, workshop and equipment maintenance techniques;\n2. explain the processes used to shape metals;\n3. differentiate between sand casting and die-casting techniques;\n4. explain the features and operating principles of simple machines;\n5. explain the functions of special parts, accessories and processes essential to the effective\noperation of productive engineering machines; and,\n6. demonstrate competencies in a range of production engineering projects.\nCONTENT\n1. Safe work practices, workshop and equipment maintenance techniques\n(a) OHS standards.\n(b) Safety rules for using hand tools and equipment.\n(c) Predictive and preventative maintenance of hand tools and equipment.\nSECTION 3: PRODUCTION ENGINEERING (cont’d)\n2. Processes used to shape metals\n(a) Processes:\n(i) casting;\n(ii) forging;\n(iii) rolling;\n(iv) extrusion;\n(v) sintering;\n(vi) metal machining; and,\n(vii) metal fabrication.\n(b) Functions of each process.\n(c) Equipment, tools and materials used in each process.\n(d) Sketches/diagrams depicting each process.\n(e) Safety guidelines and procedures applicable to each process.\n3. Sand casting and die-casting techniques\n(a) Definitions:\n(i) sand casting; and,\n(ii) die-casting.\n(b) Differences:\n(i) operating principles;\n(ii) equipment, materials and tools used;\n(iii) temperature control and testing instruments;\n(iv) advantages and disadvantages of each method;\n(v) nature of the casting defects and their solutions;\n(vi) labelled diagrams of sand casting and die-casting processes; and,\n(vii) safety procedures in each technique.\nSECTION 3: PRODUCTION ENGINEERING (cont’d)\n4. Features and operating principles of simple machines:\n(a) Types:\n(i) levers;\n(ii) pulleys; and,\n(iii) wheel and axel.\n(b) Operating principles:\n(i) levers;\n(ii) pulleys; and,\n(iii) wheel and axel.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "4",
+      "title": "Section 4: Art Metal Work",
+      "generalObjectives": [
+        "demonstrate a working knowledge of decorative metal craft through the production of basic household and commercial products; and,",
+        "appreciate the principles of quality and standards in the production of engineering goods and services."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain the basic processes used in art metal work;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "use different kinds of ornamental metal to prepare basic household and commercial",
+          "content": "products; and,"
+        },
+        {
+          "sequence": "3",
+          "title": "apply different finishing and decoration techniques using prescribed guidelines and standards.",
+          "content": "1. Processes used in art metal work"
+        },
+        {
+          "sequence": "a",
+          "title": "Shaping metals",
+          "content": "Safety guidelines, procedures and standards for shaping metals: - bending; - drawing down; - upsetting; - punching and drifting; - fullering; - flattening; - swaging; - twisting; - cutting; and, - scrolling."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. demonstrate a working knowledge of decorative metal craft through the production of basic\nhousehold and commercial products; and,\n2. appreciate the principles of quality and standards in the production of engineering goods\nand services.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. explain the basic processes used in art metal work;\n2. use different kinds of ornamental metal to prepare basic household and commercial\nproducts; and,\n3. apply different finishing and decoration techniques using prescribed guidelines and standards.\nCONTENT\n1. Processes used in art metal work\n(a) Shaping metals\nSafety guidelines, procedures and standards for shaping metals:\n- bending;\n- drawing down;\n- upsetting;\n- punching and drifting;\n- fullering;\n- flattening;\n- swaging;\n- twisting;\n- cutting; and,\n- scrolling.\nSECTION 4: ART METAL WORK (cont’d)\n(b) Finishing\nSafety guidelines, procedures and standards for:\n- enamelling;\n- etching; and,\n- hammering.\n(c) Uses and operational procedures of each process.\n(d) Materials, tools and equipment uses in each process.\n2. Ornamental metal for basic household and commercial products\n(a) Safety guidelines, procedures and standards in using:\n(i) aluminium;\n(ii) brass;\n(iii) copper;\n(iv) gold; and,\n(v) silver.\n(b) Processes:\n(i) rolling;\n(ii) hollowing; and,\n(iii) raising.\n3. Finishing and decoration techniques\nDecoration techniques:\n(a) enamelling;\n(b) etching; and,\n(c) hammering.\nWORKSHOP/LABORATORY FACILITIES\nRecommended equipment for a class of 16.\nThis list provided is for a general Mechanical Engineering laboratory for the syllabus sections\nidentified.\nMachine Shop\nLathe 9\"/255mm swing, quick change gear box 36\"/900mm bed pedestal base 1\n(desirable)\nLathe 12\"/300mm swing, quick change gear box, 48\"/1200mm pedestal base 1\n(desirable)\nRecommended Accessories\nDraw in Collet Chuck assembly (for 9\"/225mm swing lathe) 2 sets\nIndependent four jaw and universal chucks 2 sets\n(for 9\"/225mm swing lathe) Sizes 6\"/150mm 1 set\n(for 12\"/300mm swing lathe) Size 8\"/220mm\nUniversal 3-jaw chuck Sizes 6\"/150mm 2 sets\n(for 9\"/225mm swing lathe) Sizes 8\"/200mm 1 set\n(for 12\"/300mm swing lathe)\nLathe Dogs with cranked on straight tails to suit driving plates provided with Lathes -\n1/2\"/13mm, 3/4\"/16mm, 1\"/25mm, 1 1/2\"/30mm\nJacob’s Chuck 0\" – 1/2\"/13mm complete with taper shank and sleeve to fit tailstock 1\nof both lathes\nTool holders – left, right and straight 2 sets\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "1",
+      "title": "Section 1: The Natural and Built Environment",
+      "generalObjectives": [
+        "understand the components of the natural and built environment;",
+        "understand environmental issues and their impact on the built and natural environment;",
+        "appreciate the influence of other cultures on local and regional building styles; and,",
+        "understand the principles that govern building industry."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the components of the natural environment;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "discuss the components of the built environment;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "assess the impact of environmental pollution on the natural and built environment;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "discuss the influence of other cultures on local building styles; and,",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "discuss the principles that govern the building construction industry.",
+          "content": "1. Natural environment (a) Definitions: (i) the natural environment; and, (ii) the built environment. (b) Components of the natural environment: (i) the eco-system; (ii) the atmosphere; (iii) the geosphere; and,"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the components of the natural and built environment;\n2. understand environmental issues and their impact on the built and natural environment;\n3. appreciate the influence of other cultures on local and regional building styles; and,\n4. understand the principles that govern building industry.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. discuss the components of the natural environment;\n2. discuss the components of the built environment;\n3. assess the impact of environmental pollution on the natural and built environment;\n4. discuss the influence of other cultures on local building styles; and,\n5. discuss the principles that govern the building construction industry.\nCONTENT\n1. Natural environment\n(a) Definitions:\n(i) the natural environment; and,\n(ii) the built environment.\n(b) Components of the natural environment:\n(i) the eco-system;\n(ii) the atmosphere;\n(iii) the geosphere; and,\nSECTION 1: THE NATURAL AND BUILT ENVIRONMENT (cont’d)\n(iv) diagrams.\n2. Built environment\n(a) Definition for the built environment.\n(b) Environmental polices relating to land management practices, use and restrictions.\n(c) Buildings and infrastructure to satisfy humans’ needs (including homes, communities,\ncities, industries, bridges, roads).\n(d) Technology (materials, energy, finances, methods and systems used to construct the\nbuilt environment).\n(e) Labelled diagrams.\n3. Impact of environmental pollution on the natural and built environment\n(a) Effects of climate change:\n(i) definition of climate change;\n(ii) reasons for increase in natural disasters (flooding, hurricane, acid rain,\nearthquakes;\n(iii) reasons for decrease in water resources (flow and quality); and,\n(iv) reasons for decrease in soil quality (loss of organic matter and soil fertility,\nerosion of soil.\n(b) Risk management strategies:\n(i) the KYOTO Protocol; and,\n(ii) local, regional and international convention, treaties and sustainable\ndevelopment practices.\n4. The influence of other cultures on Caribbean building styles.\nFeatures of the following architecture in Caribbean building styles:\n(a) British;\n(b) French;\n(c) Indian; and,\nSECTION 1: THE NATURAL AND BUILT ENVIRONMENT (cont’d)\n(d) American.\n5. Principles of the building construction industry\n(a) Classification of buildings:\n(i) residential;\n(ii) commercial; and,\n(iii) social/civic industrial.\n(b) Basic building structures:\n(i) solid;\n(ii) framed;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "2",
+      "title": "Section 2: Site Work Operations",
+      "generalObjectives": [
+        "develop a working knowledge of the fundamentals of basic site work; and,",
+        "appreciate the importance and levels of preparation for site work operations."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the factors to be considered when choosing a building site;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "prepare for site works operations;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "explain the methods of clearing a building site;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "explain the purposes of hoarding;",
+          "content": "5. lay out simple buildings/structures; and,"
+        },
+        {
+          "sequence": "6",
+          "title": "prepare for an excavation.",
+          "content": ""
+        },
+        {
+          "sequence": "1",
+          "title": "Choosing a building site",
+          "content": "(a) Factors: (i) soil-load bearing capacity; (ii) cohesive and non-cohesive soils; (iii) correct foundation: (iv) accessibility; (v) cost; (vi) topography; (vii) history; (viii) availability of utilities;"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop a working knowledge of the fundamentals of basic site work; and,\n2. appreciate the importance and levels of preparation for site work operations.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. discuss the factors to be considered when choosing a building site;\n2. prepare for site works operations;\n3. explain the methods of clearing a building site;\n4. explain the purposes of hoarding;\n5. lay out simple buildings/structures; and,\n6. prepare for an excavation.\nCONTENT\n1. Choosing a building site\n(a) Factors:\n(i) soil-load bearing capacity;\n(ii) cohesive and non-cohesive soils;\n(iii) correct foundation:\n(iv) accessibility;\n(v) cost;\n(vi) topography;\n(vii) history;\n(viii) availability of utilities;\nSECTION 2: SITE WORK OPERATIONS (cont’d)\n(ix) zoning;\n(x) prospect;\n(xi) aspect;\n(xii) location;\n(xiii) size; and,\n(xiv) climate.\n2. Site work operations\n(a) Types of documentations:\n(i) Building design; and,\n(ii) Construction documents.\n(b) Knowledge of the contractor’s responsibilities.\n(c) Construction of temporary shelters and services:\n(i) site offices;\n(ii) sanitary facilities;\n(iii) equipment and material storage;\n(iv) water;\n(v) electricity;\n(vi) gas; and,\n(vii) telephone.\n(d) Access road.\n(e) Types of equipment for:\n(i) digging;\n(ii) lifting; and,\nSECTION 2: SITE WORK OPERATIONS (cont’d)\n(iii) fixing and measuring.\n(f) Safety and maintenance standards (workers, use and storage of equipment).\n3. Methods of clearing a building site\n(a) Safety guidelines, procedures and standards for manual and mechanical methods.\n(b) Operations:\n(i) strip site;\n(ii) cutting trees;\n(iii) demolish old buildings;\n(iv) earthing;\n(v) salvaging;\n(vi) disposing; and,\n(vii) removal of debris, old stumps old cars.\n4. Hoarding\n(a) Definition of hoarding.\n(b) Purposes:\n(i) protection of the public;\n(ii) protection of materials;\n(iii) general security; and,\n(iv) reduction of interference and interruptions.\n5. Laying out simple buildings/structures\n(a) Safety guidelines, procedures and standards for manual and mechanical methods:\n(i) square and rectangular buildings; and,\nSECTION 2: SITE WORK OPERATIONS (cont’d)\n(ii) site datum use.\n(b) Measuring/Calculating:\n(i) the distance from the site boundary to the building line on the working\ndrawing; and,\n(ii) using Pythagoras theorem (3:4:5) and builder’s square to check squareness.\n(c) Establishing levels:\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "3",
+      "title": "Section 3: Basic Architectural Drawings",
+      "generalObjectives": [
+        "develop proficiency in the production of basic architectural drawings using manual and CAD standards; and,",
+        "develop proficiency in the reading, preparation and interpretation of architectural plans."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "prepare detailed drawings;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "prepare sectional views;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "apply the principles of geometric construction; and,",
+          "content": "4. read and interpret site plans. 1. Drawings"
+        },
+        {
+          "sequence": "a",
+          "title": "Using guidelines and standards to prepare:",
+          "content": "(i) details of windows in masonry block wall (frame, glass fixing, sill, awning, sliding, sash, casement, pivot); (ii) details of doors; (iii) timber staircase; (iv) roof member; (v) floors (timber and concrete upgrade); (vi) columns (timber and concrete); (vii) beams; and, (viii) carcase (framed, box and panel)."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop proficiency in the production of basic architectural drawings using manual and CAD\nstandards; and,\n2. develop proficiency in the reading, preparation and interpretation of architectural plans.\nSPECIFIC OBJECTIVES\nStudents should be able to:\n1. prepare detailed drawings;\n2. prepare sectional views;\n3. apply the principles of geometric construction; and,\n4. read and interpret site plans.\nCONTENT\n1. Drawings\n(a) Using guidelines and standards to prepare:\n(i) details of windows in masonry block wall (frame, glass fixing, sill, awning,\nsliding, sash, casement, pivot);\n(ii) details of doors;\n(iii) timber staircase;\n(iv) roof member;\n(v) floors (timber and concrete upgrade);\n(vi) columns (timber and concrete);\n(vii) beams; and,\n(viii) carcase (framed, box and panel).\nSECTION 3: BASIC ARCHITECTURAL DRAWINGS (cont’d)\n2. Sectional views\nUsing guidelines and standards for the following sectional views of buildings and building\ncomponents:\n(a) a timber floor;\n(b) roof members ( rafter, ridge, plate, battens, covering);\n(c) timber stair-case;\n(d) broken out sections of a building (masonry block walls; and,\n(e) doors and windows.\n3. Geometrical Construction\n(a) Types.\n(b) Principles of geometrical construction.\n4. Architectural drawings or site plans\nSources:\n(a) Plot plans to include:\n(i) property lines;\n(ii) shape, location and size of the building;\n(iii) elevation of each corner of the site;\n(iv) utilities;\n(v) septic tanks;\n(vi) scale of the drawing; and,\n(vii) property description.\n(b) Foundation plans to include:\n(i) footings;\n(ii) columns;\n(iii) foundation walls;\nSECTION 3: BASIC ARCHITECTURAL DRAWINGS (cont’d)\n(iv) floor joists;\n(v) drains;\n(vi) footing/foundation sections and details;\n(vii) dimensions;\n(viii) scale of the drawing; and,\n(ix) notation.\n(c) Floor plans to include:\n(i) dimensions;\n(ii) interior and exterior walls;\n(iii) doors;\n(iv) windows;\n(v) plumbing fixtures;\n(vi) electrical fixtures;\n(vii) stairs;\n(viii) door and window schedules;\n(ix) scale of the drawing; and,\n(x) notation.",
+      "warnings": []
+    },
+    {
+      "sequence": "4",
+      "title": "Section 4: Timber Technology",
+      "generalObjectives": [
+        "understand the characteristics, uses, parts and properties of timber and timber products;",
+        "develop skills in selecting, treating, and storing timber and timber products; and,",
+        "develop a working knowledge of the preparation of timber for production purposes."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the main classification of trees;",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "identify the parts of the cross-section of a tree;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "explain the methods of processing timber;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "explain the methods of seasoning timber;",
+          "content": ""
+        },
+        {
+          "sequence": "5",
+          "title": "identify different types of defects associated with timber; and,",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "explain the methods of timber preservation.",
+          "content": "1. Classification of trees: (a) Classification of trees: (i) hard woods (including mahogany, teak, oak, birch); and, (ii) soft woods (including cedar, pine and red wood). 2. Parts of a tree and their functions: (a) cambium layer; (b) growth ring; (c) pith; (d) xylem and phloem;"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the characteristics, uses, parts and properties of timber and timber products;\n2. develop skills in selecting, treating, and storing timber and timber products; and,\n3. develop a working knowledge of the preparation of timber for production purposes.\nSPECIFIC OBJECTIVES\nStudents should be able to:\n1. discuss the main classification of trees;\n2. identify the parts of the cross-section of a tree;\n3. explain the methods of processing timber;\n4. explain the methods of seasoning timber;\n5. identify different types of defects associated with timber; and,\n6. explain the methods of timber preservation.\nCONTENT\n1. Classification of trees:\n(a) Classification of trees:\n(i) hard woods (including mahogany, teak, oak, birch); and,\n(ii) soft woods (including cedar, pine and red wood).\n2. Parts of a tree and their functions:\n(a) cambium layer;\n(b) growth ring;\n(c) pith;\n(d) xylem and phloem;\nSECTION 4: TIMBER TECHNOLOGY (cont’d)\n(e) bark;\n(f) sapwood;\n(g) heartwood; and,\n(h) labelled diagrams of the cross section of a tree trunk.\nProperties of hardwood and soft wood:\n(a) grain direction;\n(b) texture;\n(c) colour;\n(d) strength;\n(e) weight; and,\n(f) durability.\n3. Methods of processing timber\n(a) Conversion of lumber:\n(i) plain/flat sawing (through and through sawing, slab sawing);\n(ii) quarter sawing;\n(iii) tangential sawing; and,\n(iv) radial sawing.\n(b) Types of timber boards according to:\n(i) sizes (boards, lath, posts); and,\n(ii) grading (select timber for commercial purposes).\n(c) Dress and rough timber:\nGuidelines, materials, equipment and standards for the following finishes;\n(i) Flat;\n(ii) Straight.\nSECTION 4: TIMBER TECHNOLOGY (cont’d)\n(d) Storage of timber products.\n(e) Methods of wood preservation:\n(i) applying paints and varnishes;\n(ii) brushing and spraying with preservative;\n(iii) pressure treatments; and,\n(iv) dipping.\n4. Methods of seasoning timber\n(a) Definition of seasoning.\n(b) Natural: Air-drying.\n(c) Artificial method: Kiln-drying.\n(d) Procedures and standards for each natural and artificial method.\n(e) New and developing methods:\n(i) chemical;\n(ii) micro wave energy;\n(iii) conditioning; and,\n(iv) press drying.\n(f) Calculating moisture content.\n(g) Advantages and disadvantages of artificial and natural methods of seasoning.\n5. Timber defects\n(a) Natural defects:\n(i) shakes; (star, heart, cup and ring);\n(ii) knots; (dead, arris, splay, face, live);\n(iii) warps;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "5",
+      "title": "Section 5: Building Technology",
+      "generalObjectives": [
+        "understand the operating principles of tools, equipment and materials used in building construction processes;",
+        "understand the principles of the building construction industry;",
+        "develop competency in basic building construction operations; and,",
+        "appreciate safety, maintenance and quality standards."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain the production of common building construction materials",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "discuss the uses of different types of building construction material;",
+          "content": ""
+        },
+        {
+          "sequence": "3",
+          "title": "discuss the uses of different types of building construction tools and equipment;",
+          "content": ""
+        },
+        {
+          "sequence": "4",
+          "title": "demonstrate skills in the safe use of materials, tools, equipment and processes in a range of",
+          "content": "building construction operations;"
+        },
+        {
+          "sequence": "5",
+          "title": "demonstrate carpentry skills in the construction of building components;",
+          "content": ""
+        },
+        {
+          "sequence": "6",
+          "title": "explain the principles of the building construction industry; and,",
+          "content": ""
+        },
+        {
+          "sequence": "7",
+          "title": "demonstrate basic plumbing skills.",
+          "content": ""
+        },
+        {
+          "sequence": "1",
+          "title": "Building construction materials:",
+          "content": "(a) Aggregates: (i) gravel; (ii) sand; (iii) crushed stone; (iv) limestone; (v) granite; and,"
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the operating principles of tools, equipment and materials used in building\nconstruction processes;\n2. understand the principles of the building construction industry;\n3. develop competency in basic building construction operations; and,\n4. appreciate safety, maintenance and quality standards.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. explain the production of common building construction materials\n2. discuss the uses of different types of building construction material;\n3. discuss the uses of different types of building construction tools and equipment;\n4. demonstrate skills in the safe use of materials, tools, equipment and processes in a range of\nbuilding construction operations;\n5. demonstrate carpentry skills in the construction of building components;\n6. explain the principles of the building construction industry; and,\n7. demonstrate basic plumbing skills.\nCONTENT\n1. Building construction materials:\n(a) Aggregates:\n(i) gravel;\n(ii) sand;\n(iii) crushed stone;\n(iv) limestone;\n(v) granite; and,\nSECTION 5: BUILDING TECHNOLOGY (cont’d)\n(vi) tests for aggregates (silt content).\n(b) Cement:\n(i) Portland Cement (ordinary, quick setting, modified, water proof);\n(ii) slaked or white lime; and,\n(iii) building blocks.\n2. Uses of construction materials\n(a) Boards:\n(i) plywood;\n(ii) laminated boards;\n(iii) hardboards;\n(iv) plastic foam board;\n(v) cement board;\n(vi) gypsum wall board; and,\n(vii) MDF (Medium Density Fibreboard).\n(b) Plastics:\n(i) PVC;\n(ii) polymer resin;\n(iii) thermoplastics;\n(iv) thermosetting plastics; and,\n(v) environmental issues surrounding the use of plastics (burning, disposal).\n(c) Wall Materials:\n(i) bricks;\n(ii) building blocks (cement-based, glass);\n(iii) stones;\nSECTION 5: BUILDING TECHNOLOGY (cont’d)\n(iv) concrete; and,\n(v) timber.\n(d) Concrete:\nTypes:\n(i) stressed concrete; and,\n(ii) pre-stressed concrete.\n(e) Aggregates.\n(f) Mortar.\n(g) Roof materials (aluminium sheeting, tiles, plastic, shingles, concrete).\n(h) Floor materials (tiles, boards, stone-based and plastic-based, concrete).\n3. Building tools and equipment\n(a) Tools:\n(i) brick and block laying;\n(ii) cutting;\n(iii) marking;\n(iv) finishing;\n(v) measuring;\n(vi) levelling;\n(vii) percussion/impelling;\n(viii) boring;\n(ix) gripping/holding; and,\n(x) excavating.\nSECTION 5: BUILDING TECHNOLOGY (cont’d)\n(b) Equipment:\n(i) ladders;\n(ii) scaffolds;\n- using and dismantling simple scaffolds;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "6",
+      "title": "Section 6: Furniture Technology",
+      "generalObjectives": [
+        "understand the features of furniture design as influenced by different periods and styles;",
+        "develop skills in the use and maintenance of furniture materials, tools and equipment;",
+        "demonstrate the operating principles of production tools, materials, equipment and processes in the manufacture of furniture products; and,",
+        "appreciate safety, maintenance and quality standards."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the features of furniture designs associated with different periods and styles; and,",
+          "content": ""
+        },
+        {
+          "sequence": "2",
+          "title": "demonstrate the safe use of furniture materials, tools and equipment in the production of",
+          "content": "basic furniture products. 1. Features of furniture designs (a) 16th century: (i) Queen Anne; and (ii) Georgian. (b) 17th century: Victorian. (c) 19 – 21st century (contemporary): (i) art deco; (ii) bauhaus; and, (iii) tapered and carved legs and components."
+        },
+        {
+          "sequence": "d",
+          "title": "Preparing a portfolio of furniture designs for each style and period.",
+          "content": ""
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand the features of furniture design as influenced by different periods and styles;\n2. develop skills in the use and maintenance of furniture materials, tools and equipment;\n3. demonstrate the operating principles of production tools, materials, equipment and processes\nin the manufacture of furniture products; and,\n4. appreciate safety, maintenance and quality standards.\nSPECIFIC OBJECTIVES\nThe students should be able to:\n1. discuss the features of furniture designs associated with different periods and styles; and,\n2. demonstrate the safe use of furniture materials, tools and equipment in the production of\nbasic furniture products.\nCONTENT\n1. Features of furniture designs\n(a) 16th century:\n(i) Queen Anne; and\n(ii) Georgian.\n(b) 17th century: Victorian.\n(c) 19 – 21st century (contemporary):\n(i) art deco;\n(ii) bauhaus; and,\n(iii) tapered and carved legs and components.\n(d) Preparing a portfolio of furniture designs for each style and period.\nSECTION 6: FURNITURE TECHNOLOGY (cont’d)\n2. Basic furniture manufacturing\n2.1 Furniture manufacturing projects\nGuidelines, procedures and standards for the selection, safe use and maintenances of:\n(a) nuts and bolts;\n(b) hinges;\n(c) handles;\n(d) knobs;\n(e) staples;\n(f) glass;\n(g) metal;\n(h) upholstery materials; and,\n(i) dressed timber products.\n2.2 Furniture making tools\n(a) Guidelines, procedures and standards for the selection, safe use and maintenances\nof:\n(i) measuring and marking out tools;\n(ii) cutting and boring tools;\n(iii) holding and supporting devices; and,\n(iv) finishing and abrasives tools and materials;\n(b) Power hand tools:\n(i) portables electric drills;\n(ii) circular saw;\n(iii) planers;\n(iv) sanders (belt and orbital;\nSECTION 6: FURNITURE TECHNOLOGY (cont’d)\n(v) routers;\n(vi) jig saws;\n(vii) automatic pins and staple drivers; and,\n(viii) nail gun.\n(c) Cutting and shaping with hand tools\nGuidelines, procedures and standards for simple project identification and designs to\ninclude the following operations:\n(i) layout, cut chamfers and irregular shapes;\n(ii) shape with spoke shaves;\n(iii) chisel along and across grains;\n(iv) cut and pare with a chisel;\n(v) bore and drill holes; and,\n(vi) countersink holes.\n2.3 Furniture equipment\n(a) Guidelines, procedures and standards for the selection, safe use and maintenance of:\n(i) mounting and removing saw blades;\n(ii) ripping;\n(iii) cross cutting;\n(iv) cut mitering;\n(v) rebating;\n[excerpt truncated]",
+      "warnings": []
+    }
+  ]
+}

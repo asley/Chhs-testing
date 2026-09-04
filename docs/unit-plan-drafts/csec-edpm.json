@@ -1,0 +1,265 @@
+{
+  "subject": "CSEC EDPM",
+  "sourcePdf": "docs/syllabus copy/CSEC-EDPM-Syllabus-Revised-2024.pdf",
+  "generatedAt": "2026-09-03T04:02:53+00:00",
+  "intendedUse": "Review draft for Gibbon Planner unit and block seeding. Do not import without human verification.",
+  "mapping": {
+    "unit": "gibbonUnit candidate",
+    "generalObjective": "gibbonOutcome candidate",
+    "specificObjective": "gibbonUnitBlock candidate"
+  },
+  "warnings": [],
+  "units": [
+    {
+      "sequence": "I",
+      "title": "Section I: Fundamentals of Computing",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment; and,",
+        "develop the skills to select and use appropriate computer-based and web-based application software to create and manipulate documents and facilitate effective communication."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "describe the computer; Electronic machine or device that accepts and",
+          "content": "processes data to produce information. Input devices/output devices."
+        },
+        {
+          "sequence": "2",
+          "title": "discuss the evolution of the Evolution of the computer:",
+          "content": "computer; Mainframe, Minicomputer, Microcomputers including laptop, desktop, smartphones and other current devices. The main components of a computer system: (a) Hardware/software; analog/digital media; (b) Input devices/output devices and processes; (c) Storage systems; and, (d) Peripherals."
+        },
+        {
+          "sequence": "3",
+          "title": "discuss the advantages and Advantages and disadvantages of computer usage",
+          "content": "disadvantages of computer usage; in terms of speed, accuracy, storage/retrieval and reliability, ergonomics, ethics, cyber security, e-commerce."
+        },
+        {
+          "sequence": "4",
+          "title": "explain the use of modern Keyboard, touchscreen, mouse, microphone,",
+          "content": "input/output devices; digital pens, scanner, camera, Monitor, speaker, projector, printer, sound card, video card, GPS, Braille reader, biometric devices, graphic tablets and other current devices."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment; and,\n3. develop the skills to select and use appropriate computer-based and web-based application\nsoftware to create and manipulate documents and facilitate effective communication.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. describe the computer; Electronic machine or device that accepts and\nprocesses data to produce information.\nInput devices/output devices.\n2. discuss the evolution of the Evolution of the computer:\ncomputer;\nMainframe, Minicomputer, Microcomputers\nincluding laptop, desktop, smartphones and other\ncurrent devices.\nThe main components of a computer system:\n(a) Hardware/software; analog/digital media;\n(b) Input devices/output devices and processes;\n(c) Storage systems; and,\n(d) Peripherals.\n3. discuss the advantages and Advantages and disadvantages of computer usage\ndisadvantages of computer usage; in terms of speed, accuracy, storage/retrieval\nand reliability, ergonomics, ethics, cyber security,\ne-commerce.\n4. explain the use of modern Keyboard, touchscreen, mouse, microphone,\ninput/output devices; digital pens, scanner, camera, Monitor, speaker,\nprojector, printer, sound card, video card, GPS,\nBraille reader, biometric devices, graphic tablets\nand other current devices.\nSECTION I: FUNDAMENTALS OF COMPUTING (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n5. explain the functionality of devices Tablets, smartphones, touchscreens, phablets.\nused for both input and output;\n6. discuss various types of current Compact Disc (CD ROM), Digital Video Disc\nstorage media and their practical (DVD), Hard Disk ( fixed and portable), CD-RW\napplications; Flash drives and Memory cards, cloud storage\nand other current storage media.\n7. distinguish between operating Operating System Software\nsystem software and application Programs that co-ordinate activities among\nsoftware; computer devices. They contain instructions that\nallow the user to run application software.\nComputer-based Application Software\nPrograms that perform specific tasks for users,\nincluding, word processing software, spreadsheet\nsoftware, database management software,\npresentation software, graphic manipulation\nsoftware and anti-virus software.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "II",
+      "title": "Section II: Keyboard Mastery",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment;",
+        "demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and function keys;",
+        "develop the skills to select and use appropriate computer-based and web-based application software to create and manipulate documents and facilitate effective communication;",
+        "demonstrate an understanding of the knowledge and skills needed to create and prepare documents in accordance with required standards;",
+        "demonstrate the competence to interpret correction signs and terminologies used in document preparation; and,",
+        "demonstrate the ability to use acquired knowledge to enhance personal growth and skills for career development."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "use keyboarding techniques Practise and develop speed and accuracy at the",
+          "content": "effectively; keyboard using proper touch keyboarding techniques on alphanumeric keys, and appropriate proofreading techniques. 2. execute correct posture at the Practise correct posture, arm reach, seat- height, computer; Screen-to-eye-level contact. Ergonomic trends, (standing desks, appropriate furniture, lighting and fixtures, posture)."
+        },
+        {
+          "sequence": "3",
+          "title": "demonstrate competence in the Apply special keys, for example, Tab, Escape, Insert.",
+          "content": "use of special keys; Shortcut keys, for example, Ctrl and Alt; and Function keys, for example, F1."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment;\n3. demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and\nfunction keys;\n4. develop the skills to select and use appropriate computer-based and web-based application\nsoftware to create and manipulate documents and facilitate effective communication;\n5. demonstrate an understanding of the knowledge and skills needed to create and prepare\ndocuments in accordance with required standards;\n6. demonstrate the competence to interpret correction signs and terminologies used in\ndocument preparation; and,\n7. demonstrate the ability to use acquired knowledge to enhance personal growth and skills for\ncareer development.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. use keyboarding techniques Practise and develop speed and accuracy at the\neffectively; keyboard using proper touch keyboarding\ntechniques on alphanumeric keys, and appropriate\nproofreading techniques.\n2. execute correct posture at the Practise correct posture, arm reach, seat- height,\ncomputer; Screen-to-eye-level contact.\nErgonomic trends, (standing desks, appropriate\nfurniture, lighting and fixtures, posture).\n3. demonstrate competence in the Apply special keys, for example, Tab, Escape, Insert.\nuse of special keys;\nShortcut keys, for example, Ctrl and Alt; and\nFunction keys, for example, F1.\nSECTION II: KEYBOARD MASTERY (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n4. use correct spacing before and after After full stop, comma, semicolon, colon,\npunctuation marks and symbols; question mark, exclamation mark, apostrophe,\nquotation marks, parenthesis, hyphen, dash.\n5. apply manuscript signs and Application of Manuscript Signs and abbreviations\nabbreviations within context; within context.\n(See pages 74-77 for commonly used signs and\nabbreviations).\n6. apply different types of headings to Main head, sub-head, shoulder, paragraph,\ndocuments; marginal, and others; appropriate use of these\nheadings.\n7. prepare mailable typescript from Application of rules governing paragraphing\nmanuscript or typed notes using (blocked, indented and hanging paragraphs),\naccepted rules; inset paragraph, abbreviations, typing of figures\nand ellipsis, proofreading, and editing.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "III",
+      "title": "Section III: Introduction to Application Software",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment;",
+        "demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and function keys;",
+        "develop the skills to select and use appropriate computer-based and web-based application software to create and manipulate documents and facilitate effective communication;",
+        "demonstrate an understanding of the knowledge and skills needed to create and prepare documents in accordance with required standards;",
+        "demonstrate the ability to use acquired knowledge to enhance personal growth and skills for career development; and,",
+        "develop an appreciation of the importance and effectiveness of manipulating data in an electronic environment."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss the various types of Types and purposes of computer-based",
+          "content": "application software and their Application Software: purposes; Word processing, Spreadsheet, Database Management, Presentation, and Graphic. File extensions. Web-based Application Software: Google Docs."
+        },
+        {
+          "sequence": "2",
+          "title": "discuss the use of a word processor; Instances in which word processing should be",
+          "content": "used. Basic and advanced features of a word processing application."
+        },
+        {
+          "sequence": "3",
+          "title": "discuss the use of spreadsheet Instances in which spreadsheets should be used.",
+          "content": "application; Basic and advanced features of a spreadsheet application."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment;\n3. demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and\nfunction keys;\n4. develop the skills to select and use appropriate computer-based and web-based application\nsoftware to create and manipulate documents and facilitate effective communication;\n5. demonstrate an understanding of the knowledge and skills needed to create and prepare\ndocuments in accordance with required standards;\n6. demonstrate the ability to use acquired knowledge to enhance personal growth and skills for\ncareer development; and,\n7. develop an appreciation of the importance and effectiveness of manipulating data in\nan electronic environment.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. discuss the various types of Types and purposes of computer-based\napplication software and their Application Software:\npurposes; Word processing, Spreadsheet, Database\nManagement, Presentation, and Graphic.\nFile extensions.\nWeb-based Application Software:\nGoogle Docs.\n2. discuss the use of a word processor; Instances in which word processing should be\nused.\nBasic and advanced features of a word processing\napplication.\n3. discuss the use of spreadsheet Instances in which spreadsheets should be used.\napplication;\nBasic and advanced features of a spreadsheet\napplication.\nSECTION III: INTRODUCTION TO APPLICATION SOFTWARE (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n4. explain the basic and advanced Instances in which databases should be used.\nfeatures of a database Electronic storage and manipulation of data\nmanagement system; in tables for easy retrieval.\nBasic and advanced features of a database\napplication.\n5. explain the uses of a presentation Instances in which presentation software\nsoftware; should be used. Presentations including\ndelivery of lectures, speeches and reports.\nBasic and advanced features of a presentation\napplication.\nTo include:\nTo create, amend, or adjust graphics to suit\ncontent and context.\n6. explain the uses of graphic To enhance word processing, spreadsheet,\nsoftware; and, database management and presentations.\nBasic and advanced features of a graphic\nsoftware.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "IV",
+      "title": "Section IV: Use of Application Software",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment;",
+        "demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and function keys;",
+        "develop the skills to select and use appropriate computer-based and web-based application software to create and manipulate documents and facilitate effective communication;",
+        "demonstrate an understanding of the knowledge and skills needed to create and prepare documents in accordance with required standards;",
+        "demonstrate the competence to interpret correction signs and terminologies used in document preparation;",
+        "demonstrate the ability to use acquired knowledge to enhance personal growth and skills for career development; and,",
+        "develop an appreciation of the importance and effectiveness of manipulating data in an electronic environment;"
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "apply appropriate formatting Guidelines for selection of: font types, styles, sizes,",
+          "content": "features to enhance specific colour and effects for business documents, bold, documents; underline, italics. Line spacing. Alignment. Bullets and numbering, margins. Symbols. Borders and Shading. Background, watermarks. Endnotes, footnotes, headers, footers, page numbering."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment;\n3. demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and\nfunction keys;\n4. develop the skills to select and use appropriate computer-based and web-based application\nsoftware to create and manipulate documents and facilitate effective communication;\n5. demonstrate an understanding of the knowledge and skills needed to create and prepare\ndocuments in accordance with required standards;\n6. demonstrate the competence to interpret correction signs and terminologies used in\ndocument preparation;\n7. demonstrate the ability to use acquired knowledge to enhance personal growth and skills for\ncareer development; and,\n8. develop an appreciation of the importance and effectiveness of manipulating data in\nan electronic environment;\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. apply appropriate formatting Guidelines for selection of: font types, styles, sizes,\nfeatures to enhance specific colour and effects for business documents, bold,\ndocuments; underline, italics.\nLine spacing.\nAlignment.\nBullets and numbering, margins.\nSymbols.\nBorders and Shading.\nBackground, watermarks.\nEndnotes, footnotes, headers, footers, page\nnumbering.\nSECTION IV: USE OF APPLICATION SOFTWARE (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n2. apply editing techniques to Proofreading of documents and correcting errors on\nprepare documents; screen to produce a document suitable to be\ndistributed.\nApplication of techniques such as: cut, copy, paste,\nmove, search, find and replace, add and delete,\nspelling and grammar check, thesaurus, font type;\ntype over and insert mode.\n3. prepare documents using Simple Tabulations\ntabulations; Create column and row headings and oblique and\nvertical headings; apply borders.\nTable alignment on page.\nSorting data in tables.\nPerforming simple calculations using +, -, /, *\nAdvanced Tabulations\nUsing simple formulae; using spreadsheet or\ndatabase software to perform predefined functions:\nSum, Average, Minimum, Maximum; inserting\ncharts and graphs, formatting of tables using\nformatting features.\n4. create a database using a single Create a Database\ntable; Populate database using no more than five fields;\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "V",
+      "title": "Section V: Business Document Preparation",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment;",
+        "demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and function keys;",
+        "develop the skills to select and use appropriate computer-based and web-based application software to create and manipulate documents and facilitate effective communication;",
+        "demonstrate an understanding of the knowledge and skills needed to create and prepare documents in accordance with required standards;",
+        "demonstrate the competence to interpret correction signs and terminologies used in document preparation;",
+        "demonstrate the ability to use acquired knowledge to enhance personal growth and skills for career development;",
+        "develop an appreciation of the importance and effectiveness of manipulating data in an electronic environment; and,",
+        "demonstrate the ability to interpret, analyse, evaluate, and present data and assignments."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "identify sizes and orientation of Size: Letter, Legal and customized sizes.",
+          "content": "paper; Orientation: Portrait and Landscape."
+        },
+        {
+          "sequence": "2",
+          "title": "identify types of stationery; Full range of international sizes:",
+          "content": "(a) A3 - 29.7 cm. x 42 cm. (b) A4 - 21 cm. x 29.7 cm. (c) A5 - 14.8 cm. x 21 cm. (d) A6 - 10.5cm x14.8 cm. (e) B5 - 17.6 cm. x 25 cm. (f) C5 - 16.2 cm. x 22.9 cm. (g) DL - 11 cm. x 22 cm."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment;\n3. demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and\nfunction keys;\n4. develop the skills to select and use appropriate computer-based and web-based application\nsoftware to create and manipulate documents and facilitate effective communication;\n5. demonstrate an understanding of the knowledge and skills needed to create and prepare\ndocuments in accordance with required standards;\n6. demonstrate the competence to interpret correction signs and terminologies used in\ndocument preparation;\n7. demonstrate the ability to use acquired knowledge to enhance personal growth and skills for\ncareer development;\n8. develop an appreciation of the importance and effectiveness of manipulating data in an\nelectronic environment; and,\n9. demonstrate the ability to interpret, analyse, evaluate, and present data and assignments.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. identify sizes and orientation of Size: Letter, Legal and customized sizes.\npaper; Orientation: Portrait and Landscape.\n2. identify types of stationery; Full range of international sizes:\n(a) A3 - 29.7 cm. x 42 cm.\n(b) A4 - 21 cm. x 29.7 cm.\n(c) A5 - 14.8 cm. x 21 cm.\n(d) A6 - 10.5cm x14.8 cm.\n(e) B5 - 17.6 cm. x 25 cm.\n(f) C5 - 16.2 cm. x 22.9 cm.\n(g) DL - 11 cm. x 22 cm.\nSECTION V: BUSINESS DOCUMENT PREPARATION (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n3. use appropriate stationery for a Letterhead, memo, copy paper, forms, labels, index\ngiven assignment; cards, document covers and templates.\n4. create a letterhead; Include correct location and size, appropriate font size\nand content (with or without logo).\n5. produce letters using the most Styles including: blocked, indented, semi-blocked.\nappropriate styles; Short letter, two-page, circular (with a table, with an\ninset, with enumeration), using letterhead where\napplicable.\n6. prepare envelopes and labels; Preparation of envelopes and labels using mail merge\nor any other methods.\n7. demonstrate appropriate use of Use special notations for envelopes with information\nspecial notations in document that needs to be protected from others aside from the\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "VI",
+      "title": "Section VI: Specialised Document Preparation",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment;",
+        "demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and function keys;",
+        "develop the skills to select and use appropriate computer-based and web-based application software to create and manipulate documents and facilitate effective communication;",
+        "demonstrate an understanding of the knowledge and skills needed to create and prepare documents in accordance with required standards;",
+        "demonstrate the ability to use acquired knowledge to enhance personal growth and skills for career development;",
+        "develop an appreciation of the importance and effectiveness of manipulating data in an electronic environment; and,",
+        "demonstrate the ability to adopt ethical and safety standards in preparing, storing and retrieving electronic documents and in online interactions."
+      ],
+      "specificObjectives": [],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment;\n3. demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and\nfunction keys;\n4. develop the skills to select and use appropriate computer-based and web-based application\nsoftware to create and manipulate documents and facilitate effective communication;\n5. demonstrate an understanding of the knowledge and skills needed to create and prepare\ndocuments in accordance with required standards;\n6. demonstrate the ability to use acquired knowledge to enhance personal growth and skills for\ncareer development;\n7. develop an appreciation of the importance and effectiveness of manipulating data in\nan electronic environment; and,\n8. demonstrate the ability to adopt ethical and safety standards in preparing, storing and\nretrieving electronic documents and in online interactions.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. produce effective and creative Simple Displays\ndisplays, given a specific task; Centering and displaying work - columnar work, ruled\nand unruled, notices, menus, invitations, cards, one\nand two page programmes, flyers.\nAdvanced Displays\nFlow Charts, organization charts, graphs (linked and\nembedded), newsletters, 4/6/8 page leaflets.\nSECTION VI: SPECIALISED DOCUMENT PREPARATION (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n2. prepare different types of Newsletters\ndocuments using appropriate 4/6/8 page leaflets, reports, proposals, continuation\nstandards and formatting; and, pages, news and other forms of press releases.\nLegal documents\nWills, leases, conveyance documents, agreements,\nendorsements and contracts.\nTechnical documents\nBuilder or Architect Specifications, Bills of Quantity\nand scope of works.\nLiterary documents\nPlays for radio, theatre and television; actors’ scripts;\nindex cards.\nFinancial statements\nTrial Balance, Balance Sheet, Profit and Loss\nStatement, Income and Expenditure, Invoice, Bank\nStatement, Receipts.\n3. create a template for a specialized Creating templates with or without the use of\ndocument. wizard and help options.\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this syllabus, teachers are advised to engage\n[excerpt truncated]",
+      "warnings": [
+        "No specific objectives were detected for this unit."
+      ]
+    },
+    {
+      "sequence": "VII",
+      "title": "Section VII: Electronic Communication",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment;",
+        "demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and function keys;",
+        "develop the skills to select and use appropriate computer-based and web-based application software to create and manipulate documents and facilitate effective communication;",
+        "demonstrate an understanding of the knowledge and skills needed to create and prepare documents in accordance with required standards;",
+        "demonstrate the competence to interpret correction signs and terminologies used in document preparation;",
+        "demonstrate the ability to use acquired knowledge to enhance personal growth and skills for career development;",
+        "develop an appreciation of the importance and effectiveness of manipulating data in an electronic environment; and,",
+        "demonstrate the ability to adopt ethical and safety standards in preparing, storing and retrieving electronic documents and in online interactions."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "discuss various types of Including:",
+          "content": "electronic communication; Electronic Mail. Internet: World Wide Web. Social media (for example, Internet forums, weblogs, podcasts). Social networking Services Facsimile, multifunctional devices. Scan to mail, Scan to file. Any other current electronic communication."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment;\n3. demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and\nfunction keys;\n4. develop the skills to select and use appropriate computer-based and web-based application\nsoftware to create and manipulate documents and facilitate effective communication;\n5. demonstrate an understanding of the knowledge and skills needed to create and prepare\ndocuments in accordance with required standards;\n6. demonstrate the competence to interpret correction signs and terminologies used in\ndocument preparation;\n7. demonstrate the ability to use acquired knowledge to enhance personal growth and skills for\ncareer development;\n8. develop an appreciation of the importance and effectiveness of manipulating data in an\nelectronic environment; and,\n9. demonstrate the ability to adopt ethical and safety standards in preparing, storing and\nretrieving electronic documents and in online interactions.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. discuss various types of Including:\nelectronic communication; Electronic Mail.\nInternet: World Wide Web.\nSocial media (for example, Internet forums, weblogs,\npodcasts).\nSocial networking Services\nFacsimile, multifunctional devices.\nScan to mail, Scan to file.\nAny other current electronic communication.\nSECTION VII: ELECTRONIC COMMUNICATION (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n2. use various features of e-mail; Including To, Cc and Bcc.\nSending attachments.\nSubject line.\n3. discuss the advantages and Advantages including:\ndisadvantages of electronic\ncommunication media; (a) speed of delivery;\n(b) cost;\n(c) sending information to multiple recipients\nsimultaneously; and,\n(d) disadvantages including:\n(i) errors in dispatch; and,\n(ii) challenges ensuring the message is\nreceived.\n4. compare new and emerging Comparison of usage and features of new and\ncommunication technologies; emerging communication technologies, for\nexample; Social networking Services, smart-phones,\nblogging, vlogging.\n5. apply file organisation methods Storing and sorting mail by date, sender and\nfor sorting and storing e-mail; and, subject.\nContact list organisation.\nArchiving emails for future use.\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "VIII",
+      "title": "Section VIII: Document Management",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment;",
+        "demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and function keys;",
+        "develop the skills to select and use appropriate computer-based and web-based application software to create and manipulate documents and facilitate effective communication;",
+        "demonstrate the ability to use acquired knowledge to enhance personal growth and skills for career development;",
+        "develop an appreciation of the importance and effectiveness of manipulating data in a manual or an electronic environment; and,",
+        "demonstrate the ability to adopt ethical and safety standards in preparing, storing and retrieving manual and electronic documents and in online interactions."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "distinguish between a manual and Definitions and comparisons. Advantages and",
+          "content": "electronic filing system; disadvantages."
+        },
+        {
+          "sequence": "2",
+          "title": "identify types of documents used Source documents, turnaround documents and",
+          "content": "in data processing; machine-readable documents."
+        },
+        {
+          "sequence": "3",
+          "title": "manipulate an electronic filing Organization of drives, folders and files in a",
+          "content": "system; hierarchical structure."
+        },
+        {
+          "sequence": "4",
+          "title": "explain issues related to the Overwrite protection, restricted access, virus",
+          "content": "integrity of files; protection and encryption, read only access."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment;\n3. demonstrate mastery in the operation of a QWERTY keyboard, utilizing the standard and\nfunction keys;\n4. develop the skills to select and use appropriate computer-based and web-based application\nsoftware to create and manipulate documents and facilitate effective communication;\n5. demonstrate the ability to use acquired knowledge to enhance personal growth and skills for\ncareer development;\n6. develop an appreciation of the importance and effectiveness of manipulating data in a\nmanual or an electronic environment; and,\n7. demonstrate the ability to adopt ethical and safety standards in preparing, storing and\nretrieving manual and electronic documents and in online interactions.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. distinguish between a manual and Definitions and comparisons. Advantages and\nelectronic filing system; disadvantages.\n2. identify types of documents used Source documents, turnaround documents and\nin data processing; machine-readable documents.\n3. manipulate an electronic filing Organization of drives, folders and files in a\nsystem; hierarchical structure.\n4. explain issues related to the Overwrite protection, restricted access, virus\nintegrity of files; protection and encryption, read only access.\nSECTION VIII: DOCUMENT MANAGEMENT (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n5. discuss issues related to the Cyber security: Use of passwords, firewall, disaster\nphysical and cyber security of files; recovery mechanisms, backup systems.\nPhysical security: fireproof and waterproof storage,\ndisaster recovery mechanisms, backup systems.\n6. examine issues related to the Archiving, retention period and disposal; legal limit for\nretention of files; and, retaining files.\n7. explain methods for tracing Traceability of document versions. Versioning:\ndocument versions. Successive versions of documents that change over\ntime; Metadata: data stored on document, including\ndate created, date modified, date accessed, owner,\naccess privileges.\nSuggested Teaching and Learning Activities\nTo facilitate students’ attainment of the objectives of this section of the syllabus, teachers are advised\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "IX",
+      "title": "Section IX: Ethics",
+      "generalObjectives": [
+        "develop an awareness of ICT and its impact on the creation and management of electronic documents;",
+        "develop the knowledge, skills and competencies to function appropriately and effectively in a technological environment;",
+        "develop the knowledge, skills and competencies to conduct credible research;",
+        "demonstrate an understanding of the knowledge and skills needed to create and prepare documents in accordance with required standards;",
+        "demonstrate the ability to use acquired knowledge to enhance personal growth and skills for career development;",
+        "develop an appreciation of the value of desirable habits and work attitudes in the preparation of documents; and,",
+        "demonstrate the ability to adopt ethical and safety standards in preparing, storing and retrieving electronic documents and in online interactions."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain the concept of intellectual Intellectual property is conceptualized as the",
+          "content": "property; creations of the mind, such as inventions, literary and artistic works, designs and symbols, names and images. It entails the protection of the rights of persons who produce, gather or disseminate these ideas and information, including authors, singers and journalists."
+        },
+        {
+          "sequence": "2",
+          "title": "describe the rights that are Rights that are protected",
+          "content": "protected by intellectual property Economic rights: the level of payment for use of the laws; product by third parties."
+        }
+      ],
+      "sourceExcerpt": "GENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. develop an awareness of ICT and its impact on the creation and management of electronic\ndocuments;\n2. develop the knowledge, skills and competencies to function appropriately and effectively\nin a technological environment;\n3. develop the knowledge, skills and competencies to conduct credible research;\n4. demonstrate an understanding of the knowledge and skills needed to create and prepare\ndocuments in accordance with required standards;\n5. demonstrate the ability to use acquired knowledge to enhance personal growth and skills for\ncareer development;\n6. develop an appreciation of the value of desirable habits and work attitudes in the preparation\nof documents; and,\n7. demonstrate the ability to adopt ethical and safety standards in preparing, storing and\nretrieving electronic documents and in online interactions.\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\n1. explain the concept of intellectual Intellectual property is conceptualized as the\nproperty; creations of the mind, such as inventions, literary and\nartistic works, designs and symbols, names and\nimages.\nIt entails the protection of the rights of persons who\nproduce, gather or disseminate these ideas and\ninformation, including authors, singers and\njournalists.\n2. describe the rights that are Rights that are protected\nprotected by intellectual property Economic rights: the level of payment for use of the\nlaws; product by third parties.\nSECTION IX: ETHICS (cont’d)\nSPECIFIC OBJECTIVES CONTENT\nStudents should be able to:\nMoral rights: violating the integrity and reputation of\nthe author through misrepresentation or misquoting\nof the work.\n3. discuss ethical standards with The copyright concept\nrespect to intellectual property; Publishers or distributors as those who enter into\nagreements with producers to record, film or print\nthe material and distribute it in ways that would\nsecure the financial interests of producers and\nprevent the unethical use of the material.\nConsumers or users as those who have access to all\ntypes of information but must acknowledge the\nsource or seek permission of the producer through\nthe publisher, who may charge a fee under certain\ncircumstances.\nProducers or owners as those who maintain\nownership and control over their material and\nreceive financial reward from the user, through the\npublisher.\nProducers or owners as those who create Open\nEducational Resources (OERs) for universal\nconsumption.\n[excerpt truncated]",
+      "warnings": []
+    }
+  ]
+}

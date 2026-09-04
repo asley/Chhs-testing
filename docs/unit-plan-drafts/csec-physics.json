@@ -1,0 +1,120 @@
+{
+  "subject": "CSEC Physics",
+  "sourcePdf": "docs/syllabus copy/CSEC-Physics-Syllabus.pdf",
+  "generatedAt": "2026-09-03T04:03:00+00:00",
+  "intendedUse": "Review draft for Gibbon Planner unit and block seeding. Do not import without human verification.",
+  "mapping": {
+    "unit": "gibbonUnit candidate",
+    "generalObjective": "gibbonOutcome candidate",
+    "specificObjective": "gibbonUnitBlock candidate"
+  },
+  "warnings": [],
+  "units": [
+    {
+      "sequence": "B",
+      "title": "Section B: Thermal Physics and Kinetic Theory",
+      "generalObjectives": [
+        "be familiar with the development of the theory of heat;",
+        "relate macroscopic phenomena to the kinetic theory of matter;",
+        "have a conceptual understanding of thermal quantities and the relationship between them;",
+        "understand the various modes of thermal energy transfer."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "differentiate between Rumford’s cannon- Discussion.",
+          "content": "the caloric and kinetic boring experiments theories of heat as as evidence against they existed in the the caloric theory. eighteenth century; 1."
+        },
+        {
+          "sequence": "2",
+          "title": "discuss the role of",
+          "content": "Joule’s experiments in establishing the principle of conservation of energy. 2. MACROSCOPIC PROPERTIES AND PHENOMENA Temperature, T 2.1 relate temperature Temperature T, to the direction of units. net thermal energy transfer;"
+        },
+        {
+          "sequence": "2.2",
+          "title": "identify physical Perform activities to Skills: MM; ORR.",
+          "content": "properties which vary observe change in with temperature and length of liquid column may be used as the with temperature. basis for measuring temperature;"
+        }
+      ],
+      "sourceExcerpt": "Thermal physics is the study of heat, temperature and heat transfer. It can be explained in terms of\nkinetic theory at the microscopic level. It helps us to capture the different phases of matter.\nGENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. be familiar with the development of the theory of heat;\n2. relate macroscopic phenomena to the kinetic theory of matter;\n3. have a conceptual understanding of thermal quantities and the relationship between them;\n4. understand the various modes of thermal energy transfer.\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\nStudents should be able to:\n1. NATURE OF HEAT\n1. 1 differentiate between Rumford’s cannon- Discussion.\nthe caloric and kinetic boring experiments\ntheories of heat as as evidence against\nthey existed in the the caloric theory.\neighteenth century;\n1. 2 discuss the role of\nJoule’s experiments\nin establishing the\nprinciple of\nconservation of\nenergy.\n2. MACROSCOPIC PROPERTIES AND PHENOMENA\nTemperature, T\n2.1 relate temperature Temperature T,\nto the direction of units.\nnet thermal energy\ntransfer;\n2.2 identify physical Perform activities to Skills: MM; ORR.\nproperties which vary observe change in\nwith temperature and length of liquid column\nmay be used as the with temperature.\nbasis for measuring\ntemperature;\nSECTION B - THERMAL PHYSICS AND KINETIC THEORY (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\nStudents should be able to:\n2.3 relate the use of a Highlight design Draw and explain Chemistry and\nthermometer to its features which make a design of: Biology –\ndesign; thermometer suitable (a) laboratory; Thermometer.\nfor its particular task. thermometer;\nNote temperature (b) clinical\nranges for each. thermometer\n(c) thermocouple.\n2.4 define the fixed Lower and upper fixed\npoints on the points.\nCelsius scale;\n2.5 relate the\ntemperature of a\nbody to the kinetic\nenergy of\nmolecules;\nPhases of Matter\n2.6 distinguish among Note the differences Chemistry-\nsolids, liquids and with respect to inter- States of\ngases; molecular forces, matter.\nmotion of molecules,\nshape and volume of\nmatter.\n2.7 use the Kinetic Perform simple Chemistry -\ntheory to explain experiments to illustrate Diffusion, osmosis,\nthe different the existence of inter- particulate nature\nmacroscopic molecular forces, for of matter.\nproperties of solids, example, compression Biology - Diffusion,\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "C",
+      "title": "Section C: Waves and Optics",
+      "generalObjectives": [
+        "appreciate that wave motion is a means of transferring energy and that there are certain features common to all waves;",
+        "understand the way in which sound waves are produced and propagated;",
+        "understand the properties of the electromagnetic spectrum;",
+        "be familiar with the historical development of the theory of light;",
+        "appreciate how a ray treatment facilitates the understanding of reflection and refraction of light waves."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "differentiate Pulses, progressive Production of waves Skill: ORR.",
+          "content": "between types of waves, transverse and using springs and in waves; longitudinal waves. ripple tanks. Draw diagrams of: (a) transverse waves in ripple tank and slinky spring; (b) longitudinal wave in a slinky spring. Virtual simulations."
+        }
+      ],
+      "sourceExcerpt": "Wave theory represents the branch of Physics that deals with wave processes. It is significant to the\nunderstanding of sound phenomena. Light, which is electromagnetic in origin, is fundamental to the\nunderstanding of optics.\nGENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. appreciate that wave motion is a means of transferring energy and that there are certain\nfeatures common to all waves;\n2. understand the way in which sound waves are produced and propagated;\n3. understand the properties of the electromagnetic spectrum;\n4. be familiar with the historical development of the theory of light;\n5. appreciate how a ray treatment facilitates the understanding of reflection and refraction of\nlight waves.\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\nStudents should be able to:\n1. WAVE MOTION\nTypes of Waves\n1. 1 differentiate Pulses, progressive Production of waves Skill: ORR.\nbetween types of waves, transverse and using springs and in\nwaves; longitudinal waves. ripple tanks.\nDraw diagrams of:\n(a) transverse\nwaves in ripple\ntank and slinky\nspring;\n(b) longitudinal\nwave in a slinky\nspring. Virtual\nsimulations.\nSECTION C – WAVES AND OPTICS (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\nStudents should be able to:\nWave Parameters\n1. 2 apply speed, Use:𝑣 = 𝑓 𝜆. Timing echoes. Mathematics-\nfrequency, Algebra/\nwavelength, period Refer to SO D2.7. Computation.\nand amplitude; Skills: PD; MM.\n1. 3 represent transverse Note: a progressive Extract information Mathematics:\nand longitudinal wave varies in both about wave parameters Trigonometric\nwaves in time and space from graphs functions.\ndisplacement- simultaneously. To representing waves.\nposition and represent it on paper, Skills: ORR; AI.\ndisplacement-time either time or position\ngraphs. must be held\nconstant.\nRefer to SO D2.6.\n2. SOUND\nProduction and Propagation\n2.1 describe how sound Sound is transmitted Cup and string Biology – Hearing.\nis produced and as a longitudinal wave telephone.\npropagated in a and is produced by Different sounds\nmedium; vibrating systems. produced by vibrating\nsystems.\nFor example, stretch\nrubber bands.\n2.2 relate the terms Pitch - frequency Playing drums and\n‘pitch’ and ‘loudness’ Loudness - amplitude. steel pan. Tuning\nto wave parameters; Recall the range of forks. Using bottles\nfrequencies with water at\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "D",
+      "title": "Section D: Electricity and Magnetism",
+      "generalObjectives": [
+        "understand electrostatic phenomena;",
+        "understand the ways in which electricity is conducted;",
+        "understand electrical quantities and the relations between them;",
+        "have a working knowledge of electrical circuits and components;",
+        "be aware of the applications of electronics in technology;",
+        "understand the simple phenomena associated with magnets;",
+        "have a working knowledge of electromagnetic phenomena."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "explain the charging Explain in terms of Demonstrate 'charging",
+          "content": "of objects; properties of electrons by friction’. which are relatively free to move; charging of glass, perspex or polythene by rubbing with a dry cloth and explain in terms of electron transfer by friction. 1."
+        },
+        {
+          "sequence": "2",
+          "title": "describe the forces The forces between Perform simple Skills: MM; ORR.",
+          "content": "that electric charges charges as a activities to show that exert on each other; fundamental property like charges repel and of electric charges. unlike charges attract. 1."
+        },
+        {
+          "sequence": "3",
+          "title": "explain charging by How a charged object Perform simple",
+          "content": "induction; can attract objects experiment. having zero net charge."
+        }
+      ],
+      "sourceExcerpt": "In this section, Electricity and Magnetism, we explore electrical, magnetic and electromagnetic\nprinciples and phenomena. The importance of electronics in modern society is also introduced.\nGENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. understand electrostatic phenomena;\n2. understand the ways in which electricity is conducted;\n3. understand electrical quantities and the relations between them;\n4. have a working knowledge of electrical circuits and components;\n5. be aware of the applications of electronics in technology;\n6. understand the simple phenomena associated with magnets;\n7. have a working knowledge of electromagnetic phenomena.\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\nStudents should be able to:\n1. ELECTROSTATICS\nElectric Charge, Q\n1. 1 explain the charging Explain in terms of Demonstrate 'charging\nof objects; properties of electrons by friction’.\nwhich are relatively\nfree to move; charging\nof glass, perspex or\npolythene by rubbing\nwith a dry cloth and\nexplain in terms of\nelectron transfer by\nfriction.\n1. 2 describe the forces The forces between Perform simple Skills: MM; ORR.\nthat electric charges charges as a activities to show that\nexert on each other; fundamental property like charges repel and\nof electric charges. unlike charges attract.\n1. 3 explain charging by How a charged object Perform simple\ninduction; can attract objects experiment.\nhaving zero net\ncharge.\nSECTION D - ELECTRICITY AND MAGNETISM (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\nStudents should be able to:\nElectric Fields\n1. 4 define an electric Draw the electric fields\nfield; around and between\npoint charges, and\nbetween charged\nparallel plates; Refer\nto other force fields\nsuch as gravitational\nand magnetic.\nRefer to SO A3.2; D6.7.\n1. 5 describe one hazard Electrostatic painting;\nand one useful Lightning strikes, dust\napplication of static extraction,\ncharge. photocopying, static\nbuild up on vehicles.\nThe effects of a local\ncharged ionised\natmosphere.\n2. CURRENT ELECTRICITY\n2.1 distinguish between Definitions, properties Use a low voltage test Chemistry -\nconductors and and classification. circuit with lamp Electrons;\ninsulators; indicator to test properties of\ndifferent materials. metals and non-\nmetals.\nSkills: MM; ORR.\n2.2 state that an electric In other conducting Chemistry-\n[excerpt truncated]",
+      "warnings": []
+    },
+    {
+      "sequence": "E",
+      "title": "Section E: The Physics of the Atom",
+      "generalObjectives": [
+        "appreciate the development of atomic theory and the concept of the nucleus;",
+        "understand how the elements differ in atomic structure;",
+        "be familiar with the phenomenon of radioactivity and the safety measures when dealing with radioactive substances;",
+        "know that a change in the nuclear mass is associated with the release of energy;",
+        "appreciate the importance of nuclear energy on society and the environment."
+      ],
+      "specificObjectives": [
+        {
+          "sequence": "1",
+          "title": "describe the work Include Thomson, Chemistry - Atoms",
+          "content": "done in establishing Rutherford, Bohr, and the Periodic the modern view of Chadwick. table. the atom; 1."
+        },
+        {
+          "sequence": "2",
+          "title": "describe the Geiger- Establish the nuclear Chemistry-",
+          "content": "Marsden experiment. structure of the atom. Structure of the Consider that the atom. nucleus contains protons and neutrons of approximately equal mass. 2. STRUCTURE OF THE ATOM Particles in the Atom 2.1 sketch the Include the Chemistry- structure of simple distribution of charge. Structure of the atoms; atom, metallic bonding."
+        }
+      ],
+      "sourceExcerpt": "This is the branch of physics that studies the structure of the atom and the interaction of the sub-atomic\nparticles of matter and electromagnetic fields. Students will appreciate how energy can be released\nfrom inside the atom and become aware of its impact on society and the environment.\nGENERAL OBJECTIVES\nOn completion of this Section, students should:\n1. appreciate the development of atomic theory and the concept of the nucleus;\n2. understand how the elements differ in atomic structure;\n3. be familiar with the phenomenon of radioactivity and the safety measures when dealing with\nradioactive substances;\n4. know that a change in the nuclear mass is associated with the release of energy;\n5. appreciate the importance of nuclear energy on society and the environment.\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\nStudents should be able to:\n1. MODELS OF THE ATOM\n1. 1 describe the work Include Thomson, Chemistry - Atoms\ndone in establishing Rutherford, Bohr, and the Periodic\nthe modern view of Chadwick. table.\nthe atom;\n1. 2 describe the Geiger- Establish the nuclear Chemistry-\nMarsden experiment. structure of the atom. Structure of the\nConsider that the atom.\nnucleus contains\nprotons and neutrons\nof approximately\nequal mass.\n2. STRUCTURE OF THE\nATOM\nParticles in the Atom\n2.1 sketch the Include the Chemistry-\nstructure of simple distribution of charge. Structure of the\natoms; atom, metallic\nbonding.\nSECTION E - THE PHYSICS OF THE ATOM (cont’d)\nSPECIFIC OBJECTIVES CONTENT/ SUGGESTED SKILLS AND\nEXPLANATORY PRACTICAL INTER-\nNOTES ACTIVITIES RELATIONSHIP\nStudents should be able to:\n2.2 compare the mass Mention could be\nand charge of the made of the absolute\nelectron with the values in kg and C.\nmass and charge of\nthe proton;\n2.3 explain why an atom Chemistry-\nis normally neutral Structure of the\nand stable; atom.\n2.4 apply the Use of standard Chemistry -\nrelationship notation for Atomic number\nA = Z + N; representing a and atomic mass.\nnuclide,\n𝐴 12\n𝑍𝑋 for example 6𝐶 .\n2.5 explain what is meant Chemistry-\nby the term \"isotope\"; Isotopes.\n2.6 relate the shell model of Any element in the Chemistry-\nthe atom to the periodic periodic table has one Periodic table.\ntable. more proton than an\nelement before it.\n3. RADIOACTIVITY\nRadioactive Emissions\n3.1 describe Marie Curie’s Research biography. Chemistry -\nwork in the field of Marie Curie\nradioactivity;\n[excerpt truncated]",
+      "warnings": []
+    }
+  ]
+}
